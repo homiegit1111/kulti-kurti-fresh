@@ -42,3 +42,9 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# agent tooling (vendored Clerk skills, re-fetchable via skills-lock.json)
+/.agents
+
+# bun lockfile (repo uses package-lock.json)
+bun.lock
