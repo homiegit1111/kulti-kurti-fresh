@@ -55,7 +55,6 @@ export function ConsentBanner() {
               >
                 privacy policy
               </Link>
-              {/* /privacy page is added in the QA pass — see PRIVACY page. */}
               .
             </p>
             <div className="flex shrink-0 items-center gap-3">

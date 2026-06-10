@@ -38,17 +38,18 @@ const nextConfig: NextConfig = {
     // Next.js and framer-motion inject inline/eval'd code without nonces; a
     // nonce/hash-based lockdown is a future hardening step (tracked separately).
     // Allow-lists cover: Clerk (auth + telemetry), Cloudflare Turnstile,
-    // Shopify, Unsplash, and same-origin assets.
+    // Shopify, Google Analytics 4 (gtag), Sanity (lookbook CMS), Unsplash, and
+    // same-origin assets.
     const csp = [
       "default-src 'self'",
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com https://www.googletagmanager.com https://www.google-analytics.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com",
+      "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.sanity.io https://cdn.sanity.io",
       "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
       "worker-src 'self' blob:",
       "form-action 'self' https://*.myshopify.com",

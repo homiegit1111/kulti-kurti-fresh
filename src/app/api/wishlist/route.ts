@@ -119,10 +119,11 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
   const productId = new URL(req.url).searchParams.get("product_id");
   const query = supabase.from("wishlist_items").delete();
 
-  // Single item, or clear-all (still RLS-scoped; explicit owner filter keeps
-  // supabase-js happy about the required WHERE clause).
+  // Single item, or clear-all. Always pin to the owner explicitly
+  // (defense-in-depth on top of RLS) so a delete can never touch another
+  // user's rows even if an RLS policy is later misconfigured.
   const { error } = productId
-    ? await query.eq("product_id", productId)
+    ? await query.eq("clerk_user_id", userId).eq("product_id", productId)
     : await query.eq("clerk_user_id", userId);
 
   if (error) {

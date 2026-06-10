@@ -192,7 +192,7 @@ export default function Heritage() {
               className="pt-10"
             >
               <a
-                href="/artisans"
+                href="/about"
                 className="group inline-flex items-center gap-4 text-xs font-semibold uppercase tracking-widest text-charcoal hover:text-gold transition-colors"
               >
                 <span>Meet the Artisans</span>

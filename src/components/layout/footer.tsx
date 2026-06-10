@@ -128,9 +128,9 @@ const socialLinks = [
 ];
 
 const bottomLinks = [
-  { label: "Privacy Policy", href: "/contact" },
-  { label: "Terms", href: "/contact" },
-  { label: "Cookies", href: "/contact" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Cookies", href: "/privacy" },
 ];
 
 /* ── Reusable column component ── */
