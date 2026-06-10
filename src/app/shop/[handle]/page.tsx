@@ -51,6 +51,12 @@ export default async function ProductPage({
     return <ClientProductDetail params={params} />;
   }
 
+  const inStock = product.availableForSale !== false;
+  // Google recommends priceValidUntil; default to ~1 year out.
+  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -58,6 +64,7 @@ export default async function ProductPage({
     image: product.images,
     description: product.description,
     sku: product.handle,
+    category: product.category,
     brand: {
       "@type": "Brand",
       name: "Rangat Pehnawa",
@@ -67,8 +74,11 @@ export default async function ProductPage({
       url: `https://www.rangatpehnawa.com/shop/${product.handle}`,
       priceCurrency: "INR",
       price: product.salePrice ?? product.price,
+      priceValidUntil,
       itemCondition: "https://schema.org/NewCondition",
-      availability: "https://schema.org/InStock",
+      availability: inStock
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
     },
   };
 
