@@ -159,7 +159,7 @@ function OtpInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
-          className={`h-14 w-full min-w-0 rounded-2xl border bg-warm-white/60 text-center font-serif text-2xl text-charcoal outline-none transition-all disabled:opacity-50 ${
+          className={`h-14 w-full min-w-0 border bg-warm-white/60 text-center font-serif text-2xl text-charcoal outline-none transition-all disabled:opacity-50 ${
             error
               ? "border-red-300 bg-red-50/50"
               : char
@@ -470,7 +470,7 @@ function UnifiedAuthInner() {
 
         <Link
           href="/"
-          className="absolute left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full border border-charcoal/10 bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-charcoal/60 backdrop-blur-sm transition-colors hover:text-charcoal"
+          className="absolute left-6 top-6 z-20 inline-flex items-center gap-2 border border-charcoal/15 bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-charcoal/60 backdrop-blur-sm transition-colors hover:text-charcoal"
         >
           <ArrowLeft className="h-3 w-3" /> Store
         </Link>
@@ -530,7 +530,7 @@ function UnifiedAuthInner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 role="alert"
-                className="mb-5 rounded-xl border border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600"
+                className="mb-5 border border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600"
               >
                 {localError}
               </motion.div>
@@ -540,7 +540,7 @@ function UnifiedAuthInner() {
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                className="mb-5 rounded-xl border border-charcoal/10 bg-white/70 px-4 py-3 text-center text-xs font-medium text-charcoal/70"
+                className="mb-5 border border-charcoal/10 bg-white/70 px-4 py-3 text-center text-xs font-medium text-charcoal/70"
               >
                 {notice}
               </motion.div>
@@ -552,7 +552,7 @@ function UnifiedAuthInner() {
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-4 rounded-3xl border border-charcoal/5 bg-white/70 px-8 py-12 text-center"
+              className="flex flex-col items-center gap-4 border border-charcoal/5 bg-white/70 px-8 py-12 text-center"
             >
               <span className="flex h-14 w-14 items-center justify-center rounded-full bg-charcoal text-white">
                 <Check className="h-6 w-6" />
@@ -585,7 +585,7 @@ function UnifiedAuthInner() {
                       disabled={busy}
                       value={emailAddress}
                       onChange={(e) => setEmailAddress(e.target.value)}
-                      className="h-14 w-full rounded-2xl border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                      className="h-14 w-full border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
                       placeholder="name@example.com"
                     />
                     <PrimaryButton busy={busy} label="Continue" loadingLabel="Sending code…" />
@@ -603,7 +603,7 @@ function UnifiedAuthInner() {
                     type="button"
                     onClick={handleOAuth}
                     disabled={oauthLoading || busy}
-                    className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-charcoal/10 bg-white text-xs font-semibold tracking-wide text-charcoal shadow-sm transition-all hover:border-charcoal/25 disabled:opacity-60"
+                    className="flex h-14 w-full items-center justify-center gap-3 border border-charcoal/10 bg-white text-xs font-semibold tracking-wide text-charcoal shadow-sm transition-all hover:border-charcoal/25 disabled:opacity-60"
                   >
                     {oauthLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -639,7 +639,7 @@ function UnifiedAuthInner() {
                         disabled={busy}
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="h-14 w-full rounded-2xl border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                        className="h-14 w-full border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
                         placeholder="First name"
                       />
                       <input
@@ -649,7 +649,7 @@ function UnifiedAuthInner() {
                         disabled={busy}
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="h-14 w-full rounded-2xl border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                        className="h-14 w-full border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
                         placeholder="Last name"
                       />
                     </div>
@@ -763,7 +763,7 @@ function PrimaryButton({
       type="submit"
       disabled={busy || disabled}
       aria-busy={busy}
-      className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl bg-charcoal text-xs font-semibold uppercase tracking-[0.18em] text-white transition-all hover:bg-black hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+      className="group relative flex h-14 w-full items-center justify-center overflow-hidden bg-charcoal text-xs font-semibold uppercase tracking-[0.18em] text-white transition-all hover:bg-black hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
     >
       {busy ? (
         <span className="flex items-center gap-2">
@@ -808,21 +808,24 @@ function GoogleIcon() {
 export default function UnifiedAuthPage() {
   if (!isAuthEnabled) {
     return (
-      <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col items-center justify-center px-6 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold mb-4">
-          Sign In
-        </p>
-        <h1 className="font-serif text-4xl md:text-5xl mb-4">Coming very soon</h1>
-        <p className="text-charcoal/60 max-w-md mb-10 leading-relaxed">
-          Sign-in isn&apos;t enabled on this storefront yet. You can still browse
-          the full collection and check out as a guest.
-        </p>
-        <Link
-          href="/shop"
-          className="inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
-        >
-          Continue Shopping
-        </Link>
+      <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-24 top-[-10%] h-80 w-80 rounded-full bg-gold/10 blur-[110px]" />
+          <div className="absolute -left-20 bottom-[-10%] h-72 w-72 rounded-full bg-gold/[0.07] blur-[110px]" />
+        </div>
+        <div className="relative panel-luxe frame-luxe max-w-lg w-full px-10 py-16">
+          <p className="eyebrow justify-center mb-5">Sign In</p>
+          <h1 className="font-serif text-4xl md:text-5xl font-light mb-5">
+            Coming <span className="italic">very soon</span>
+          </h1>
+          <p className="text-sm text-charcoal/55 max-w-md mx-auto mb-10 leading-relaxed">
+            Sign-in isn&apos;t enabled on this storefront yet. You can still browse
+            the full collection and check out as a guest.
+          </p>
+          <Link href="/shop" className="btn-luxe">
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     );
   }

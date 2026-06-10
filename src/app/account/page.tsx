@@ -127,44 +127,42 @@ function AccountInner() {
             
             {/* Left Sidebar Profile Card */}
             <div className="lg:col-span-1">
-              <div className="bg-white border border-charcoal/5 shadow-[0_20px_40px_rgba(0,0,0,0.03)] rounded-2xl overflow-hidden mb-8 relative">
-                <div className="h-32 bg-charcoal relative">
-                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1613040809024-b4ef7ba99bc3?q=80&w=600&auto=format&fit=crop')] opacity-20 object-cover mix-blend-overlay" />
-                </div>
-                <div className="px-6 pb-8 text-center relative">
-                  <div className="w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden mx-auto -mt-12 bg-warm-white relative z-10">
-                    <Image src={user.imageUrl} alt="Profile Avatar" fill className="object-cover" />
+              <div className="panel-luxe overflow-hidden mb-8 relative">
+                <div className="bg-charcoal px-6 py-10 text-center relative frame-luxe">
+                  <div className="w-20 h-20 rounded-full border border-gold/50 p-1 overflow-hidden mx-auto relative z-10">
+                    <div className="relative w-full h-full rounded-full overflow-hidden">
+                      <Image src={user.imageUrl} alt="Profile Avatar" fill className="object-cover" />
+                    </div>
                   </div>
-                  <h2 className="font-serif text-2xl text-charcoal mt-4 mb-1">
-                    {user.firstName || user.lastName ? `${user.firstName || ""} ${user.lastName || ""}` : "VIP Guest"}
+                  <h2 className="font-serif text-2xl font-light text-warm-white mt-5 mb-1">
+                    {user.firstName || user.lastName ? `${user.firstName || ""} ${user.lastName || ""}` : "Guest of the House"}
                   </h2>
-                  <p className="text-xs text-charcoal/60 font-sans tracking-wide">{primaryEmail}</p>
-                  
-                  <div className="mt-6 flex flex-col gap-2">
-                    <button
-                      onClick={() => setActiveTab("orders")}
-                      className={`w-full flex items-center gap-3 text-xs uppercase tracking-widest font-bold px-4 py-4 rounded-xl transition-all ${
-                        activeTab === "orders" ? "bg-charcoal text-gold shadow-lg" : "text-charcoal/60 hover:bg-charcoal/5"
-                      }`}
-                    >
-                      <Package className="w-4 h-4" /> Order History
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("profile")}
-                      className={`w-full flex items-center gap-3 text-xs uppercase tracking-widest font-bold px-4 py-4 rounded-xl transition-all ${
-                        activeTab === "profile" ? "bg-charcoal text-gold shadow-lg" : "text-charcoal/60 hover:bg-charcoal/5"
-                      }`}
-                    >
-                      <User className="w-4 h-4" /> Profile Settings
-                    </button>
-                    <div className="h-px w-full bg-charcoal/10 my-2" />
-                    <button
-                      onClick={() => signOut({ redirectUrl: "/" })}
-                      className="w-full flex items-center gap-3 text-xs uppercase tracking-widest font-bold px-4 py-4 rounded-xl text-red-600/80 hover:bg-red-50 transition-all"
-                    >
-                      <LogOut className="w-4 h-4" /> Sign Out
-                    </button>
-                  </div>
+                  <p className="text-[10px] text-white/50 font-sans tracking-[0.15em]">{primaryEmail}</p>
+                </div>
+                <div className="px-4 py-5 flex flex-col gap-1">
+                  <button
+                    onClick={() => setActiveTab("orders")}
+                    className={`w-full flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] font-bold px-4 py-4 border-l-2 transition-all duration-300 ${
+                      activeTab === "orders" ? "border-gold bg-warm-gray/60 text-charcoal" : "border-transparent text-charcoal/50 hover:text-charcoal hover:bg-warm-gray/40"
+                    }`}
+                  >
+                    <Package className="w-4 h-4" strokeWidth={1.5} /> Order History
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("profile")}
+                    className={`w-full flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] font-bold px-4 py-4 border-l-2 transition-all duration-300 ${
+                      activeTab === "profile" ? "border-gold bg-warm-gray/60 text-charcoal" : "border-transparent text-charcoal/50 hover:text-charcoal hover:bg-warm-gray/40"
+                    }`}
+                  >
+                    <User className="w-4 h-4" strokeWidth={1.5} /> Profile Settings
+                  </button>
+                  <div className="h-px w-full bg-charcoal/10 my-2" />
+                  <button
+                    onClick={() => signOut({ redirectUrl: "/" })}
+                    className="w-full flex items-center gap-3 text-[10px] uppercase tracking-[0.2em] font-bold px-4 py-4 border-l-2 border-transparent text-charcoal/40 hover:text-destructive hover:bg-destructive/5 transition-all duration-300"
+                  >
+                    <LogOut className="w-4 h-4" strokeWidth={1.5} /> Sign Out
+                  </button>
                 </div>
               </div>
             </div>
@@ -173,12 +171,15 @@ function AccountInner() {
             <div className="lg:col-span-3">
               {activeTab === "orders" && (
                 <div className="animate-fade-in">
-                  <h1 className="font-serif text-4xl text-charcoal mb-8 border-b border-charcoal/10 pb-6">
-                    Order <span className="italic text-gold">History</span>
-                  </h1>
+                  <div className="mb-8 border-b border-charcoal/10 pb-6">
+                    <p className="eyebrow mb-3">Your Archive</p>
+                    <h1 className="font-serif text-4xl md:text-5xl font-light text-charcoal">
+                      Order <span className="italic">History</span>
+                    </h1>
+                  </div>
 
                   {ordersNotice && !ordersLoading && (
-                    <div className="mb-6 p-4 rounded-xl bg-warm-white border border-gold/20 text-charcoal/70 text-xs font-medium">
+                    <div className="mb-6 p-4 bg-white border border-gold/25 border-l-2 border-l-gold text-charcoal/70 text-xs font-medium">
                       {ordersNotice}
                     </div>
                   )}
@@ -188,14 +189,16 @@ function AccountInner() {
                       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
                     </div>
                   ) : orders.length === 0 ? (
-                    <div className="bg-white border border-charcoal/5 p-12 text-center rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.02)]">
-                      <Package className="w-16 h-16 text-charcoal/10 mx-auto mb-6" />
-                      <h3 className="font-serif text-2xl text-charcoal mb-3">No orders yet</h3>
+                    <div className="panel-luxe frame-luxe p-14 text-center">
+                      <Package className="w-12 h-12 text-gold/40 mx-auto mb-6" strokeWidth={1} />
+                      <h3 className="font-serif text-3xl font-light text-charcoal mb-3">
+                        No orders <span className="italic">yet</span>
+                      </h3>
                       <p className="text-charcoal/60 text-sm max-w-sm mx-auto mb-8 leading-relaxed">
                         Your bespoke journey awaits. Once you make a purchase, your orders will appear here for seamless tracking.
                       </p>
-                      <button onClick={() => router.push("/shop")} className="inline-flex items-center gap-2 bg-charcoal text-white text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full hover:bg-black transition-all">
-                        Discover Collections <ArrowRight className="w-4 h-4" />
+                      <button onClick={() => router.push("/shop")} className="btn-luxe">
+                        Discover Collections <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ) : (
@@ -206,7 +209,7 @@ function AccountInner() {
                         return (
                           <div
                             key={order.id}
-                            className="bg-white border border-charcoal/10 rounded-2xl p-6 lg:p-8 hover:border-gold/30 transition-all shadow-sm"
+                            className="panel-luxe p-6 lg:p-8 hover:border-gold/40 transition-colors duration-300"
                           >
                             <div className="flex flex-wrap items-start justify-between gap-6 mb-6 pb-6 border-b border-charcoal/5">
                               <div>
@@ -214,7 +217,7 @@ function AccountInner() {
                                   <p className="font-serif text-xl text-charcoal">
                                     Order {order.name}
                                   </p>
-                                  <span className="inline-flex px-3 py-1 bg-warm-white text-[9px] uppercase tracking-widest text-charcoal font-bold rounded-full">
+                                  <span className="inline-flex px-3 py-1 border border-gold/40 text-[9px] uppercase tracking-[0.18em] text-gold-dark font-bold">
                                     {order.financial_status}
                                   </span>
                                 </div>
@@ -223,11 +226,11 @@ function AccountInner() {
                                 </p>
                               </div>
                               <div className="text-right">
-                                <p className="font-sans text-xl font-medium text-charcoal mb-2">
+                                <p className="font-serif text-2xl font-light text-charcoal mb-2">
                                   {formatPrice(total)}
                                 </p>
                                 {order.fulfillment_status && (
-                                  <span className="inline-block px-3 py-1 bg-charcoal text-[9px] uppercase tracking-widest text-white font-bold rounded-full">
+                                  <span className="inline-block px-3 py-1 bg-charcoal text-[9px] uppercase tracking-[0.18em] text-white font-bold">
                                     {order.fulfillment_status}
                                   </span>
                                 )}
@@ -236,9 +239,9 @@ function AccountInner() {
 
                             <div className="space-y-4">
                               {order.line_items.map((item) => (
-                                <div key={item.id} className="flex justify-between items-center bg-warm-white/50 p-4 rounded-xl">
+                                <div key={item.id} className="flex justify-between items-center border-b border-charcoal/5 last:border-0 py-3 px-1">
                                   <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-charcoal/5 rounded-lg flex items-center justify-center text-xs font-bold text-charcoal">
+                                    <div className="w-9 h-9 border border-charcoal/15 flex items-center justify-center text-[10px] font-bold text-charcoal/70 tabular-nums">
                                       x{item.quantity}
                                     </div>
                                     <div>
@@ -248,7 +251,7 @@ function AccountInner() {
                                       )}
                                     </div>
                                   </div>
-                                  <p className="text-charcoal font-semibold text-sm">
+                                  <p className="font-serif text-sm text-charcoal">
                                     {formatPrice(Number(item.price))}
                                   </p>
                                 </div>
@@ -263,48 +266,52 @@ function AccountInner() {
               )}
 
               {activeTab === "profile" && (
-                <div className="animate-fade-in bg-white border border-charcoal/5 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.02)] p-8 lg:p-12">
-                  <h1 className="font-serif text-3xl text-charcoal mb-8 border-b border-charcoal/10 pb-6">
-                    Profile <span className="italic text-gold">Settings</span>
-                  </h1>
+                <div className="animate-fade-in panel-luxe p-8 lg:p-12">
+                  <div className="mb-10 border-b border-charcoal/10 pb-6">
+                    <p className="eyebrow mb-3">Personal</p>
+                    <h1 className="font-serif text-4xl font-light text-charcoal">
+                      Profile <span className="italic">Settings</span>
+                    </h1>
+                  </div>
 
                   <form onSubmit={handleUpdateProfile} className="max-w-md space-y-8">
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.2em] text-charcoal/40 font-bold mb-2">Primary Email</label>
+                      <label className="field-label">Primary Email</label>
                       <input 
                         type="email" 
                         value={primaryEmail || ""} 
                         disabled 
-                        className="w-full border-b border-charcoal/10 bg-warm-white/30 px-4 py-3 text-charcoal/50 font-sans text-sm rounded-t-lg cursor-not-allowed"
+                        className="field-luxe"
+                        readOnly
                       />
                       <p className="text-[10px] text-charcoal/40 mt-2 font-medium">Email address cannot be changed directly.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.2em] text-charcoal/40 font-bold mb-2">First Name</label>
+                        <label className="field-label">First Name</label>
                         <input 
                           type="text" 
                           value={firstName} 
                           onChange={(e) => setFirstName(e.target.value)}
-                          className="w-full border-b border-charcoal/20 bg-transparent px-0 py-3 text-charcoal font-sans text-sm focus:border-gold focus:ring-0 transition-colors"
+                          className="field-luxe"
                           placeholder="Your first name"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.2em] text-charcoal/40 font-bold mb-2">Last Name</label>
+                        <label className="field-label">Last Name</label>
                         <input 
                           type="text" 
                           value={lastName} 
                           onChange={(e) => setLastName(e.target.value)}
-                          className="w-full border-b border-charcoal/20 bg-transparent px-0 py-3 text-charcoal font-sans text-sm focus:border-gold focus:ring-0 transition-colors"
+                          className="field-luxe"
                           placeholder="Your last name"
                         />
                       </div>
                     </div>
 
                     {updateMessage && (
-                      <div className={`p-4 rounded-xl text-xs font-medium ${updateMessage.includes("success") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+                      <div className={`p-4 border text-xs font-medium ${updateMessage.includes("success") ? "border-gold/40 border-l-2 border-l-gold bg-warm-gray/50 text-charcoal" : "border-destructive/30 border-l-2 border-l-destructive bg-destructive/5 text-destructive"}`}>
                         {updateMessage}
                       </div>
                     )}
@@ -312,7 +319,7 @@ function AccountInner() {
                     <button 
                       type="submit" 
                       disabled={isUpdating}
-                      className="bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.2em] h-14 px-8 rounded-full hover:bg-black transition-all flex items-center justify-center min-w-[200px]"
+                      className="btn-luxe min-w-[200px]"
                     >
                       {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
                     </button>
@@ -336,21 +343,16 @@ function AccountUnavailable() {
     <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-24 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold mb-4">
-          Accounts
-        </p>
-        <h1 className="font-serif text-4xl md:text-5xl mb-4">
-          Coming very soon
+        <p className="eyebrow eyebrow--bare mb-4">Accounts</p>
+        <h1 className="font-serif text-5xl md:text-6xl font-light mb-5">
+          Coming <span className="italic">very soon</span>
         </h1>
         <p className="text-charcoal/60 max-w-md mb-10 leading-relaxed">
           Customer accounts aren&apos;t enabled on this storefront yet. You can
           still browse the full collection and check out as a guest.
         </p>
-        <Link
-          href="/shop"
-          className="inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
-        >
-          Continue Shopping <ArrowRight className="w-4 h-4" />
+        <Link href="/shop" className="btn-luxe">
+          Continue Shopping <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </main>
       <Footer />
