@@ -6,13 +6,15 @@ import { Package, User, LogOut, Loader2, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useUser, useClerk } from "@clerk/nextjs";
+import Link from "next/link";
+import { isAuthEnabled } from "@/lib/auth/config";
 import Image from "next/image";
 import type { ShopifyAdminOrder } from "@/lib/server/shopify-admin";
 import { formatPrice } from "@/lib/shopify";
 
 type AccountTab = "orders" | "profile";
 
-export default function AccountPage() {
+function AccountInner() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
@@ -325,4 +327,38 @@ export default function AccountPage() {
       <Footer />
     </>
   );
+}
+
+/* ── Graceful fallback when auth isn't configured ────────────────────────── */
+
+function AccountUnavailable() {
+  return (
+    <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
+      <Navbar />
+      <main className="flex-1 flex flex-col items-center justify-center px-6 pt-32 pb-24 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold mb-4">
+          Accounts
+        </p>
+        <h1 className="font-serif text-4xl md:text-5xl mb-4">
+          Coming very soon
+        </h1>
+        <p className="text-charcoal/60 max-w-md mb-10 leading-relaxed">
+          Customer accounts aren&apos;t enabled on this storefront yet. You can
+          still browse the full collection and check out as a guest.
+        </p>
+        <Link
+          href="/shop"
+          className="inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
+        >
+          Continue Shopping <ArrowRight className="w-4 h-4" />
+        </Link>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default function AccountPage() {
+  if (!isAuthEnabled) return <AccountUnavailable />;
+  return <AccountInner />;
 }

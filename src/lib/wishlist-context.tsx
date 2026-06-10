@@ -10,7 +10,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth/client";
 import { type MockProduct } from "@/lib/shopify";
 
 // ── Types ──

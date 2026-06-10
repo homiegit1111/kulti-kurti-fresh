@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth/client";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { CartDrawer } from "./cart-drawer";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@/lib/auth/client";
 
 export function ClerkShopifySync() {
   const { user, isLoaded } = useUser();

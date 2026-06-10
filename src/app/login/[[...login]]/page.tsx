@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useSignIn, useSignUp, useAuth, useClerk } from "@clerk/nextjs";
+import { isAuthEnabled } from "@/lib/auth/config";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -174,7 +175,7 @@ function OtpInput({
 /* -------------------------------------------------------------------------- */
 /*  Page                                                                       */
 /* -------------------------------------------------------------------------- */
-export default function UnifiedAuthPage() {
+function UnifiedAuthInner() {
   const { signIn, fetchStatus: signInFetchStatus } = useSignIn();
   const { signUp, fetchStatus: signUpFetchStatus } = useSignUp();
   const { isLoaded, isSignedIn } = useAuth();
@@ -800,4 +801,30 @@ function GoogleIcon() {
       />
     </svg>
   );
+}
+
+/* ── Graceful fallback when auth isn't configured ────────────────────────── */
+
+export default function UnifiedAuthPage() {
+  if (!isAuthEnabled) {
+    return (
+      <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col items-center justify-center px-6 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-gold mb-4">
+          Sign In
+        </p>
+        <h1 className="font-serif text-4xl md:text-5xl mb-4">Coming very soon</h1>
+        <p className="text-charcoal/60 max-w-md mb-10 leading-relaxed">
+          Sign-in isn&apos;t enabled on this storefront yet. You can still browse
+          the full collection and check out as a guest.
+        </p>
+        <Link
+          href="/shop"
+          className="inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
+        >
+          Continue Shopping
+        </Link>
+      </div>
+    );
+  }
+  return <UnifiedAuthInner />;
 }

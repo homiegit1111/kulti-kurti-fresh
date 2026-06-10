@@ -6,6 +6,7 @@ import { WebVitals } from "./web-vitals";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { ConsentBanner } from "@/components/analytics/consent-banner";
 import { ClerkProvider } from "@clerk/nextjs";
+import { isAuthEnabled } from "@/lib/auth/config";
 
 export const viewport = {
   width: "device-width",
@@ -108,6 +109,29 @@ export default function RootLayout({
     ]
   };
 
+  const app = (
+    <html
+      lang="en"
+      className={`${playfair.variable} ${inter.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col font-sans bg-warm-white text-charcoal relative">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <GoogleAnalytics />
+        <WebVitals />
+        <Providers>{children}</Providers>
+        <ConsentBanner />
+      </body>
+    </html>
+  );
+
+  // Storefront resilience: when Clerk isn't configured (local dev, preview
+  // deploys) the app renders fully without it — auth surfaces degrade
+  // gracefully via @/lib/auth instead of blanking the whole tree.
+  if (!isAuthEnabled) return app;
+
   return (
     <ClerkProvider
       appearance={{
@@ -144,21 +168,7 @@ export default function RootLayout({
         }
       }}
     >
-      <html
-        lang="en"
-        className={`${playfair.variable} ${inter.variable} h-full antialiased`}
-      >
-        <body className="min-h-full flex flex-col font-sans bg-warm-white text-charcoal relative">
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          />
-          <GoogleAnalytics />
-          <WebVitals />
-          <Providers>{children}</Providers>
-          <ConsentBanner />
-        </body>
-      </html>
+      {app}
     </ClerkProvider>
   );
 }
