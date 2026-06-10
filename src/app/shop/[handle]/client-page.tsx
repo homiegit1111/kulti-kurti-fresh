@@ -5,6 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Banknote,
+  Truck,
+  RefreshCcw,
   MessageCircle,
   ChevronDown,
   ChevronRight,
@@ -30,18 +33,24 @@ import { isShopifyConfigured } from "@/lib/shopify";
 
 export default function ProductDetailPage({
   params,
+  initialProduct,
 }: {
   params: Promise<{ handle: string }>;
+  // Server-fetched product: ships real HTML on first paint (SEO/LCP) and
+  // removes the client-side loading spinner entirely.
+  initialProduct?: MockProduct | null;
 }) {
   const { handle } = use(params);
   // undefined = loading, null = not found, MockProduct = loaded
   const [product, setProduct] = useState<MockProduct | null | undefined>(
-    undefined,
+    initialProduct ?? undefined,
   );
 
   useEffect(() => {
+    // Only fetch client-side when the server didn't provide the product.
+    if (initialProduct) return;
     getProductByHandle(handle).then(setProduct);
-  }, [handle]);
+  }, [handle, initialProduct]);
 
   if (product === undefined) {
     return (
@@ -437,6 +446,25 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               )}
               </div>
 
+              {/* Trust signals */}
+              <div className="grid grid-cols-3 gap-2 mt-8 pt-6 border-t border-charcoal/10">
+                {[
+                  { icon: Banknote, label: "COD Available" },
+                  { icon: Truck, label: "Free Ship ₹2,999+" },
+                  { icon: RefreshCcw, label: "7-Day Returns" },
+                ].map(({ icon: Icon, label }) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center gap-2 text-center"
+                  >
+                    <Icon className="w-4 h-4 text-gold" strokeWidth={1.5} />
+                    <span className="text-[9px] uppercase tracking-[0.15em] font-bold text-charcoal/50 leading-tight">
+                      {label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
               <div className="flex justify-center mt-6">
                 <p className="text-[9px] uppercase tracking-[0.3em] text-charcoal/30 font-bold">
                   SKU: {product.handle.slice(0, 8)}
@@ -633,6 +661,22 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Trust signals (mobile) */}
+              <div className="flex items-center justify-between gap-2 pt-4 border-t border-charcoal/10">
+                {[
+                  { icon: Banknote, label: "COD" },
+                  { icon: Truck, label: "Free Ship ₹2,999+" },
+                  { icon: RefreshCcw, label: "7-Day Returns" },
+                ].map(({ icon: Icon, label }) => (
+                  <div key={label} className="flex items-center gap-1.5">
+                    <Icon className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} />
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-charcoal/50">
+                      {label}
+                    </span>
+                  </div>
+                ))}
               </div>
             </motion.div>
 
