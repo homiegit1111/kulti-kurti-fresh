@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Sanity Studio schema lives here and is compiled by the separate Studio
+    // project (it imports `sanity`, not a storefront dependency).
+    "sanity/**",
   ]),
 ]);
 

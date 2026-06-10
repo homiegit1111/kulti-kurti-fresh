@@ -93,6 +93,7 @@ import { SearchDialog } from "@/components/ui/search-dialog";
 const navLinks = [
   { label: "Shop", href: "/shop" },
   { label: "Collections", href: "/collections" },
+  { label: "Lookbook", href: "/lookbook" },
   { label: "About", href: "/about" },
 ];
 

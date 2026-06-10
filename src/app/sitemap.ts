@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getProducts, getCollections } from "@/lib/shopify";
+import { getEditorialSlugs } from "@/lib/sanity/queries";
 import { absoluteUrl } from "@/lib/seo";
 
 // Regenerate the sitemap at most once a day.
@@ -17,16 +18,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl("/"), lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: absoluteUrl("/shop"), lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: absoluteUrl("/collections"), lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: absoluteUrl("/lookbook"), lastModified: now, changeFrequency: "weekly", priority: 0.6 },
     { url: absoluteUrl("/about"), lastModified: now, changeFrequency: "monthly", priority: 0.5 },
     { url: absoluteUrl("/contact"), lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   // Pull catalog in parallel; fall back gracefully if a fetch fails so the
   // sitemap never 500s (a broken sitemap hurts crawling).
-  const [products, collections] = await Promise.all([
+  const [products, collections, editorialSlugs] = await Promise.all([
     getProducts(250).catch(() => []),
     getCollections().catch(() => []),
+    getEditorialSlugs().catch(() => []),
   ]);
+
+  const editorialRoutes: MetadataRoute.Sitemap = editorialSlugs.map((slug) => ({
+    url: absoluteUrl(`/lookbook/${slug}`),
+    lastModified: now,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
 
   const productRoutes: MetadataRoute.Sitemap = products.map((p) => ({
     url: absoluteUrl(`/shop/${p.handle}`),
@@ -42,5 +52,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...collectionRoutes, ...productRoutes];
+  return [
+    ...staticRoutes,
+    ...collectionRoutes,
+    ...productRoutes,
+    ...editorialRoutes,
+  ];
 }
