@@ -135,6 +135,30 @@ not `bun dev`,** when doing browser QA in CI/sandboxes.
 
 ---
 
+## 7b. Luxe visual overhaul — June 10, 2026 (later same day, on `main`)
+
+Site-wide **visual-only** "quiet luxury editorial" pass (no logic/backend changes),
+verified with full-page screenshots of every route at 1440px + 390px against a
+production build:
+
+- **Design system** (`globals.css`, after `.grain-overlay`): `.eyebrow`(+`--bare`),
+  `.btn-luxe` (charcoal block w/ gold sweep), `.btn-luxe-outline`, `.field-luxe` +
+  `.field-label` (underline editorial inputs), `.link-luxe` (animated gold
+  underline, also fires from `.group:hover`), `.panel-luxe`, `.frame-luxe`
+  (double hairline w/ gold inner rule). **Reuse these instead of ad-hoc classes.**
+- **Direction:** unified `warm-white` background (no more `#f7f6f2`/`#fcfbf9`
+  drift), square corners (rounded-full/2xl/3xl removed from UI chrome), hairline
+  `charcoal/10` borders, serif-light headings w/ italic accents, gold uppercase
+  microlabels, charcoal CTAs hovering to `gold-dark`.
+- **Pages restyled:** home (doodles → quiet gold accents), shop grid + product
+  card, PDP (square hero, serif purchase header, legible size selector, square
+  CTAs, 3D-soon button removed), cart page + drawer, checkout (also fixed a
+  broken empty-state DOM nesting), order-confirmation, account, login (square
+  inputs + framed keyless fallback), contact, wishlist, 404 (ghost numeral).
+- Lookbook + collection-detail pages were left as-is (intentionally art-directed).
+
+---
+
 ## 8. 🔭 Open items / next ideas
 
 1. **Wire an ESP** into `sendAbandonedCartEmail` (the only TODO in the abandoned-cart pipeline). `resend` is already in `package.json` — finish the integration.
