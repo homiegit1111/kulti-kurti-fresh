@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useSignIn, useSignUp, useAuth } from "@clerk/nextjs";
+import { useSignIn, useSignUp, useAuth, useClerk } from "@clerk/nextjs";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -178,6 +178,7 @@ export default function UnifiedAuthPage() {
   const { signIn, fetchStatus: signInFetchStatus } = useSignIn();
   const { signUp, fetchStatus: signUpFetchStatus } = useSignUp();
   const { isLoaded, isSignedIn } = useAuth();
+  const clerk = useClerk();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/account";
@@ -314,24 +315,27 @@ export default function UnifiedAuthPage() {
   };
 
   const completeAndRedirect = async (flow: "signin" | "signup") => {
-    // Don't gate on the (possibly stale) `status` snapshot — finalize() is the
-    // single source of truth. It converts a complete attempt into an active
-    // session and surfaces an error if more steps are genuinely required.
-    const finalize = flow === "signin" ? signIn?.finalize : signUp?.finalize;
-    if (!finalize) {
-      setLocalError("Something went wrong. Please try again.");
-      return;
-    }
-    const { error } = await finalize({
-      navigate: ({ decorateUrl }) => router.push(decorateUrl(redirectTo)),
-    });
-    if (error) {
+    // After a successful code verification the attempt is `complete` and carries
+    // a `createdSessionId`. We activate it with the stable `clerk.setActive(...)`
+    // (passing a plain `redirectUrl` string) rather than the experimental
+    // `finalize({ navigate })` path, which throws an internal error in this SDK.
+    const resource = flow === "signin" ? signIn : signUp;
+    const sessionId = resource?.createdSessionId;
+    if (!sessionId) {
       setLocalError(
-        errorMessage(error, "We verified your code but couldn't finish signing you in. Please try again.")
+        "We verified your code but couldn't finish signing you in. Please try again."
       );
       return;
     }
     setSuccess(true);
+    try {
+      await clerk.setActive({ session: sessionId, redirectUrl: redirectTo });
+    } catch (err) {
+      setSuccess(false);
+      setLocalError(
+        errorMessage(err, "Couldn't finish signing you in. Please refresh and try again.")
+      );
+    }
   };
 
   const handleOtpVerify = async (submitted?: string) => {
