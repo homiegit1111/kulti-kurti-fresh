@@ -219,6 +219,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (product: MockProduct, size: string, color?: string) => {
+      // Inventory guard (safety net): never add a product Shopify reports as
+      // unavailable, even if a UI surface forgets to disable its button.
+      // `undefined` means unknown/mock → allowed.
+      if (product.availableForSale === false) {
+        setSyncError("Sorry — this piece is currently sold out.");
+        return;
+      }
+
       const resolvedColor = color || product.colors[0] || "default";
       const variantId =
         product.variantIds?.[size] ?? product.variantId ?? undefined;

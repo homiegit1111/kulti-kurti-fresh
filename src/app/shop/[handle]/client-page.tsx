@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useOptimistic, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -89,21 +89,34 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [expandedSection, setExpandedSection] = useState<string | null>("info");
 
-  const [added, setAdded] = useState(false);
+  // Inventory guard: only block when Shopify explicitly reports unavailable.
+  // (undefined = mock/unknown → treat as available so the catalog still works.)
+  const soldOut = product.availableForSale === false;
+
+  // Optimistic "Added" affordance (React 19): true during the add transition,
+  // auto-reverts when it settles — no manual setTimeout toggle needed.
+  const [, startAddTransition] = useTransition();
+  const [added, setAddedOptimistic] = useOptimistic(
+    false,
+    (_state, value: boolean) => value,
+  );
 
   const { addItem, checkoutUrl } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const wishlisted = isWishlisted(product.id);
 
   const handleAddToCart = () => {
-    if (!selectedSize) return;
-    addItem(product, selectedSize, selectedColor);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+    if (!selectedSize || soldOut) return;
+    startAddTransition(async () => {
+      setAddedOptimistic(true);
+      addItem(product, selectedSize, selectedColor);
+      // Hold the optimistic confirmation briefly for visible feedback.
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+    });
   };
 
   const handleBuyNow = () => {
-    if (!selectedSize) return;
+    if (!selectedSize || soldOut) return;
     addItem(product, selectedSize, selectedColor);
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
@@ -338,7 +351,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               <div className="flex gap-3 mt-8">
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize}
+                disabled={!selectedSize || soldOut}
                 className={`group relative flex-1 h-16 rounded-full flex items-center justify-between px-2 pl-8 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${
                   added
                     ? "bg-[#2a4d3e] text-white shadow-[0_20px_40px_rgba(42,77,62,0.3)]"
@@ -367,7 +380,11 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                         exit={{ y: -20, opacity: 0 }}
                         className="font-bold uppercase tracking-[0.2em] text-[10px]"
                       >
-                        {selectedSize ? "Add to Cart" : "Select a Size"}
+                        {soldOut
+                          ? "Sold Out"
+                          : selectedSize
+                            ? "Add to Cart"
+                            : "Select a Size"}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -408,7 +425,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               {isShopifyConfigured() && (
                 <button
                   onClick={handleBuyNow}
-                  disabled={!selectedSize}
+                  disabled={!selectedSize || soldOut}
                   className={`h-16 px-6 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shrink-0 ${
                     !selectedSize
                       ? "bg-gold/20 text-gold/30 cursor-not-allowed"
@@ -768,7 +785,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
         <div className="flex gap-2">
         <button
           onClick={handleAddToCart}
-          disabled={!selectedSize}
+          disabled={!selectedSize || soldOut}
           className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 font-bold uppercase tracking-widest text-xs overflow-hidden relative ${
             added
               ? "bg-[#2a4d3e] text-white scale-[0.98] shadow-lg shadow-[#2a4d3e]/20"
@@ -797,7 +814,9 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 exit={{ y: -20, opacity: 0 }}
                 className="flex items-center gap-2"
               >
-                {selectedSize ? (
+                {soldOut ? (
+                  "Sold Out"
+                ) : selectedSize ? (
                   <>
                     <span>Add to Cart</span>
                     <ShoppingBag className="w-4 h-4 opacity-50" />
@@ -813,7 +832,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
         {isShopifyConfigured() && (
           <button
             onClick={handleBuyNow}
-            disabled={!selectedSize}
+            disabled={!selectedSize || soldOut}
             className={`h-14 px-5 rounded-2xl font-bold uppercase tracking-widest text-xs flex items-center justify-center shrink-0 transition-all duration-500 ${
               !selectedSize
                 ? "bg-gold/20 text-gold/30"

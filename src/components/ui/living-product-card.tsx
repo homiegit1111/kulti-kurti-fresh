@@ -29,6 +29,9 @@ export const LivingProductCard = memo(function LivingProductCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const { addItem } = useCart();
 
+  // Inventory guard: disable quick-add when Shopify reports it unavailable.
+  const soldOut = product.availableForSale === false;
+
   const showVideo = Boolean(videoUrl) && (isLiving ? !isHovered : isHovered);
 
   useEffect(() => {
@@ -117,13 +120,29 @@ export const LivingProductCard = memo(function LivingProductCard({
         <button
           onClick={(e) => {
             e.preventDefault();
+            if (soldOut) return;
             addItem(product, "M");
           }}
-          aria-label={`Add ${product.title} to cart in size M`}
-          className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-30 flex min-h-11 items-center gap-2 px-4 md:px-6 py-3 bg-white text-charcoal text-[9px] font-bold uppercase tracking-[0.2em] transform translate-y-0 opacity-100 md:translate-y-8 md:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 hover:bg-charcoal hover:text-white active:scale-[0.98] transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
+          disabled={soldOut}
+          aria-label={
+            soldOut
+              ? `${product.title} is sold out`
+              : `Add ${product.title} to cart in size M`
+          }
+          className={`absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-30 flex min-h-11 items-center gap-2 px-4 md:px-6 py-3 text-[9px] font-bold uppercase tracking-[0.2em] transform translate-y-0 opacity-100 md:translate-y-8 md:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 active:scale-[0.98] transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 ${
+            soldOut
+              ? "bg-white/80 text-charcoal/40 cursor-not-allowed"
+              : "bg-white text-charcoal hover:bg-charcoal hover:text-white"
+          }`}
         >
-          <span>Add to Cart</span>
-          <Plus className="h-3 w-3" strokeWidth={2} />
+          {soldOut ? (
+            <span>Sold Out</span>
+          ) : (
+            <>
+              <span>Add to Cart</span>
+              <Plus className="h-3 w-3" strokeWidth={2} />
+            </>
+          )}
         </button>
       </Link>
 
