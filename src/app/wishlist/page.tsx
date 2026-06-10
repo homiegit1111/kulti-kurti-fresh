@@ -8,7 +8,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/medusa";
+import { formatPrice } from "@/lib/shopify";
 
 // A playful handwritten font style
 const doodleFont = {

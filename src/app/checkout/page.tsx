@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/medusa";
+import { formatPrice } from "@/lib/shopify";
 import { updateCartBuyerIdentity } from "@/lib/shopify-cart";
 
 type Step = "shipping" | "payment" | "confirmation";

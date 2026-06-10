@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice, COLOR_MAP } from "@/lib/medusa";
+import { formatPrice, COLOR_MAP } from "@/lib/shopify";
 
 const doodleFont = {
   fontFamily: '"Kalam", "Caveat", "Comic Sans MS", cursive',

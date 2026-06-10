@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getProductByHandle } from "@/lib/medusa";
+import { getProductByHandle } from "@/lib/shopify";
 import ClientProductDetail from "./client-page";
 
 export async function generateMetadata(

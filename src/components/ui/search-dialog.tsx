@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MOCK_PRODUCTS, formatPrice } from "@/lib/medusa";
+import { MOCK_PRODUCTS, formatPrice } from "@/lib/shopify";
 
 export function SearchDialog({
   isOpen,

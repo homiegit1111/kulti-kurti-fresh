@@ -23,7 +23,7 @@ import {
   formatPrice,
   COLOR_MAP,
   type MockProduct,
-} from "@/lib/medusa";
+} from "@/lib/shopify";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { isShopifyConfigured } from "@/lib/shopify";

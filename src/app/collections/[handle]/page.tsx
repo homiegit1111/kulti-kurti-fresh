@@ -13,7 +13,7 @@ import {
   getCollections,
   getProductsByCollection,
   type MockProduct,
-} from "@/lib/medusa";
+} from "@/lib/shopify";
 import { useWishlist } from "@/lib/wishlist-context";
 import { LivingProductCard } from "@/components/ui/living-product-card";
 

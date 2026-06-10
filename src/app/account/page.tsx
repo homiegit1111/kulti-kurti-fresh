@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/footer";
 import { useUser, useClerk } from "@clerk/nextjs";
 import Image from "next/image";
 import type { ShopifyAdminOrder } from "@/lib/server/shopify-admin";
-import { formatPrice } from "@/lib/medusa";
+import { formatPrice } from "@/lib/shopify";
 
 type AccountTab = "orders" | "profile";
 
