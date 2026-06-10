@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { getProducts, type MockProduct } from "@/lib/shopify";
+import { getProducts, type MockProduct, COLOR_MAP } from "@/lib/shopify";
 import ShopLoading from "@/app/shop/loading";
 import { useWishlist } from "@/lib/wishlist-context";
 import { LivingProductCard } from "@/components/ui/living-product-card";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 
 const PRODUCT_REEL_VIDEO = "/videos/background.mp4";
 
@@ -18,28 +19,78 @@ const sortOptions = [
   { label: "Price: High to Low", value: "price-desc" },
 ];
 
-export default function ShopPage() {
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("newest");
+const priceBands = [
+  { label: "Under ₹2,000", value: "under-2000", test: (p: number) => p < 2000 },
+  {
+    label: "₹2,000 – ₹5,000",
+    value: "2000-5000",
+    test: (p: number) => p >= 2000 && p <= 5000,
+  },
+  { label: "₹5,000+", value: "5000-plus", test: (p: number) => p > 5000 },
+];
+
+function ShopContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [isSortOpen, setIsSortOpen] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
-  const [categories, setCategories] = useState(["All", "Kurtis", "Lehengas", "Co-ords", "Sarees"]);
+  const [categories, setCategories] = useState([
+    "All",
+    "Kurtis",
+    "Lehengas",
+    "Co-ords",
+    "Sarees",
+  ]);
   const [products, setProducts] = useState<MockProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // ── Filter state lives in the URL (shareable, SSR-friendly, back-button OK) ──
+  const activeCategory = searchParams.get("cat") ?? "All";
+  const sortBy = searchParams.get("sort") ?? "newest";
+  const activeColor = searchParams.get("color");
+  const activePrice = searchParams.get("price");
+
+  const setParam = (key: string, value: string | null) => {
+    const params = new URLSearchParams(Array.from(searchParams.entries()));
+    if (!value || value === "All" || value === "newest") params.delete(key);
+    else params.set(key, value);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  const toggleParam = (key: string, value: string) => {
+    setParam(key, searchParams.get(key) === value ? null : value);
+  };
+
+  const clearAll = () => router.replace(pathname, { scroll: false });
 
   useEffect(() => {
     getProducts().then((data) => {
       setProducts(data);
-      const dynamicCategories = ["All", ...new Set(data.map((p) => p.category).filter(Boolean))];
+      const dynamicCategories = [
+        "All",
+        ...new Set(data.map((p) => p.category).filter(Boolean)),
+      ];
       if (dynamicCategories.length > 1) setCategories(dynamicCategories);
       setIsLoading(false);
     });
   }, []);
 
+  // Colors available across the catalog (for the swatch facet)
+  const availableColors = useMemo(
+    () => [...new Set(products.flatMap((p) => p.colors).filter(Boolean))],
+    [products],
+  );
+
   const filtered = useMemo(() => {
+    const band = priceBands.find((b) => b.value === activePrice);
     return products
       .filter((p) => activeCategory === "All" || p.category === activeCategory)
+      .filter((p) => !activeColor || p.colors.includes(activeColor))
+      .filter((p) => !band || band.test(p.salePrice ?? p.price))
       .sort((a, b) => {
         switch (sortBy) {
           case "price-asc":
@@ -50,7 +101,9 @@ export default function ShopPage() {
             return 0; // newest
         }
       });
-  }, [activeCategory, sortBy, products]);
+  }, [activeCategory, activeColor, activePrice, sortBy, products]);
+
+  const hasActiveFacets = Boolean(activeColor || activePrice) || activeCategory !== "All";
 
   if (isLoading) return <ShopLoading />;
 
@@ -78,13 +131,13 @@ export default function ShopPage() {
         {/* ── REFINED STICKY FILTER BAR ── */}
         <div className="sticky top-[72px] lg:top-20 z-40 bg-[#fcfbf9]/95 backdrop-blur-xl border-y border-charcoal/5 mb-12">
           <div className="max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
-            
+
             {/* Pill Categories */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 hide-scrollbar">
               {categories.map((cat) => (
                 <button
                   key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                  onClick={() => setParam("cat", cat)}
                   className={`px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
                     activeCategory === cat
                       ? "bg-charcoal text-white"
@@ -123,7 +176,7 @@ export default function ShopPage() {
                         <button
                           key={opt.value}
                           onClick={() => {
-                            setSortBy(opt.value);
+                            setParam("sort", opt.value);
                             setIsSortOpen(false);
                           }}
                           className={`w-full text-left px-5 py-3 text-[10px] uppercase tracking-[0.2em] font-bold transition-colors ${
@@ -140,6 +193,58 @@ export default function ShopPage() {
                 </AnimatePresence>
               </div>
             </div>
+          </div>
+
+          {/* ── FACETS: price bands + color swatches ── */}
+          <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="flex gap-2 flex-wrap">
+              {priceBands.map((band) => (
+                <button
+                  key={band.value}
+                  onClick={() => toggleParam("price", band.value)}
+                  className={`px-3.5 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                    activePrice === band.value
+                      ? "bg-charcoal text-white"
+                      : "bg-transparent border border-charcoal/15 text-charcoal/55 hover:border-charcoal/40 hover:text-charcoal"
+                  }`}
+                >
+                  {band.label}
+                </button>
+              ))}
+            </div>
+
+            {availableColors.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {availableColors.map((color) => {
+                  const swatch = COLOR_MAP[color.toLowerCase()] ?? "#D9D4CC";
+                  const isActive = activeColor === color;
+                  return (
+                    <button
+                      key={color}
+                      onClick={() => toggleParam("color", color)}
+                      title={color}
+                      aria-label={`Filter by ${color}`}
+                      aria-pressed={isActive}
+                      className={`w-5 h-5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                        isActive
+                          ? "ring-2 ring-charcoal ring-offset-2 ring-offset-[#fcfbf9]"
+                          : "ring-1 ring-charcoal/10 hover:ring-charcoal/30"
+                      }`}
+                      style={{ backgroundColor: swatch }}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            {hasActiveFacets && (
+              <button
+                onClick={clearAll}
+                className="ml-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.15em] text-charcoal/50 hover:text-charcoal transition-colors"
+              >
+                <X className="w-3 h-3" /> Clear filters
+              </button>
+            )}
           </div>
         </div>
 
@@ -180,6 +285,14 @@ export default function ShopPage() {
               <p className="font-serif text-2xl text-charcoal/40 italic">
                 Nothing found in this collection.
               </p>
+              {hasActiveFacets && (
+                <button
+                  onClick={clearAll}
+                  className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal underline underline-offset-4 hover:text-gold transition-colors"
+                >
+                  Clear all filters
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -187,5 +300,13 @@ export default function ShopPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<ShopLoading />}>
+      <ShopContent />
+    </Suspense>
   );
 }
