@@ -99,13 +99,39 @@ bun run build              # tsc + ESLint + build. FAILS on any lint error → g
 
 ---
 
-## 7. ⚠️ Current branch state — clean this up first
+## 7-old. ⚠️ (Resolved) Previous branch state
 
 This branch (`viktor/<this-task>`) has a `sync: local changes before task` commit that:
 - Added `@portabletext/react` and `resend` to `package.json` (the two open TODOs below — someone started wiring them).
 - **BUT** committed a stray npm **`package-lock.json` (~7k lines)** and **did NOT update `bun.lock`**.
 
 👉 **Before building/shipping:** delete `package-lock.json`, run `bun install` to regenerate `bun.lock`, and commit the updated `bun.lock`. This repo is **bun-only**; a stray `package-lock.json` will confuse Vercel and future agents.
+
+---
+
+## 7. UI/UX overhaul — June 10, 2026 (branch `viktor/1781089511`)
+
+Shipped by Viktor; verified in a real browser against a **production build**:
+
+- **Auth-optional architecture** — `src/lib/auth/` exposes `isAuthEnabled` +
+  `useAuth`/`useUser`/`useClerk` wrappers (`@/lib/auth/client`) that return
+  stable signed-out stubs when Clerk keys are absent. `layout.tsx` skips
+  `ClerkProvider` entirely in keyless mode; `proxy.ts` only mounts
+  `clerkMiddleware` when both keys exist. Account/login/sso-callback degrade
+  gracefully. **Always import auth hooks from `@/lib/auth/client`, never
+  directly from `@clerk/nextjs`** (except inside the auth lib itself).
+- **PDP server-rendered** — `shop/[handle]/page.tsx` passes `initialProduct`
+  into the client island; real product HTML ships on first paint (no spinner).
+  Trust signals (COD / free ship ₹2,999+ / 7-day returns) on desktop + mobile.
+- **Shop grid server-rendered** — `shop/page.tsx` passes `initialProducts`;
+  all product cards are in the raw HTML. Client fetch remains as fallback.
+- **Wishlist rebuilt** — old doodle/polaroid theme replaced with an on-brand
+  editorial grid (quick-add w/ size pop-over, badges, animated removal).
+- The stray `package-lock.json` from §7-old is **deleted**.
+
+⚠️ Dev-server (Turbopack) hydration can stall in headless/proxied browser
+environments (HMR websocket). **Verify with `bun run build && bun run start`,
+not `bun dev`,** when doing browser QA in CI/sandboxes.
 
 ---
 
