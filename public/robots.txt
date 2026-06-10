@@ -1,9 +1,0 @@
-# *
-User-agent: *
-Allow: /
-
-# Host
-Host: https://www.rangatpehnawa.com
-
-# Sitemaps
-Sitemap: https://www.rangatpehnawa.com/sitemap.xml

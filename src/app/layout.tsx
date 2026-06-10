@@ -88,7 +88,7 @@ export default function RootLayout({
         "@id": "https://www.rangatpehnawa.com/#organization",
         "name": "Rangat Pehnawa",
         "url": "https://www.rangatpehnawa.com/",
-        "logo": "https://www.rangatpehnawa.com/logo.png",
+        "logo": "https://www.rangatpehnawa.com/images/RangatPehnawa.png",
         "sameAs": [
           "https://instagram.com/rangatpehnawa",
           "https://facebook.com/rangatpehnawa"

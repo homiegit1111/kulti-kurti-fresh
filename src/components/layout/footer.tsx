@@ -278,10 +278,13 @@ export function Footer() {
 
       {/* ── Giant Footer Typography & Bottom Bar ── */}
       <div className="relative w-full flex flex-col items-center justify-end overflow-hidden pt-10 lg:pt-0">
-        {/* Giant Text */}
-        <h1 className="text-[13vw] font-serif leading-[0.75] tracking-tighter whitespace-nowrap text-white/[0.04] select-none pointer-events-none">
+        {/* Giant decorative wordmark — not a heading (aria-hidden, div) */}
+        <div
+          aria-hidden="true"
+          className="text-[13vw] font-serif leading-[0.75] tracking-tighter whitespace-nowrap text-white/[0.04] select-none pointer-events-none"
+        >
           RANGAT PEHNAWA
-        </h1>
+        </div>
 
         {/* Soft Fade at Bottom */}
         <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-charcoal to-transparent pointer-events-none" />

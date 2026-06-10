@@ -1,312 +1,87 @@
-"use client";
+import type { Metadata } from "next";
+import { absoluteUrl } from "@/lib/seo";
+import { SHOP_FAQS } from "./faqs";
+import ShopClient from "./shop-client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
-import { getProducts, type MockProduct, COLOR_MAP } from "@/lib/shopify";
-import ShopLoading from "@/app/shop/loading";
-import { useWishlist } from "@/lib/wishlist-context";
-import { LivingProductCard } from "@/components/ui/living-product-card";
-import { ChevronDown, X } from "lucide-react";
+// Render on demand so the keyword H1, category copy and FAQ are in the raw HTML
+// Googlebot/AI crawlers receive (the client island reads ?cat/&sort/&color/&price,
+// which otherwise forces the Suspense fallback during static prerender).
+export const dynamic = "force-dynamic";
 
-const PRODUCT_REEL_VIDEO = "/videos/background.mp4";
-
-const sortOptions = [
-  { label: "Newest", value: "newest" },
-  { label: "Price: Low to High", value: "price-asc" },
-  { label: "Price: High to Low", value: "price-desc" },
-];
-
-const priceBands = [
-  { label: "Under ₹2,000", value: "under-2000", test: (p: number) => p < 2000 },
-  {
-    label: "₹2,000 – ₹5,000",
-    value: "2000-5000",
-    test: (p: number) => p >= 2000 && p <= 5000,
+export const metadata: Metadata = {
+  title: "Shop Kurtis for Women — Cotton, Daily & Festive Ethnic Wear",
+  description:
+    "Shop premium kurtis for women online in India — cotton daily kurtis, co-ord sets, anarkalis, lehengas & sarees. Sizes XS–XXL, COD, free shipping over ₹1,999.",
+  keywords: [
+    "kurti",
+    "kurtis for women",
+    "women kurti",
+    "daily kurti",
+    "cotton kurti",
+    "kurti online",
+    "ethnic wear for women",
+    "buy kurti online india",
+  ],
+  alternates: { canonical: "/shop" },
+  openGraph: {
+    title: "Shop Kurtis for Women | Rangat Pehnawa",
+    description:
+      "Premium cotton, daily & festive kurtis for women. Sizes XS–XXL, COD, free shipping over ₹1,999.",
+    url: "/shop",
+    type: "website",
+    locale: "en_IN",
+    siteName: "Rangat Pehnawa",
   },
-  { label: "₹5,000+", value: "5000-plus", test: (p: number) => p > 5000 },
-];
-
-function ShopContent() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const { isWishlisted, toggleWishlist } = useWishlist();
-
-  const [categories, setCategories] = useState([
-    "All",
-    "Kurtis",
-    "Lehengas",
-    "Co-ords",
-    "Sarees",
-  ]);
-  const [products, setProducts] = useState<MockProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // ── Filter state lives in the URL (shareable, SSR-friendly, back-button OK) ──
-  const activeCategory = searchParams.get("cat") ?? "All";
-  const sortBy = searchParams.get("sort") ?? "newest";
-  const activeColor = searchParams.get("color");
-  const activePrice = searchParams.get("price");
-
-  const setParam = (key: string, value: string | null) => {
-    const params = new URLSearchParams(Array.from(searchParams.entries()));
-    if (!value || value === "All" || value === "newest") params.delete(key);
-    else params.set(key, value);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
-
-  const toggleParam = (key: string, value: string) => {
-    setParam(key, searchParams.get(key) === value ? null : value);
-  };
-
-  const clearAll = () => router.replace(pathname, { scroll: false });
-
-  useEffect(() => {
-    getProducts().then((data) => {
-      setProducts(data);
-      const dynamicCategories = [
-        "All",
-        ...new Set(data.map((p) => p.category).filter(Boolean)),
-      ];
-      if (dynamicCategories.length > 1) setCategories(dynamicCategories);
-      setIsLoading(false);
-    });
-  }, []);
-
-  // Colors available across the catalog (for the swatch facet)
-  const availableColors = useMemo(
-    () => [...new Set(products.flatMap((p) => p.colors).filter(Boolean))],
-    [products],
-  );
-
-  const filtered = useMemo(() => {
-    const band = priceBands.find((b) => b.value === activePrice);
-    return products
-      .filter((p) => activeCategory === "All" || p.category === activeCategory)
-      .filter((p) => !activeColor || p.colors.includes(activeColor))
-      .filter((p) => !band || band.test(p.salePrice ?? p.price))
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "price-asc":
-            return (a.salePrice ?? a.price) - (b.salePrice ?? b.price);
-          case "price-desc":
-            return (b.salePrice ?? b.price) - (a.salePrice ?? a.price);
-          default:
-            return 0; // newest
-        }
-      });
-  }, [activeCategory, activeColor, activePrice, sortBy, products]);
-
-  const hasActiveFacets = Boolean(activeColor || activePrice) || activeCategory !== "All";
-
-  if (isLoading) return <ShopLoading />;
-
-  return (
-    <div className="bg-[#fcfbf9] min-h-screen text-charcoal font-sans selection:bg-gold selection:text-white flex flex-col">
-      <Navbar />
-
-      <main className="flex-1 relative z-10 pt-24 pb-32">
-        {/* ── SLEEK HEADER ── */}
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 mb-10 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            <h1 className="font-serif text-3xl sm:text-4xl text-charcoal font-light mb-4">
-              The Collection
-            </h1>
-            <p className="text-sm font-sans text-charcoal/50 max-w-xl mx-auto">
-              Modern heirlooms crafted for everyday elegance.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* ── REFINED STICKY FILTER BAR ── */}
-        <div className="sticky top-[72px] lg:top-20 z-40 bg-[#fcfbf9]/95 backdrop-blur-xl border-y border-charcoal/5 mb-12">
-          <div className="max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
-
-            {/* Pill Categories */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 hide-scrollbar">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setParam("cat", cat)}
-                  className={`px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
-                    activeCategory === cat
-                      ? "bg-charcoal text-white"
-                      : "bg-[#f2f4f7] text-charcoal/60 hover:bg-[#e4e7ec] hover:text-charcoal"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {/* Meta & Sort Dropdown */}
-            <div className="flex items-center justify-between w-full md:w-auto gap-6 shrink-0 relative">
-              <span className="text-[10px] font-medium text-charcoal/40 hidden lg:block">
-                {filtered.length} Results
-              </span>
-
-              <div className="relative">
-                <button
-                  onClick={() => setIsSortOpen(!isSortOpen)}
-                  className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
-                >
-                  Sort By: {sortOptions.find((o) => o.value === sortBy)?.label}
-                  <ChevronDown className={`w-3 h-3 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                <AnimatePresence>
-                  {isSortOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 top-full mt-4 w-48 bg-white shadow-xl rounded-2xl border border-charcoal/5 overflow-hidden z-50"
-                    >
-                      {sortOptions.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => {
-                            setParam("sort", opt.value);
-                            setIsSortOpen(false);
-                          }}
-                          className={`w-full text-left px-5 py-3 text-[10px] uppercase tracking-[0.2em] font-bold transition-colors ${
-                            sortBy === opt.value
-                              ? "bg-charcoal/5 text-charcoal"
-                              : "text-charcoal/50 hover:bg-charcoal/5 hover:text-charcoal"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-
-          {/* ── FACETS: price bands + color swatches ── */}
-          <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <div className="flex gap-2 flex-wrap">
-              {priceBands.map((band) => (
-                <button
-                  key={band.value}
-                  onClick={() => toggleParam("price", band.value)}
-                  className={`px-3.5 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
-                    activePrice === band.value
-                      ? "bg-charcoal text-white"
-                      : "bg-transparent border border-charcoal/15 text-charcoal/55 hover:border-charcoal/40 hover:text-charcoal"
-                  }`}
-                >
-                  {band.label}
-                </button>
-              ))}
-            </div>
-
-            {availableColors.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {availableColors.map((color) => {
-                  const swatch = COLOR_MAP[color.toLowerCase()] ?? "#D9D4CC";
-                  const isActive = activeColor === color;
-                  return (
-                    <button
-                      key={color}
-                      onClick={() => toggleParam("color", color)}
-                      title={color}
-                      aria-label={`Filter by ${color}`}
-                      aria-pressed={isActive}
-                      className={`w-5 h-5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
-                        isActive
-                          ? "ring-2 ring-charcoal ring-offset-2 ring-offset-[#fcfbf9]"
-                          : "ring-1 ring-charcoal/10 hover:ring-charcoal/30"
-                      }`}
-                      style={{ backgroundColor: swatch }}
-                    />
-                  );
-                })}
-              </div>
-            )}
-
-            {hasActiveFacets && (
-              <button
-                onClick={clearAll}
-                className="ml-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.15em] text-charcoal/50 hover:text-charcoal transition-colors"
-              >
-                <X className="w-3 h-3" /> Clear filters
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* ── DENSER PRODUCT GRID (4 columns on lg) ── */}
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-12">
-          <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-6 md:gap-y-12">
-            <AnimatePresence mode="popLayout">
-              {filtered.map((product, idx) => {
-                const hasVideo = idx % 5 === 0;
-                const videoUrl = hasVideo ? PRODUCT_REEL_VIDEO : undefined;
-                const isLiving = idx % 5 === 0;
-
-                return (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.4 }}
-                  >
-                    <LivingProductCard
-                      product={product}
-                      isWishlisted={isWishlisted(product.id)}
-                      onToggleWishlist={() => toggleWishlist(product)}
-                      videoUrl={videoUrl}
-                      isLiving={isLiving}
-                    />
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
-
-          {/* Minimal Empty State */}
-          {filtered.length === 0 && (
-            <div className="text-center py-32">
-              <p className="font-serif text-2xl text-charcoal/40 italic">
-                Nothing found in this collection.
-              </p>
-              {hasActiveFacets && (
-                <button
-                  onClick={clearAll}
-                  className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal underline underline-offset-4 hover:text-gold transition-colors"
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
-
-      <Footer />
-    </div>
-  );
-}
+};
 
 export default function ShopPage() {
+  // CollectionPage + BreadcrumbList + FAQPage structured data. CollectionPage
+  // tells Google/AI this is a category listing; FAQPage (mirrors the visible
+  // accordion) is eligible for AI Overviews and rich results.
+  const collectionLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Kurtis & Ethnic Wear for Women",
+    description:
+      "Premium women's kurtis and Indian ethnic wear — cotton daily kurtis, co-ord sets, anarkalis, lehengas and sarees.",
+    url: absoluteUrl("/shop"),
+    isPartOf: { "@id": absoluteUrl("/#website") },
+  };
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "Shop", item: absoluteUrl("/shop") },
+    ],
+  };
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: SHOP_FAQS.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: { "@type": "Answer", text: faq.a },
+    })),
+  };
+
   return (
-    <Suspense fallback={<ShopLoading />}>
-      <ShopContent />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
+      <ShopClient />
+    </>
   );
 }
