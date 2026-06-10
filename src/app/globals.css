@@ -723,6 +723,47 @@ a,
     z-index: 10000;
 }
 
+/* ── Mobile micro-interactions ──────────────────────────────────────────────
+   Tactile press feedback for touch devices. Hover sweeps never fire on touch,
+   so :active becomes the primary signal: CTAs ink instantly to deep gold and
+   compress a hair; cards and tap targets settle under the finger. Scoped to
+   (hover: none) so desktop keeps its slow cinematic transitions. */
+.btn-luxe,
+.btn-luxe-outline {
+    transition-property: color, background-color, border-color, transform;
+    transition-duration: 0.45s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: none) {
+    .btn-luxe:active:not(:disabled) {
+        background: hsl(37 45% 38%);
+        transform: scale(0.98);
+        transition-duration: 0.08s;
+    }
+
+    .btn-luxe-outline:active:not(:disabled) {
+        background: hsl(0 0% 10%);
+        color: hsl(40 20% 98%);
+        border-color: hsl(0 0% 10%);
+        transform: scale(0.98);
+        transition-duration: 0.08s;
+    }
+
+    .tap-luxe {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tap-luxe:active {
+        transform: scale(0.985);
+        transition-duration: 0.08s;
+    }
+
+    .link-luxe:active {
+        color: hsl(37 45% 45%);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

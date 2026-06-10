@@ -59,7 +59,7 @@ export const LivingProductCard = memo(function LivingProductCard({
 
   return (
     <div
-      className={`group relative w-full flex flex-col bg-transparent overflow-hidden ${heightClass}`}
+      className={`group tap-luxe relative w-full flex flex-col bg-transparent overflow-hidden ${heightClass}`}
       style={{
         willChange: "transform",
         backfaceVisibility: "hidden",
