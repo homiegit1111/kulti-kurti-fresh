@@ -7,7 +7,7 @@ export default function AboutLoading() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 bg-[#fcfbf9] relative pt-32 pb-24 min-h-screen flex flex-col items-center justify-center">
+      <main className="flex-1 bg-warm-white relative pt-32 pb-24 min-h-screen flex flex-col items-center justify-center">
         <div className="max-w-5xl mx-auto px-6 w-full relative z-10">
           
           {/* Header Skeleton */}

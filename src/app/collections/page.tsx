@@ -39,7 +39,7 @@ export default function CollectionsPage() {
   };
 
   return (
-    <div className="bg-[#fcfbf9] min-h-screen text-charcoal flex flex-col font-sans selection:bg-gold selection:text-white">
+    <div className="bg-warm-white min-h-screen text-charcoal flex flex-col font-sans selection:bg-gold selection:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}

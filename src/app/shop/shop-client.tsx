@@ -248,7 +248,7 @@ function ShopContent({
                       aria-pressed={isActive}
                       className={`w-5 h-5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
                         isActive
-                          ? "ring-2 ring-charcoal ring-offset-2 ring-offset-[#fcfbf9]"
+                          ? "ring-2 ring-charcoal ring-offset-2 ring-offset-warm-white"
                           : "ring-1 ring-charcoal/10 hover:ring-charcoal/30"
                       }`}
                       style={{ backgroundColor: swatch }}

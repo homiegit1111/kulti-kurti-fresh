@@ -8,7 +8,7 @@ export default function AboutPage() {
     <>
       <Navbar />
 
-      <main className="flex-1 bg-[#fcfbf9] relative pt-32 pb-24 min-h-screen flex flex-col items-center justify-center">
+      <main className="flex-1 bg-warm-white relative pt-32 pb-24 min-h-screen flex flex-col items-center justify-center">
         {/* Subtle Background Elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] bg-orange-300/10 rounded-full blur-[120px]" />

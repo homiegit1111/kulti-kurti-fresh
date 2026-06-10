@@ -72,7 +72,7 @@ export default async function LookbookPage() {
     <>
       <Navbar />
 
-      <main className="flex-1 bg-[#fcfbf9] relative pt-32 pb-24 min-h-screen">
+      <main className="flex-1 bg-warm-white relative pt-32 pb-24 min-h-screen">
         <div className="max-w-6xl mx-auto px-6 w-full relative z-10">
           {/* Header */}
           <div className="text-center mb-16">

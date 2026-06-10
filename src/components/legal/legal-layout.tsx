@@ -16,7 +16,7 @@ export function LegalLayout({
   children: ReactNode;
 }) {
   return (
-    <main className="flex-1 bg-[#fcfbf9] relative pt-32 pb-24 min-h-screen">
+    <main className="flex-1 bg-warm-white relative pt-32 pb-24 min-h-screen">
       <div className="max-w-3xl mx-auto px-6 w-full">
         <div className="mb-12">
           <div className="inline-flex items-center gap-2 mb-4">

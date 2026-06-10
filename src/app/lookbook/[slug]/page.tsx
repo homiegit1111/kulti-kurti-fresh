@@ -140,7 +140,7 @@ export default async function EditorialDetailPage({
     <>
       <Navbar />
 
-      <main className="flex-1 bg-[#fcfbf9] relative pt-28 pb-24 min-h-screen">
+      <main className="flex-1 bg-warm-white relative pt-28 pb-24 min-h-screen">
         <article className="max-w-3xl mx-auto px-6 w-full">
           <Link
             href="/lookbook"

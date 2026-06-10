@@ -7,7 +7,7 @@ export default function ShopLoading() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 relative z-10 bg-[#fcfbf9] pt-28 lg:pt-32 overflow-hidden min-h-screen">
+      <main className="flex-1 relative z-10 bg-warm-white pt-28 lg:pt-32 overflow-hidden min-h-screen">
         {/* Header Skeleton */}
         <div className="px-4 lg:px-20 mb-10 flex flex-col items-center text-center relative z-10">
           <div className="h-[1px] w-12 bg-charcoal/10 mb-4 animate-pulse" />

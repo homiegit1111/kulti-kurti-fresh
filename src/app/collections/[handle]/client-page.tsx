@@ -38,7 +38,7 @@ const THEMES: Record<string, CollectionTheme> = {
   },
 };
 const DEFAULT_THEME = {
-  bg: "bg-[#fcfbf9]",
+  bg: "bg-warm-white",
   text: "text-charcoal",
   accent: "text-gold",
 };
