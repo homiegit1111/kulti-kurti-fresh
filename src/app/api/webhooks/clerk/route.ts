@@ -28,7 +28,19 @@ export async function POST(req: NextRequest) {
   // Create a new Svix instance with your secret.
   const wh = new Webhook(WEBHOOK_SECRET);
 
-  let evt: any;
+  type ClerkEmailAddress = { id: string; email_address: string };
+  type ClerkWebhookEvent = {
+    type: string;
+    data: {
+      id: string;
+      first_name?: string | null;
+      last_name?: string | null;
+      primary_email_address_id?: string | null;
+      email_addresses?: ClerkEmailAddress[];
+    };
+  };
+
+  let evt: ClerkWebhookEvent;
 
   // Verify the payload with the headers
   try {
@@ -36,7 +48,7 @@ export async function POST(req: NextRequest) {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
-    });
+    }) as ClerkWebhookEvent;
   } catch (err) {
     console.error("[clerk-webhook] Error verifying webhook:", err);
     return NextResponse.json({ error: "Error occurred verifying webhook" }, { status: 400 });
@@ -47,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   if (eventType === "user.created" || eventType === "user.updated") {
     const { id, email_addresses, first_name, last_name } = evt.data;
-    const primaryEmail = email_addresses?.find((e: any) => e.id === evt.data.primary_email_address_id)?.email_address || email_addresses?.[0]?.email_address;
+    const primaryEmail = email_addresses?.find((e) => e.id === evt.data.primary_email_address_id)?.email_address || email_addresses?.[0]?.email_address;
 
     if (primaryEmail) {
       try {

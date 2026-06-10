@@ -104,7 +104,7 @@ const CUSTOMER_QUERY = `
 // ── Exported Methods ───────────────────────────────────────────────────────────
 
 export async function registerCustomer(input: Record<string, unknown>) {
-  const data = await shopifyAuthFetch<{ customerCreate?: { customerUserErrors?: any[], customer?: any } }>(CUSTOMER_CREATE_MUTATION, { input });
+  const data = await shopifyAuthFetch<{ customerCreate?: { customerUserErrors?: { message: string }[]; customer?: Record<string, unknown> } }>(CUSTOMER_CREATE_MUTATION, { input });
   
   const errors = data?.customerCreate?.customerUserErrors;
   if (errors && errors.length > 0) {
@@ -115,7 +115,7 @@ export async function registerCustomer(input: Record<string, unknown>) {
 }
 
 export async function loginCustomer(input: Record<string, unknown>) {
-  const data = await shopifyAuthFetch<{ customerAccessTokenCreate?: { customerUserErrors?: any[], customerAccessToken?: any } }>(CUSTOMER_ACCESS_TOKEN_CREATE_MUTATION, { input });
+  const data = await shopifyAuthFetch<{ customerAccessTokenCreate?: { customerUserErrors?: { message: string }[]; customerAccessToken?: Record<string, unknown> } }>(CUSTOMER_ACCESS_TOKEN_CREATE_MUTATION, { input });
   
   const errors = data?.customerAccessTokenCreate?.customerUserErrors;
   if (errors && errors.length > 0) {
@@ -126,6 +126,6 @@ export async function loginCustomer(input: Record<string, unknown>) {
 }
 
 export async function getCustomer(customerAccessToken: string) {
-  const data = await shopifyAuthFetch<{ customer?: any }>(CUSTOMER_QUERY, { customerAccessToken });
+  const data = await shopifyAuthFetch<{ customer?: Record<string, unknown> }>(CUSTOMER_QUERY, { customerAccessToken });
   return data?.customer;
 }

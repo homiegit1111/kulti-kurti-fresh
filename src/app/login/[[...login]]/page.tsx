@@ -4,12 +4,27 @@ import * as React from "react";
 import { useSignIn, useSignUp, useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Sparkles, MoveRight } from "lucide-react";
+import { ArrowLeft, Loader2, MoveRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 
 type Step = "email" | "name" | "otp";
 type AuthFlow = "signin" | "signup" | null;
+
+// Clerk surfaces field-level errors on an `errors` array; this narrows the
+// unknown error object so we can read messages without `any`.
+type ClerkFieldError = { code?: string; longMessage?: string; message?: string };
+function clerkFieldErrors(error: unknown): ClerkFieldError[] {
+  if (
+    error &&
+    typeof error === "object" &&
+    "errors" in error &&
+    Array.isArray((error as { errors?: unknown }).errors)
+  ) {
+    return (error as { errors: ClerkFieldError[] }).errors;
+  }
+  return [];
+}
 
 const QUOTES = [
   "Welcome to Pehnawa — The Art of Rangat.",
@@ -63,7 +78,7 @@ export default function UnifiedAuthPage() {
         redirectUrl: "/account",
         redirectCallbackUrl: "/sso-callback",
       });
-    } catch (err: any) {
+    } catch {
       setLocalError("An error occurred during SSO.");
     }
   };
@@ -76,12 +91,12 @@ export default function UnifiedAuthPage() {
     const { error } = await signIn.emailCode.sendCode({ emailAddress });
 
     if (error) {
-      const isNotFound = (error as any).errors?.some((e: any) => e.code === "form_identifier_not_found");
+      const isNotFound = clerkFieldErrors(error).some((e) => e.code === "form_identifier_not_found");
       if (isNotFound) {
         setAuthFlow("signup");
         setStep("name");
       } else {
-        setLocalError((error as any).errors?.[0]?.longMessage || "Something went wrong.");
+        setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Something went wrong.");
       }
     } else {
       setAuthFlow("signin");
@@ -101,14 +116,14 @@ export default function UnifiedAuthPage() {
     });
 
     if (createError) {
-      setLocalError((createError as any).errors?.[0]?.longMessage || "Sign up failed. Please try again.");
+      setLocalError(clerkFieldErrors(createError)[0]?.longMessage || "Sign up failed. Please try again.");
       return;
     }
 
     const { error: sendError } = await signUp.verifications.sendEmailCode();
 
     if (sendError) {
-      setLocalError((sendError as any).errors?.[0]?.longMessage || "Failed to send code.");
+      setLocalError(clerkFieldErrors(sendError)[0]?.longMessage || "Failed to send code.");
     } else {
       setStep("otp");
     }
@@ -123,7 +138,7 @@ export default function UnifiedAuthPage() {
       const { error } = await signIn.emailCode.verifyCode({ code });
       
       if (error) {
-        setLocalError((error as any).errors?.[0]?.longMessage || "Invalid verification code.");
+        setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
         return;
       }
 
@@ -138,7 +153,7 @@ export default function UnifiedAuthPage() {
       const { error } = await signUp.verifications.verifyEmailCode({ code });
       
       if (error) {
-        setLocalError((error as any).errors?.[0]?.longMessage || "Invalid verification code.");
+        setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
         return;
       }
 

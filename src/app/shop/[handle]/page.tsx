@@ -10,13 +10,16 @@ export async function generateMetadata(
 
   if (!product) {
     return {
-      title: "Product Not Found | Rangat Pehnawa",
+      title: "Product Not Found",
     };
   }
 
   return {
-    title: `${product.title} | Rangat Pehnawa`,
+    title: product.title,
     description: product.description,
+    alternates: {
+      canonical: `/shop/${product.handle}`,
+    },
     openGraph: {
       title: `${product.title} | Rangat Pehnawa`,
       description: product.description,

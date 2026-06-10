@@ -71,6 +71,7 @@ export default function CheckoutPage() {
       });
       return () => {
         isMounted = false;
+        clearTimeout(timer);
       };
     }
   }, [checkoutUrl, items, shopifyCartEnabled]);

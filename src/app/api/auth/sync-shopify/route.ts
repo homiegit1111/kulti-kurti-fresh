@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { ensureShopifyCustomer, isShopifyAdminConfigured } from "@/lib/server/shopify-admin";
 
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 const json = (body: Record<string, unknown>, status = 200) =>
   NextResponse.json(body, { status });
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export async function POST(): Promise<NextResponse> {
   const { userId } = await auth();
 
   if (!userId) {

@@ -12,10 +12,20 @@ export const viewport = {
   themeColor: "#1a1a1a",
 };
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  "https://www.rangatpehnawa.com";
+
 export const metadata: Metadata = {
-  title: "Rangat Pehnawa | Redefining Indian Fashion",
+  // Resolves all relative OpenGraph/Twitter/canonical URLs to absolute ones.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Rangat Pehnawa | Redefining Indian Fashion",
+    template: "%s | Rangat Pehnawa",
+  },
   description:
     "Discover handcrafted Indian fashion that blends tradition with contemporary elegance. Shop premium kurtis, lehengas, sarees, and co-ord sets at Rangat Pehnawa.",
+  applicationName: "Rangat Pehnawa",
   keywords: [
     "Indian fashion",
     "kurtis",
@@ -26,23 +36,42 @@ export const metadata: Metadata = {
     "handcrafted fashion",
     "premium Indian wear",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Rangat Pehnawa | Redefining Indian Fashion",
     description:
       "Where tradition meets contemporary elegance. Handcrafted pieces that tell your story.",
+    url: "/",
     type: "website",
     locale: "en_IN",
     siteName: "Rangat Pehnawa",
+    images: [
+      {
+        url: "/images/hero.png",
+        width: 1200,
+        height: 630,
+        alt: "Rangat Pehnawa — handcrafted Indian fashion",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Rangat Pehnawa | Redefining Indian Fashion",
     description:
       "Where tradition meets contemporary elegance. Handcrafted pieces that tell your story.",
+    images: ["/images/hero.png"],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

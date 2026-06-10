@@ -32,6 +32,8 @@ export default function AccountPage() {
       router.push("/login?redirect=/account");
     }
     if (user) {
+      // Seed the editable profile form from the Clerk user once it resolves.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFirstName(user.firstName || "");
       setLastName(user.lastName || "");
     }
@@ -39,6 +41,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (isLoaded && user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOrdersLoading(true);
       fetch("/api/account/orders")
         .then((res) => res.json())
@@ -63,8 +66,13 @@ export default function AccountPage() {
       await user.update({ firstName, lastName });
       setUpdateMessage("Profile updated successfully.");
       setTimeout(() => setUpdateMessage(""), 3000);
-    } catch (err: any) {
-      setUpdateMessage(err.errors?.[0]?.longMessage || "An error occurred.");
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "errors" in err
+          ? (err as { errors?: { longMessage?: string }[] }).errors?.[0]
+              ?.longMessage
+          : undefined;
+      setUpdateMessage(message || "An error occurred.");
     } finally {
       setIsUpdating(false);
     }
