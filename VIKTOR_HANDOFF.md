@@ -159,13 +159,44 @@ production build:
 
 ---
 
+## 7c. Final sprint — June 10, 2026 (evening, on `main`)
+
+Four workstreams shipped in one pass (`89127d4..` series):
+
+**Leftovers**
+- `warm-white` token unified everywhere (`bg-[#fcfbf9]` literals gone except manifest/email hexes, which are intentional).
+- Mobile micro-interactions: `@media (hover: none)` block in `globals.css` — `:active` press states for `.btn-luxe`/`.btn-luxe-outline`/`.link-luxe` + new `.tap-luxe` utility (applied to product cards & PDP size pills).
+- **CSP nonce architecture** (`src/lib/server/csp.ts` + `src/proxy.ts`):
+  - Dynamic routes (`/shop*`, `/collections/[handle]`, `/login`, `/sign-up`) get per-request `'nonce-…' 'strict-dynamic'`; middleware sets the CSP on *request* headers so Next stamps the nonce onto framework scripts.
+  - Static/ISR routes (home, lookbook, cart, legal…) **cannot** carry a nonce (prerendered HTML) → they keep the hardened allowlist policy. ⚠️ If you make a new page dynamic, add its prefix to `DYNAMIC_ROUTE_PREFIXES` in `csp.ts`; if you blanket-apply strict-dynamic, static pages break.
+  - Static CSP was removed from `next.config.ts` (two CSP headers enforce their intersection).
+
+**Lifecycle emails (Resend)**
+- `src/lib/server/email.ts` — shared branded shell (`renderBrandedEmail`) + `sendBrandedEmail` wrapper (graceful no-key no-op, `EMAIL_FROM` fallback, per-kind `*_FROM` overrides). Abandoned-cart pipeline was already fully wired — untouched.
+- **Wishlist nudge**: `src/lib/server/wishlist-nudge.ts` + `/api/cron/wishlist-nudge` (daily 9:00). Items ≥ `WISHLIST_NUDGE_DAYS` (3) old, per-user cooldown `WISHLIST_NUDGE_COOLDOWN_DAYS` (21) stamped in `wishlist_nudges` table. Emails resolved from `profiles`.
+- **Back-in-stock & size alerts**: `/api/stock-alerts` (POST, guest-allowed, validated + rate-limited 5/min) + PDP `StockAlertForm` (shows when sold out, picks up selected size) + `/api/cron/stock-alerts` (every 4h, emails + stamps `notified_at`).
+- Shared `requireCronSecret` guard in `src/lib/server/cron-auth.ts`; all 3 crons scheduled in `vercel.json`.
+
+**Customer reviews with photos**
+- `supabase/reviews_schema.sql` — `product_reviews` (rating 1–5, body 10–2000, `photo_urls[]`, `status published|hidden`, unique per user+product). RLS: public read of published only; **no write policies** — service-role API is the sole write path.
+- `/api/reviews` — GET public (s-maxage=60), POST multipart (Clerk auth, ≤3 photos, ≤5MB, jpeg/png/webp; author name derived server-side from `currentUser()`, never client-supplied).
+- PDP: `ReviewsSection` ("Client Voices / Worn & loved") in `client-page.tsx`; server `page.tsx` emits `aggregateRating` + top-5 `review` JSON-LD **only when real reviews exist**.
+
+**⚠️ Manual Supabase steps (one-time, required before these features go live)**
+1. Run `supabase/lifecycle_schema.sql` (after `wishlist_profile_schema.sql`).
+2. Run `supabase/reviews_schema.sql`.
+3. Create a **public** storage bucket named `review-photos`.
+4. Set env: `RESEND_API_KEY`, `CRON_SECRET`, optionally `EMAIL_FROM` / `WISHLIST_NUDGE_FROM` / `STOCK_ALERT_FROM`.
+
+---
+
 ## 8. 🔭 Open items / next ideas
 
-1. **Wire an ESP** into `sendAbandonedCartEmail` (the only TODO in the abandoned-cart pipeline). `resend` is already in `package.json` — finish the integration.
-2. **Real Portable Text rendering** on lookbook detail (`@portabletext/react`, already added to deps) — currently fallback content.
-3. **CSP nonce/hash lockdown** — drop `unsafe-inline` / `unsafe-eval` from the enforcing CSP.
-4. **Server-side Shopify `productFilters`** — move faceted filtering server-side.
-5. **Real delivery** for `/api/contact` + a newsletter provider.
+1. **Real Portable Text rendering** on lookbook detail (`@portabletext/react`, already added to deps) — currently fallback content.
+2. **Server-side Shopify `productFilters`** — move faceted filtering server-side.
+3. **Real delivery** for `/api/contact` + a newsletter provider.
+4. **Review moderation surface** — flip `status` to `hidden` via Supabase dashboard for now; a tiny admin view would be nicer.
+5. **CSP**: consider hashing the static pages' inline bootstrap scripts to drop `unsafe-inline` there too.
 
 ---
 
@@ -176,8 +207,11 @@ Build-minimum (dummy) — see §3. Feature flags / integrations (all documented 
 ```
 NEXT_PUBLIC_GA_MEASUREMENT_ID        # turns on GA4
 NEXT_PUBLIC_SHOP_PAY_ENABLED         # shows Shop Pay express button
-CRON_SECRET                          # secures the abandoned-cart cron
+CRON_SECRET                          # secures ALL cron endpoints (abandoned-cart, wishlist-nudge, stock-alerts)
 ABANDONED_CART_THRESHOLD_MINUTES
+RESEND_API_KEY                       # lifecycle emails; without it sweeps no-op gracefully
+EMAIL_FROM                           # default From; ABANDONED_CART_FROM / WISHLIST_NUDGE_FROM / STOCK_ALERT_FROM override per kind
+WISHLIST_NUDGE_DAYS / WISHLIST_NUDGE_COOLDOWN_DAYS   # defaults 3 / 21
 NEXT_PUBLIC_SANITY_PROJECT_ID / _DATASET / _API_VERSION
 SANITY_API_READ_TOKEN
 # + Shopify Storefront, Clerk, Supabase, Turnstile keys
