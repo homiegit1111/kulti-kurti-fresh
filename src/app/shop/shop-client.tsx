@@ -123,29 +123,34 @@ function ShopContent({
   const hasActiveFacets = Boolean(activeColor || activePrice) || activeCategory !== "All";
 
   return (
-    <div className="bg-[#fcfbf9] min-h-screen text-charcoal font-sans selection:bg-gold selection:text-white flex flex-col">
+    <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
       <Navbar />
 
-      <main className="flex-1 relative z-10 pt-24 pb-32">
-        {/* ── SLEEK HEADER ── */}
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 mb-10 text-center">
+      <main className="flex-1 relative z-10 pt-28 lg:pt-36 pb-32">
+        {/* ── EDITORIAL HEADER ── */}
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 mb-12">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
+            className="flex flex-col md:flex-row md:items-end md:justify-between gap-6"
           >
-            <h1 className="font-serif text-3xl sm:text-4xl text-charcoal font-light mb-4">
-              Kurtis &amp; Ethnic Wear for Women
-            </h1>
-            <p className="text-sm font-sans text-charcoal/50 max-w-xl mx-auto">
-              Daily kurtis, co-ord sets, lehengas &amp; sarees — modern heirlooms
-              crafted for everyday elegance.
+            <div>
+              <p className="eyebrow mb-3">The Atelier</p>
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-charcoal font-light tracking-tight">
+                Kurtis &amp; Ethnic Wear{" "}
+                <span className="italic text-charcoal/70">for Women</span>
+              </h1>
+            </div>
+            <p className="text-sm font-sans text-charcoal/50 max-w-xs leading-relaxed md:text-right md:pb-2">
+              Daily kurtis, co-ord sets, lehengas &amp; sarees — modern
+              heirlooms crafted for everyday elegance.
             </p>
           </motion.div>
         </div>
 
         {/* ── REFINED STICKY FILTER BAR ── */}
-        <div className="sticky top-[72px] lg:top-20 z-40 bg-[#fcfbf9]/95 backdrop-blur-xl border-y border-charcoal/5 mb-12">
+        <div className="sticky top-[72px] lg:top-20 z-40 bg-warm-white/95 backdrop-blur-xl border-y border-charcoal/10 mb-14">
           <div className="max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
 
             {/* Pill Categories */}
@@ -154,10 +159,10 @@ function ShopContent({
                 <button
                   key={cat}
                   onClick={() => setParam("cat", cat)}
-                  className={`px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                  className={`relative px-1 py-2 text-[10px] font-bold uppercase tracking-[0.22em] transition-colors duration-300 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 after:absolute after:left-0 after:-bottom-px after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-gold after:transition-transform after:duration-400 mr-5 last:mr-0 ${
                     activeCategory === cat
-                      ? "bg-charcoal text-white"
-                      : "bg-[#f2f4f7] text-charcoal/60 hover:bg-[#e4e7ec] hover:text-charcoal"
+                      ? "text-charcoal after:scale-x-100 after:origin-left"
+                      : "text-charcoal/40 hover:text-charcoal hover:after:scale-x-100 hover:after:origin-left"
                   }`}
                 >
                   {cat}
@@ -167,8 +172,8 @@ function ShopContent({
 
             {/* Meta & Sort Dropdown */}
             <div className="flex items-center justify-between w-full md:w-auto gap-6 shrink-0 relative">
-              <span className="text-[10px] font-medium text-charcoal/40 hidden lg:block">
-                {filtered.length} Results
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal/35 hidden lg:block">
+                {filtered.length} Pieces
               </span>
 
               <div className="relative">
@@ -186,7 +191,7 @@ function ShopContent({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 top-full mt-4 w-48 bg-white shadow-xl rounded-2xl border border-charcoal/5 overflow-hidden z-50"
+                      className="absolute right-0 top-full mt-4 w-52 bg-white shadow-[0_24px_48px_-16px_rgba(0,0,0,0.15)] border border-charcoal/10 overflow-hidden z-50"
                     >
                       {sortOptions.map((opt) => (
                         <button
@@ -218,10 +223,10 @@ function ShopContent({
                 <button
                   key={band.value}
                   onClick={() => toggleParam("price", band.value)}
-                  className={`px-3.5 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.15em] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                  className={`px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
                     activePrice === band.value
-                      ? "bg-charcoal text-white"
-                      : "bg-transparent border border-charcoal/15 text-charcoal/55 hover:border-charcoal/40 hover:text-charcoal"
+                      ? "bg-charcoal text-white border-charcoal"
+                      : "bg-transparent border-charcoal/15 text-charcoal/55 hover:border-charcoal/50 hover:text-charcoal"
                   }`}
                 >
                   {band.label}
@@ -323,9 +328,10 @@ function ShopContent({
         </div>
 
         {/* ── SEO / GEO content: crawlable copy + FAQ (mirrors FAQPage JSON-LD) ── */}
-        <section className="max-w-3xl mx-auto px-6 lg:px-12 mt-28 border-t border-charcoal/10 pt-16">
-          <h2 className="font-serif text-2xl text-charcoal font-light mb-5">
-            Shop Premium Kurtis Online in India
+        <section className="max-w-3xl mx-auto px-6 lg:px-12 mt-32 border-t border-charcoal/10 pt-20">
+          <p className="eyebrow mb-4">The House</p>
+          <h2 className="font-serif text-3xl text-charcoal font-light mb-6">
+            Shop Premium Kurtis <span className="italic">Online in India</span>
           </h2>
           <div className="space-y-4 text-sm leading-relaxed text-charcoal/60 font-sans">
             <p>
@@ -344,17 +350,17 @@ function ShopContent({
             </p>
           </div>
 
-          <h2 className="font-serif text-2xl text-charcoal font-light mt-12 mb-5">
-            Frequently Asked Questions
+          <h2 className="font-serif text-3xl text-charcoal font-light mt-16 mb-8">
+            Frequently <span className="italic">Asked</span>
           </h2>
           <div className="divide-y divide-charcoal/10 border-y border-charcoal/10">
             {SHOP_FAQS.map((faq) => (
-              <details key={faq.q} className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-charcoal">
+              <details key={faq.q} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-serif text-base text-charcoal transition-colors hover:text-gold-dark">
                   {faq.q}
-                  <ChevronDown className="w-4 h-4 text-charcoal/40 transition-transform group-open:rotate-180" />
+                  <ChevronDown className="w-4 h-4 shrink-0 text-gold transition-transform duration-300 group-open:rotate-180" />
                 </summary>
-                <p className="mt-3 text-sm leading-relaxed text-charcoal/60 font-sans">
+                <p className="mt-4 text-sm leading-relaxed text-charcoal/60 font-sans max-w-xl">
                   {faq.a}
                 </p>
               </details>

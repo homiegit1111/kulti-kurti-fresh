@@ -4,7 +4,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, Plus } from "lucide-react";
+import { Heart, Plus, X } from "lucide-react";
 import { formatPrice, type MockProduct } from "@/lib/shopify";
 import { useCart } from "@/lib/cart-context";
 
@@ -59,7 +59,7 @@ export const LivingProductCard = memo(function LivingProductCard({
 
   return (
     <div
-      className={`group relative w-full flex flex-col bg-[#fcfbf9] overflow-hidden ${heightClass}`}
+      className={`group relative w-full flex flex-col bg-transparent overflow-hidden ${heightClass}`}
       style={{
         willChange: "transform",
         backfaceVisibility: "hidden",
@@ -158,49 +158,52 @@ export const LivingProductCard = memo(function LivingProductCard({
               ? `${product.title} is sold out`
               : `Add ${product.title} to cart in size M`
           }
-          className={`absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 z-30 flex min-h-11 items-center gap-2 px-4 md:px-6 py-3 text-[9px] font-bold uppercase tracking-[0.2em] transform translate-y-0 opacity-100 md:translate-y-8 md:opacity-0 group-hover:translate-y-0 group-hover:opacity-100 active:scale-[0.98] transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 ${
+          className={`absolute z-30 transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 active:scale-[0.97]
+            bottom-3 right-3 flex h-10 w-10 items-center justify-center
+            md:bottom-0 md:right-0 md:h-11 md:w-full md:gap-2 md:translate-y-full md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 ${
             soldOut
-              ? "bg-white/80 text-charcoal/40 cursor-not-allowed"
-              : "bg-white text-charcoal hover:bg-charcoal hover:text-white"
+              ? "bg-white/85 text-charcoal/40 cursor-not-allowed"
+              : "bg-charcoal/90 backdrop-blur-sm text-white hover:bg-charcoal"
           }`}
         >
           {soldOut ? (
-            <span>Sold Out</span>
+            <span className="hidden md:inline text-[9px] font-bold uppercase tracking-[0.25em]">
+              Sold Out
+            </span>
           ) : (
-            <>
-              <span>Add to Cart</span>
-              <Plus className="h-3 w-3" strokeWidth={2} />
-            </>
+            <span className="hidden md:inline text-[9px] font-bold uppercase tracking-[0.25em]">
+              Add to Cart
+            </span>
+          )}
+          {soldOut ? (
+            <X className="h-3.5 w-3.5 md:hidden" strokeWidth={1.5} />
+          ) : (
+            <Plus className="h-3.5 w-3.5 md:h-3 md:w-3" strokeWidth={1.5} />
           )}
         </button>
       </Link>
 
-      {/* Content Below Image - Formal & Compact */}
-      <div className="pt-4 pb-6 px-1 flex flex-col items-center text-center">
-        <p className="text-[9px] uppercase tracking-[0.2em] text-charcoal/40 font-bold mb-1.5">
+      {/* Content Below Image — editorial, left-aligned */}
+      <div className="pt-4 pb-6 pr-1 flex flex-col items-start text-left">
+        <p className="text-[8.5px] uppercase tracking-[0.28em] text-gold-dark/80 font-bold mb-1.5">
           {product.category}
         </p>
-        <Link
-          href={`/shop/${product.handle}`}
-          className="transition-colors"
-        >
-          <h3 className="font-serif text-base md:text-lg text-charcoal font-light tracking-tight leading-snug mb-1.5 line-clamp-2 group-hover:text-gold transition-colors">
-            {product.title}
+        <Link href={`/shop/${product.handle}`} className="transition-colors">
+          <h3 className="font-serif text-base md:text-[19px] text-charcoal font-light tracking-tight leading-snug mb-1 line-clamp-2">
+            <span className="link-luxe">{product.title}</span>
           </h3>
-          {/* Gold underline reveal on hover */}
-          <span className="mx-auto block h-px w-0 bg-gold/70 transition-all duration-500 ease-out group-hover:w-6" />
         </Link>
         {onSale ? (
-          <p className="mt-2 flex items-baseline justify-center gap-2 tracking-widest">
-            <span className="text-[10px] font-semibold text-charcoal">
+          <p className="mt-1.5 flex items-baseline gap-2.5">
+            <span className="font-serif text-sm text-charcoal">
               {formatPrice(product.salePrice as number)}
             </span>
-            <span className="text-[10px] font-medium text-charcoal/35 line-through">
+            <span className="text-[10px] font-medium text-charcoal/35 line-through tracking-wider">
               {formatPrice(product.price)}
             </span>
           </p>
         ) : (
-          <p className="mt-2 text-[10px] font-medium text-charcoal/60 tracking-widest">
+          <p className="mt-1.5 font-serif text-sm text-charcoal/75">
             {formatPrice(product.price)}
           </p>
         )}
