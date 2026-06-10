@@ -48,6 +48,7 @@ export default function UnifiedAuthPage() {
   const [localError, setLocalError] = React.useState("");
   const [focused, setFocused] = React.useState(false);
   const [quoteIndex, setQuoteIndex] = React.useState(0);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Form Fields
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -68,7 +69,7 @@ export default function UnifiedAuthPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const isLoading = signInFetchStatus === "fetching" || signUpFetchStatus === "fetching";
+  const isLoading = !isLoaded || isSubmitting;
 
   const handleOAuth = async (strategy: "oauth_google") => {
     if (!isLoaded || !signIn) return;
@@ -87,20 +88,25 @@ export default function UnifiedAuthPage() {
     e.preventDefault();
     if (!isLoaded || !signIn) return;
     setLocalError("");
+    setIsSubmitting(true);
 
-    const { error } = await signIn.emailCode.sendCode({ emailAddress });
+    try {
+      const { error } = await signIn.emailCode.sendCode({ emailAddress });
 
-    if (error) {
-      const isNotFound = clerkFieldErrors(error).some((e) => e.code === "form_identifier_not_found");
-      if (isNotFound) {
-        setAuthFlow("signup");
-        setStep("name");
+      if (error) {
+        const isNotFound = clerkFieldErrors(error).some((e) => e.code === "form_identifier_not_found");
+        if (isNotFound) {
+          setAuthFlow("signup");
+          setStep("name");
+        } else {
+          setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Something went wrong.");
+        }
       } else {
-        setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Something went wrong.");
+        setAuthFlow("signin");
+        setStep("otp");
       }
-    } else {
-      setAuthFlow("signin");
-      setStep("otp");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -108,24 +114,29 @@ export default function UnifiedAuthPage() {
     e.preventDefault();
     if (!isLoaded || !signUp) return;
     setLocalError("");
+    setIsSubmitting(true);
 
-    const { error: createError } = await signUp.create({
-      emailAddress,
-      firstName,
-      lastName,
-    });
+    try {
+      const { error: createError } = await signUp.create({
+        emailAddress,
+        firstName,
+        lastName,
+      });
 
-    if (createError) {
-      setLocalError(clerkFieldErrors(createError)[0]?.longMessage || "Sign up failed. Please try again.");
-      return;
-    }
+      if (createError) {
+        setLocalError(clerkFieldErrors(createError)[0]?.longMessage || "Sign up failed. Please try again.");
+        return;
+      }
 
-    const { error: sendError } = await signUp.verifications.sendEmailCode();
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
 
-    if (sendError) {
-      setLocalError(clerkFieldErrors(sendError)[0]?.longMessage || "Failed to send code.");
-    } else {
-      setStep("otp");
+      if (sendError) {
+        setLocalError(clerkFieldErrors(sendError)[0]?.longMessage || "Failed to send code.");
+      } else {
+        setStep("otp");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -133,37 +144,42 @@ export default function UnifiedAuthPage() {
     e.preventDefault();
     if (!isLoaded || !signIn || !signUp) return;
     setLocalError("");
+    setIsSubmitting(true);
 
-    if (authFlow === "signin") {
-      const { error } = await signIn.emailCode.verifyCode({ code });
-      
-      if (error) {
-        setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
-        return;
-      }
+    try {
+      if (authFlow === "signin") {
+        const { error } = await signIn.emailCode.verifyCode({ code });
+        
+        if (error) {
+          setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
+          return;
+        }
 
-      if (signIn.status === "complete") {
-        await signIn.finalize({
-          navigate: ({ decorateUrl }) => router.push(decorateUrl("/account")),
-        });
-      } else {
-        setLocalError("Additional verification needed.");
-      }
-    } else if (authFlow === "signup") {
-      const { error } = await signUp.verifications.verifyEmailCode({ code });
-      
-      if (error) {
-        setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
-        return;
-      }
+        if (signIn.status === "complete") {
+          await signIn.finalize({
+            navigate: ({ decorateUrl }) => router.push(decorateUrl("/account")),
+          });
+        } else {
+          setLocalError("Additional verification needed.");
+        }
+      } else if (authFlow === "signup") {
+        const { error } = await signUp.verifications.verifyEmailCode({ code });
+        
+        if (error) {
+          setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
+          return;
+        }
 
-      if (signUp.status === "complete") {
-        await signUp.finalize({
-          navigate: ({ decorateUrl }) => router.push(decorateUrl("/account")),
-        });
-      } else {
-        setLocalError("Sign up verification incomplete.");
+        if (signUp.status === "complete") {
+          await signUp.finalize({
+            navigate: ({ decorateUrl }) => router.push(decorateUrl("/account")),
+          });
+        } else {
+          setLocalError("Sign up verification incomplete.");
+        }
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
