@@ -30,7 +30,31 @@ const nextConfig: NextConfig = {
   // it needs to be verified in a real browser against Clerk's inline scripts,
   // Shopify checkout redirects, and framer-motion inline styles before enabling.
   async headers() {
+    // ── Content-Security-Policy (REPORT-ONLY phase) ──────────────────────────
+    // This does NOT block anything yet — browsers only report what *would* be
+    // blocked to /api/csp-report. Watch those logs, tighten the allow-lists
+    // below, then graduate to an enforcing `Content-Security-Policy` header.
+    // Allow-lists cover: Clerk (auth), Cloudflare Turnstile, Shopify, Unsplash.
+    const cspReportOnly = [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'self'",
+      // framer-motion / Clerk inject inline; keep unsafe-inline/eval while in
+      // report-only so we can measure before locking down with nonces/hashes.
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://*.myshopify.com https://challenges.cloudflare.com",
+      "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
+      "worker-src 'self' blob:",
+      "form-action 'self' https://*.myshopify.com",
+      "report-uri /api/csp-report",
+    ].join("; ");
+
     const securityHeaders = [
+      { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
       // Force HTTPS for 2 years incl. subdomains (safe once the site is HTTPS).
       {
         key: "Strict-Transport-Security",

@@ -20,6 +20,7 @@ export default function AccountPage() {
   const [activeTab, setActiveTab] = useState<AccountTab>("orders");
   const [orders, setOrders] = useState<ShopifyAdminOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersNotice, setOrdersNotice] = useState<string>("");
   
   // Profile update state
   const [firstName, setFirstName] = useState("");
@@ -43,14 +44,37 @@ export default function AccountPage() {
     if (isLoaded && user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setOrdersLoading(true);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOrdersNotice("");
       fetch("/api/account/orders")
-        .then((res) => res.json())
-        .then((data: { orders?: ShopifyAdminOrder[] }) => {
-          if (Array.isArray(data.orders)) {
-            setOrders(data.orders);
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json() as Promise<{
+            orders?: ShopifyAdminOrder[];
+            synced?: boolean;
+            error?: string;
+            message?: string;
+          }>;
+        })
+        .then((data) => {
+          if (Array.isArray(data.orders)) setOrders(data.orders);
+          // Distinguish "store not connected yet" / fetch failure from a real
+          // empty history so the customer isn't misled by "No orders yet".
+          if (data.synced === false) {
+            setOrdersNotice(
+              "Order syncing isn't fully set up yet — your purchase history will appear here soon.",
+            );
+          } else if (data.error) {
+            setOrdersNotice(
+              "We couldn't load your orders right now. Please refresh in a moment.",
+            );
           }
         })
-        .catch(() => {})
+        .catch(() => {
+          setOrdersNotice(
+            "We couldn't load your orders right now. Please refresh in a moment.",
+          );
+        })
         .finally(() => {
           setOrdersLoading(false);
         });
@@ -151,6 +175,12 @@ export default function AccountPage() {
                     Order <span className="italic text-gold">History</span>
                   </h1>
 
+                  {ordersNotice && !ordersLoading && (
+                    <div className="mb-6 p-4 rounded-xl bg-warm-white border border-gold/20 text-charcoal/70 text-xs font-medium">
+                      {ordersNotice}
+                    </div>
+                  )}
+
                   {ordersLoading ? (
                     <div className="flex justify-center py-24">
                       <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
@@ -192,7 +222,7 @@ export default function AccountPage() {
                               </div>
                               <div className="text-right">
                                 <p className="font-sans text-xl font-medium text-charcoal mb-2">
-                                  {formatPrice(total * 100)}
+                                  {formatPrice(total)}
                                 </p>
                                 {order.fulfillment_status && (
                                   <span className="inline-block px-3 py-1 bg-charcoal text-[9px] uppercase tracking-widest text-white font-bold rounded-full">
@@ -217,7 +247,7 @@ export default function AccountPage() {
                                     </div>
                                   </div>
                                   <p className="text-charcoal font-semibold text-sm">
-                                    {formatPrice(Number(item.price) * 100)}
+                                    {formatPrice(Number(item.price))}
                                   </p>
                                 </div>
                               ))}

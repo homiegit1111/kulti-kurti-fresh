@@ -1,17 +1,51 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Mail, Phone, MapPin, Send, Check } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { Turnstile } from "@/components/ui/turnstile";
 
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [token, setToken] = useState("");
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSubmitted(true);
+    setError("");
+    setSubmitting(true);
+    try {
+      const form = new FormData(e.currentTarget);
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.get("name"),
+          email: form.get("email"),
+          subject: form.get("subject"),
+          message: form.get("message"),
+          turnstileToken: token,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -104,6 +138,7 @@ export default function ContactPage() {
                       </label>
                       <input
                         type="text"
+                        name="name"
                         required
                         className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
                       />
@@ -114,6 +149,7 @@ export default function ContactPage() {
                       </label>
                       <input
                         type="email"
+                        name="email"
                         required
                         className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
                       />
@@ -124,7 +160,7 @@ export default function ContactPage() {
                     <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
                       Subject
                     </label>
-                    <select className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors appearance-none">
+                    <select name="subject" className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors appearance-none">
                       <option>General Inquiry</option>
                       <option>Order Issue</option>
                       <option>Returns & Exchange</option>
@@ -138,18 +174,32 @@ export default function ContactPage() {
                       Message *
                     </label>
                     <textarea
+                      name="message"
                       required
                       rows={6}
                       className="w-full px-4 py-3 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors resize-none"
                     />
                   </div>
 
+                  <Turnstile onVerify={setToken} onExpire={() => setToken("")} />
+
+                  {error && (
+                    <div className="p-4 text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                      {error}
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="h-12 px-8 flex items-center gap-3 bg-charcoal text-white text-xs font-semibold uppercase tracking-widest hover:bg-gold transition-colors"
+                    disabled={submitting}
+                    className="h-12 px-8 flex items-center gap-3 bg-charcoal text-white text-xs font-semibold uppercase tracking-widest hover:bg-gold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <Send className="h-4 w-4" />
-                    <span>Send Message</span>
+                    {submitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    <span>{submitting ? "Sending…" : "Send Message"}</span>
                   </button>
                 </form>
               )}
