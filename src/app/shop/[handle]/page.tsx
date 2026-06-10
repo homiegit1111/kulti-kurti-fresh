@@ -85,11 +85,42 @@ export default async function ProductPage({
     },
   };
 
+  // Breadcrumb trail (Home › Shop › Product) — lets Google render a breadcrumb
+  // path in search results instead of the bare URL.
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.rangatpehnawa.com/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Shop",
+        item: "https://www.rangatpehnawa.com/shop",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.title,
+        item: `https://www.rangatpehnawa.com/shop/${product.handle}`,
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <ClientProductDetail params={params} />
     </>
