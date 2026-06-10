@@ -19,10 +19,6 @@ import { formatPrice, COLOR_MAP } from "@/lib/shopify";
 import { trackCheckoutStart } from "@/lib/checkout";
 import { ShopPayButton } from "@/components/checkout/shop-pay-button";
 
-const doodleFont = {
-  fontFamily: '"Kalam", "Caveat", "Comic Sans MS", cursive',
-};
-
 export default function CartPage() {
   const {
     items,
@@ -38,154 +34,81 @@ export default function CartPage() {
   } = useCart();
 
   return (
-    <div className="bg-[#fcfbf9] min-h-screen text-charcoal flex flex-col font-sans selection:bg-gold selection:text-white">
+    <div className="bg-warm-white min-h-screen text-charcoal flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 relative z-10 pt-28 lg:pt-32 pb-24 overflow-hidden">
-        {/* Subtle Background Glows */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute left-1/4 top-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-300/10 rounded-full blur-[120px]" />
-          <div className="absolute right-1/4 bottom-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[100px]" />
-        </div>
-
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-12 relative z-10">
+      <main className="flex-1 relative z-10 pt-28 lg:pt-36 pb-24">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
           {/* ── HEADER ── */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-12 md:mb-16 relative"
+            className="mb-12 md:mb-16 flex flex-wrap items-end justify-between gap-6 border-b border-charcoal/10 pb-8"
           >
-            <div className="inline-flex items-center gap-3 mb-2">
-              <span className="h-[1px] w-6 bg-gold" />
-              <p className="text-[10px] font-sans uppercase tracking-[0.4em] text-gold font-semibold">
-                Shopping Cart
-              </p>
+            <div>
+              <p className="eyebrow mb-3">The Cart</p>
+              <h1 className="font-serif text-5xl md:text-6xl text-charcoal font-light tracking-tight">
+                Your <span className="italic">Selection</span>
+              </h1>
             </div>
-            <h1 className="font-serif text-5xl md:text-6xl text-charcoal tracking-tighter">
-              Your Curated <span className="italic">Pieces</span>
-            </h1>
-
-            {/* Doodle under header */}
-            <svg
-              className="absolute -bottom-4 left-0 w-48 h-4 text-charcoal/20"
-              viewBox="0 0 100 10"
-              preserveAspectRatio="none"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M0,5 Q20,0 40,8 T80,2 T100,6" />
-            </svg>
+            {items.length > 0 && (
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal/40">
+                {itemCount} {itemCount === 1 ? "Piece" : "Pieces"}
+              </p>
+            )}
           </motion.div>
 
           {/* ── EMPTY CART STATE ── */}
           {items.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-center py-20 flex flex-col items-center justify-center min-h-[50vh]"
+              className="py-24 flex flex-col items-center justify-center text-center"
             >
-              {/* Hand-drawn Shopping Bag */}
-              <div className="relative w-40 h-40 mb-8">
-                <svg
-                  viewBox="0 0 100 100"
-                  className="w-full h-full text-charcoal/20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  {/* Bag body */}
-                  <path d="M20,30 L80,30 L75,90 L25,90 Z" />
-                  {/* Bag handles */}
-                  <path d="M40,30 C40,15 60,15 60,30" strokeDasharray="3 3" />
-                  {/* Doodle scribble on bag */}
-                  <path d="M35,50 Q50,45 65,55 Q50,65 35,60" />
-                </svg>
-                {/* Floating star doodle */}
-                <motion.svg
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  viewBox="0 0 24 24"
-                  className="absolute -top-2 -right-2 w-8 h-8 text-gold"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                >
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                    strokeLinejoin="round"
-                  />
-                </motion.svg>
-              </div>
-
-              <h2 className="font-serif text-3xl text-charcoal mb-4">
-                Your cart is waiting...
-              </h2>
-              <p className="text-xl text-charcoal/50 mb-10" style={doodleFont}>
-                Let&apos;s find something beautiful to put inside.
+              <p className="font-serif text-[100px] md:text-[140px] leading-none text-charcoal/[0.06] select-none mb-[-30px] md:mb-[-44px]">
+                Empty
               </p>
-
-              <div className="relative inline-block">
-                <Link
-                  href="/shop"
-                  className="relative z-10 px-8 py-4 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-black hover:scale-[1.02] transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.1)] flex items-center gap-3"
-                >
-                  <span>Start Curating</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-
-                {/* Scribble Arrow */}
-                <svg
-                  className="absolute top-10 -right-16 w-16 h-16 text-charcoal/30 rotate-12"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M10,80 Q50,20 90,40" />
-                  <path d="M75,30 L90,40 L80,55" />
-                </svg>
-              </div>
+              <h2 className="font-serif text-3xl md:text-4xl text-charcoal font-light mb-4 relative">
+                Nothing here — <span className="italic">yet.</span>
+              </h2>
+              <p className="text-sm text-charcoal/50 max-w-sm leading-relaxed mb-10">
+                Your cart is waiting for its first piece. Explore the
+                collection and find something worth keeping.
+              </p>
+              <Link href="/shop" className="btn-luxe group">
+                <span>Explore the Collection</span>
+                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
             </motion.div>
           ) : (
             /* ── FILLED CART STATE ── */
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-              {/* Left Column: Curated Items */}
+              {/* Left Column: Line items */}
               <div className="lg:col-span-7 xl:col-span-8 flex flex-col">
                 <AnimatePresence mode="popLayout">
                   {items.map((item) => (
                     <motion.div
                       key={item.id}
                       layout
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
                       transition={{ duration: 0.4 }}
                       className="group flex gap-6 md:gap-8 py-8 border-b border-charcoal/10 relative"
                     >
                       {/* Product Image */}
                       <Link
                         href={`/shop/${item.handle}`}
-                        className="relative w-28 md:w-36 aspect-[3/4] shrink-0 bg-[#f4efe6] overflow-hidden shadow-sm"
+                        className="relative w-28 md:w-36 aspect-[3/4] shrink-0 bg-warm-gray overflow-hidden"
                       >
                         <Image
                           src={item.image}
                           alt={item.title}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                          className="object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out"
                           sizes="150px"
                         />
-                        {/* Fake photo corner shadow */}
-                        <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.02)] pointer-events-none" />
                       </Link>
 
                       {/* Details & Actions */}
@@ -193,39 +116,28 @@ export default function CartPage() {
                         <div className="flex justify-between items-start gap-4">
                           <div>
                             <Link href={`/shop/${item.handle}`}>
-                              <h3 className="text-xl md:text-2xl font-serif text-charcoal group-hover:text-gold transition-colors line-clamp-2 leading-tight">
-                                {item.title}
+                              <h3 className="text-xl md:text-2xl font-serif font-light text-charcoal line-clamp-2 leading-tight">
+                                <span className="link-luxe">{item.title}</span>
                               </h3>
                             </Link>
 
-                            <div className="flex flex-wrap items-center gap-4 mt-3">
-                              <p className="text-[10px] font-bold text-charcoal/50 uppercase tracking-widest bg-white/50 px-2 py-1 border border-charcoal/5 rounded-sm relative">
-                                Size:{" "}
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4">
+                              <p className="text-[10px] font-bold text-charcoal/45 uppercase tracking-[0.2em]">
+                                Size —{" "}
                                 <span className="text-charcoal">
                                   {item.size}
                                 </span>
-                                {/* Hover doodle circle */}
-                                <svg
-                                  className="absolute -inset-1 w-[calc(100%+8px)] h-[calc(100%+8px)] text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                                  viewBox="0 0 100 100"
-                                  preserveAspectRatio="none"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <ellipse cx="50" cy="50" rx="48" ry="40" />
-                                </svg>
                               </p>
 
-                              <div className="flex items-center gap-1.5 bg-white/50 px-2 py-1 border border-charcoal/5 rounded-sm">
+                              <div className="flex items-center gap-2">
                                 <span
-                                  className="w-2.5 h-2.5 rounded-full border border-charcoal/10"
+                                  className="w-2.5 h-2.5 rounded-full border border-charcoal/15"
                                   style={{
                                     backgroundColor:
                                       COLOR_MAP[item.color] ?? "#ccc",
                                   }}
                                 />
-                                <span className="text-[10px] font-bold text-charcoal/50 uppercase tracking-widest">
+                                <span className="text-[10px] font-bold text-charcoal/45 uppercase tracking-[0.2em]">
                                   {item.color}
                                 </span>
                               </div>
@@ -234,42 +146,45 @@ export default function CartPage() {
 
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="text-charcoal/30 hover:text-red-500 transition-colors p-2 -mr-2"
+                            className="text-charcoal/30 hover:text-charcoal transition-colors p-2 -mr-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
                             title="Remove item"
+                            aria-label={`Remove ${item.title} from cart`}
                           >
-                            <X className="h-5 w-5" strokeWidth={1.5} />
+                            <X className="h-4 w-4" strokeWidth={1.5} />
                           </button>
                         </div>
 
                         {/* Bottom Row: Quantity & Price */}
                         <div className="flex items-end justify-between mt-6">
-                          {/* Playful Quantity Adjuster */}
-                          <div className="flex items-center border-b border-charcoal/20 pb-1">
+                          <div className="flex items-center border border-charcoal/15">
                             <button
                               onClick={() =>
                                 updateQuantity(item.id, item.quantity - 1)
                               }
-                              className="w-6 h-6 flex items-center justify-center text-charcoal/50 hover:text-charcoal transition-colors"
+                              aria-label="Decrease quantity"
+                              className="w-9 h-9 flex items-center justify-center text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
                             >
-                              <Minus className="h-3 w-3" strokeWidth={2} />
+                              <Minus className="h-3 w-3" strokeWidth={1.5} />
                             </button>
-                            <span className="w-8 text-center text-sm font-bold font-serif">
+                            <span className="w-10 text-center text-xs font-semibold tabular-nums border-x border-charcoal/15 leading-9">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() =>
                                 updateQuantity(item.id, item.quantity + 1)
                               }
-                              className="w-6 h-6 flex items-center justify-center text-charcoal/50 hover:text-charcoal transition-colors"
+                              aria-label="Increase quantity"
+                              className="w-9 h-9 flex items-center justify-center text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
                             >
-                              <Plus className="h-3 w-3" strokeWidth={2} />
+                              <Plus className="h-3 w-3" strokeWidth={1.5} />
                             </button>
                           </div>
 
                           <div className="text-right">
                             {item.quantity > 1 && (
-                              <p className="text-[10px] text-charcoal/40 font-bold tracking-widest uppercase mb-1">
-                                {formatPrice(item.salePrice ?? item.price)} each
+                              <p className="text-[10px] text-charcoal/40 font-semibold tracking-[0.15em] uppercase mb-1">
+                                {formatPrice(item.salePrice ?? item.price)}{" "}
+                                each
                               </p>
                             )}
                             <p className="text-xl font-serif text-charcoal">
@@ -288,112 +203,65 @@ export default function CartPage() {
                 <div className="flex items-center justify-between mt-10">
                   <Link
                     href="/shop"
-                    className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-charcoal/60 hover:text-charcoal transition-colors relative"
+                    className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal/60 hover:text-charcoal transition-colors"
                   >
-                    <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-                    Back to Collection
-                    {/* Scribble underline */}
-                    <svg
-                      className="absolute -bottom-1 left-0 w-full h-1 text-gold opacity-0 group-hover:opacity-100 transition-opacity"
-                      viewBox="0 0 100 10"
-                      preserveAspectRatio="none"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M0,5 Q50,0 100,5" />
-                    </svg>
+                    <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform duration-300" />
+                    <span className="link-luxe">Continue Shopping</span>
                   </Link>
                   <button
                     onClick={clearCart}
-                    className="text-[10px] font-bold text-charcoal/40 hover:text-red-500 uppercase tracking-widest transition-colors"
+                    className="text-[10px] font-bold text-charcoal/35 hover:text-charcoal uppercase tracking-[0.2em] transition-colors"
                   >
                     Clear Cart
                   </button>
                 </div>
               </div>
 
-              {/* Right Column: The Editorial Receipt */}
+              {/* Right Column: Order summary */}
               <div className="lg:col-span-5 xl:col-span-4 relative mt-8 lg:mt-0">
-                <div className="sticky top-32 z-20 filter drop-shadow-[0_20px_40px_rgba(0,0,0,0.08)]">
-                  {/* Receipt Paper Container */}
-                  <div className="bg-white/80 backdrop-blur-xl relative px-8 py-10 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.05)] border border-charcoal/5 overflow-hidden">
-                    {/* Faint dot grid on receipt */}
-                    <div
-                      className="absolute inset-0 z-0 opacity-10 pointer-events-none"
-                      style={{
-                        backgroundImage:
-                          "radial-gradient(charcoal 1px, transparent 1px)",
-                        backgroundSize: "20px 20px",
-                      }}
-                    />
-
+                <div className="sticky top-32 z-20">
+                  <div className="bg-charcoal text-warm-white relative px-8 py-10 md:px-10 md:py-12 frame-luxe">
                     <div className="relative z-10">
-                      <h3 className="font-serif text-3xl text-charcoal mb-8 text-center italic">
-                        Order Summary
+                      <p className="eyebrow eyebrow--bare mb-2">Summary</p>
+                      <h3 className="font-serif text-3xl font-light mb-10">
+                        Order <span className="italic">Total</span>
                       </h3>
 
-                      <div className="space-y-4 mb-8">
-                        <div className="flex justify-between items-baseline border-b border-charcoal/10 border-dashed pb-2">
-                          <span className="text-xs font-bold uppercase tracking-widest text-charcoal/60">
+                      <div className="space-y-5 mb-10">
+                        <div className="flex justify-between items-baseline border-b border-white/10 pb-4">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/50">
                             Pieces ({itemCount})
                           </span>
-                          <span className="font-serif text-lg text-charcoal">
+                          <span className="font-serif text-lg">
                             {formatPrice(subtotal)}
                           </span>
                         </div>
-                        <div className="flex justify-between items-baseline border-b border-charcoal/10 border-dashed pb-2 relative">
-                          <span className="text-xs font-bold uppercase tracking-widest text-charcoal/60">
+                        <div className="flex justify-between items-baseline border-b border-white/10 pb-4">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/50">
                             Shipping
                           </span>
-                          <span className="font-serif text-lg text-gold italic">
+                          <span className="font-serif text-lg italic text-gold-light">
                             Complimentary
                           </span>
-                          {/* Doodle arrow pointing to complimentary */}
-                          <svg
-                            className="absolute top-1 right-28 w-6 h-6 text-charcoal/30 hidden md:block"
-                            viewBox="0 0 100 100"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M10,50 Q40,20 80,50" />
-                            <path d="M70,40 L80,50 L70,60" />
-                          </svg>
                         </div>
-                        <div className="flex justify-between items-baseline pb-2">
-                          <span className="text-xs font-bold uppercase tracking-widest text-charcoal/60">
+                        <div className="flex justify-between items-baseline pb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/50">
                             Taxes
                           </span>
-                          <span
-                            className="text-lg text-charcoal/40"
-                            style={doodleFont}
-                          >
+                          <span className="text-xs text-white/45">
                             Calculated at checkout
                           </span>
                         </div>
                       </div>
 
                       {/* Total */}
-                      <div className="flex justify-between items-end mb-8 pt-6 border-t-2 border-charcoal relative">
-                        <span className="text-sm font-bold uppercase tracking-widest text-charcoal">
-                          Total Amount
+                      <div className="flex justify-between items-end mb-10 pt-6 border-t border-gold/40">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/70 pb-1">
+                          Total
                         </span>
-                        <span className="font-serif text-4xl text-charcoal">
+                        <span className="font-serif text-4xl font-light">
                           {formatPrice(total)}
                         </span>
-
-                        {/* Circle doodle around total */}
-                        <svg
-                          className="absolute -right-4 -bottom-4 w-32 h-16 text-gold/40 pointer-events-none"
-                          viewBox="0 0 100 100"
-                          preserveAspectRatio="none"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <ellipse cx="50" cy="50" rx="45" ry="30" />
-                        </svg>
                       </div>
 
                       {/* Shop Pay express lane (appears only when enabled) */}
@@ -419,7 +287,7 @@ export default function CartPage() {
                             window.location.href = "/checkout";
                           }
                         }}
-                        className="group w-full h-14 flex items-center justify-center gap-3 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-black hover:scale-[1.02] transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.1)] mb-6 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100"
+                        className="group w-full h-14 flex items-center justify-center gap-3 bg-warm-white text-charcoal text-[10px] font-bold uppercase tracking-[0.25em] hover:bg-gold hover:text-charcoal transition-colors duration-400 mb-6 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
                       >
                         {isSyncing ? (
                           <>
@@ -428,40 +296,36 @@ export default function CartPage() {
                           </>
                         ) : (
                           <>
-                            <span>Secure Checkout</span>
-                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            <span>Proceed to Checkout</span>
+                            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-300" />
                           </>
                         )}
                       </button>
 
                       {/* Security Note */}
-                      <div className="flex items-center justify-center gap-1.5 text-[10px] text-charcoal/50 uppercase tracking-widest mb-4">
+                      <div className="flex items-center justify-center gap-1.5 text-[9px] text-white/40 uppercase tracking-[0.25em]">
                         <Lock className="h-3 w-3" />
-                        <span>Secured by Shopify</span>
-                      </div>
-
-                      {/* Handwritten Note */}
-                      <div className="text-center">
-                        <p
-                          className="text-xl text-charcoal/60"
-                          style={doodleFont}
-                        >
-                          Thank you for choosing Rangat!
-                        </p>
-                        <div className="flex justify-center mt-2 opacity-30">
-                          {/* Heart scribble */}
-                          <svg
-                            viewBox="0 0 100 100"
-                            className="w-6 h-6 text-charcoal"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M50,80 C50,80 20,50 20,30 C20,10 50,10 50,30 C50,10 80,10 80,30 C80,50 50,80 50,80 Z" />
-                          </svg>
-                        </div>
+                        <span>Secure Checkout</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Service notes */}
+                  <div className="grid grid-cols-3 divide-x divide-charcoal/10 border-x border-b border-charcoal/10 bg-white text-center">
+                    {[
+                      ["COD", "Available"],
+                      ["Free Ship", "₹2,999+"],
+                      ["Returns", "7 Days"],
+                    ].map(([k, v]) => (
+                      <div key={k} className="py-4 px-2">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-charcoal">
+                          {k}
+                        </p>
+                        <p className="text-[9px] uppercase tracking-[0.14em] text-charcoal/45 mt-1">
+                          {v}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

@@ -17,10 +17,6 @@ import { ShopPayButton } from "@/components/checkout/shop-pay-button";
 import { Minus, Plus, X, ArrowRight, Loader2, ShoppingBag, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const doodleFont = {
-  fontFamily: '"Kalam", "Caveat", "Comic Sans MS", cursive',
-};
-
 export function CartDrawer() {
   const [open, setOpen] = useState(false);
   const [hoverOpen, setHoverOpen] = useState(false);
@@ -85,11 +81,11 @@ export function CartDrawer() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute top-[100%] right-0 w-[320px] bg-[#FAFAF9]/90 backdrop-blur-2xl border border-white/60 shadow-[0_20px_40px_rgba(0,0,0,0.08)] rounded-3xl overflow-hidden z-[100] hidden lg:flex flex-col mt-2 before:absolute before:inset-0 before:bg-[url('https://grainy-gradients.vercel.app/noise.svg')] before:opacity-[0.03] before:pointer-events-none"
+              className="absolute top-[100%] right-0 w-[320px] bg-warm-white/95 backdrop-blur-2xl border border-charcoal/10 shadow-[0_24px_48px_-16px_rgba(0,0,0,0.15)] overflow-hidden z-[100] hidden lg:flex flex-col mt-2"
             >
-              <div className="p-4 border-b border-charcoal/5 flex justify-between items-center bg-white/40">
+              <div className="p-4 border-b border-charcoal/10 flex justify-between items-center bg-white">
                 <span className="font-serif text-lg tracking-tight text-charcoal flex items-center gap-2">
-                  <ShoppingBag className="w-3.5 h-3.5 text-gold" /> Curations
+                  <ShoppingBag className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} /> Your Selection
                 </span>
                 <span className="text-[9px] font-bold tracking-[0.2em] text-charcoal/40 uppercase">
                   {itemCount} Items
@@ -106,7 +102,7 @@ export function CartDrawer() {
                   <div className="flex flex-col gap-3 py-2">
                     {items.slice(0, 3).map(item => (
                       <div key={item.id} className="flex gap-3 group items-center">
-                        <div className="relative w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-charcoal/5">
+                        <div className="relative w-12 h-16 shrink-0 overflow-hidden bg-warm-gray">
                           <Image src={item.image} alt={item.title} fill className="object-cover" sizes="48px" />
                         </div>
                         <div className="flex flex-col flex-1 overflow-hidden">
@@ -130,7 +126,7 @@ export function CartDrawer() {
               </div>
 
               {items.length > 0 && (
-                <div className="p-4 bg-white/60 border-t border-white/50 flex flex-col gap-3">
+                <div className="p-4 bg-white border-t border-charcoal/10 flex flex-col gap-3">
                   <div className="flex justify-between items-center">
                     <span className="text-[9px] font-bold tracking-[0.2em] text-charcoal/50 uppercase">Subtotal</span>
                     <span className="font-serif text-lg text-charcoal">{formatPrice(subtotal)}</span>
@@ -141,7 +137,7 @@ export function CartDrawer() {
                       setHoverOpen(false);
                       setOpen(true);
                     }}
-                    className="w-full h-10 bg-charcoal text-white text-[9px] font-bold uppercase tracking-[0.2em] rounded-xl hover:bg-black transition-all flex items-center justify-center gap-2"
+                    className="w-full h-11 bg-charcoal text-white text-[9px] font-bold uppercase tracking-[0.25em] hover:bg-gold-dark transition-colors duration-300 flex items-center justify-center gap-2"
                   >
                     View Cart <ArrowRight className="w-3 h-3" />
                   </button>
@@ -156,44 +152,34 @@ export function CartDrawer() {
       <SheetContent className="w-full sm:max-w-md bg-transparent border-none p-0 flex flex-col z-[100] shadow-none">
         
         {/* Floating Inner Container */}
-        <div className="h-full w-full sm:h-[calc(100%-2rem)] sm:my-4 sm:mr-4 sm:rounded-[2.5rem] overflow-hidden flex flex-col relative bg-[#FAFAF9]/80 backdrop-blur-[60px] border border-white/60 shadow-[0_30px_100px_rgba(0,0,0,0.12),inset_0_0_0_1px_rgba(255,255,255,0.5)]">
+        <div className="h-full w-full overflow-hidden flex flex-col relative bg-warm-white border-l border-charcoal/10 shadow-[0_30px_100px_rgba(0,0,0,0.18)]">
           
-          {/* ── Ethereal Fluid Background ── */}
+          {/* Quiet warm wash */}
           <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.04] mix-blend-overlay z-20" />
-            <motion.div 
-              animate={{ x: ["0%", "15%", "0%"], y: ["0%", "10%", "0%"], scale: [1, 1.2, 1] }}
-              transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-20 -left-20 w-[120%] h-[50%] bg-gradient-to-br from-[#E8D9C8]/40 to-transparent rounded-full blur-[80px] z-0"
-            />
-            <motion.div 
-              animate={{ x: ["0%", "-10%", "0%"], y: ["0%", "-15%", "0%"], scale: [0.9, 1.1, 0.9] }}
-              transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute bottom-[-10%] -right-20 w-[120%] h-[60%] bg-gradient-to-tl from-[#E2DFD2]/50 to-transparent rounded-full blur-[100px] z-0"
-            />
+            <div className="absolute -top-24 right-[-30%] w-[120%] h-[40%] bg-gold/[0.06] rounded-full blur-[90px]" />
           </div>
 
           <SheetHeader className="px-6 py-6 sm:px-8 sm:py-8 bg-transparent z-10 relative">
             <SheetTitle className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-white/60 backdrop-blur-md flex items-center justify-center shadow-sm border border-white">
+                  <div className="w-10 h-10 border border-gold/40 flex items-center justify-center">
                     <ShoppingBag className="w-4 h-4 text-charcoal/80" strokeWidth={1.5} />
                   </div>
                   {itemCount > 0 && (
-                    <motion.div 
+                    <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-gold rounded-full border-2 border-[#FAFAF9] flex items-center justify-center"
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-gold rounded-full border-2 border-warm-white"
                     />
                   )}
                 </div>
                 <div className="flex flex-col items-start">
-                  <span className="font-serif text-2xl tracking-tight text-charcoal leading-none">
-                    Curations
+                  <span className="font-serif text-2xl font-light tracking-tight text-charcoal leading-none">
+                    Your <span className="italic">Selection</span>
                   </span>
-                  <span className="text-[9px] font-bold font-sans tracking-[0.2em] text-charcoal/40 uppercase mt-1">
-                    {itemCount} {itemCount === 1 ? 'Item' : 'Items'} Selected
+                  <span className="text-[9px] font-bold font-sans tracking-[0.25em] text-charcoal/40 uppercase mt-1.5">
+                    {itemCount} {itemCount === 1 ? 'Piece' : 'Pieces'}
                   </span>
                 </div>
               </div>
@@ -207,26 +193,25 @@ export function CartDrawer() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center h-full text-center"
               >
-                <div className="relative w-32 h-32 mb-8">
-                  <motion.div 
+                <div className="relative w-28 h-28 mb-8">
+                  <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 border border-dashed border-charcoal/20 rounded-full"
+                    transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 border border-dashed border-gold/40 rounded-full"
                   />
-                  <div className="absolute inset-2 rounded-full bg-white/40 backdrop-blur-md border border-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex items-center justify-center">
-                    <Sparkles className="w-8 h-8 text-charcoal/20 absolute top-6 right-6" />
-                    <ShoppingBag className="w-8 h-8 text-charcoal/40" strokeWidth={1} />
+                  <div className="absolute inset-3 rounded-full bg-white border border-charcoal/5 flex items-center justify-center">
+                    <ShoppingBag className="w-7 h-7 text-charcoal/35" strokeWidth={1} />
                   </div>
                 </div>
-                <h3 className="font-serif text-3xl text-charcoal mb-3">
-                  Your bag is empty
+                <h3 className="font-serif text-3xl font-light text-charcoal mb-3">
+                  Your bag is <span className="italic">empty</span>
                 </h3>
-                <p className="text-base text-charcoal/50 mb-10" style={doodleFont}>
+                <p className="font-serif italic text-lg text-charcoal/45 mb-10">
                   Fill it with something beautiful.
                 </p>
                 <button
                   onClick={() => setOpen(false)}
-                  className="group relative px-8 py-4 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-black transition-all flex items-center gap-3 overflow-hidden"
+                  className="btn-luxe group"
                 >
                   <span className="relative z-10">Start Curating</span>
                   <ArrowRight className="h-3 w-3 relative z-10 group-hover:translate-x-1 transition-transform" />
@@ -243,14 +228,12 @@ export function CartDrawer() {
                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: index * 0.05 } }}
                       exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-                      className="group flex gap-4 p-2.5 bg-white/40 hover:bg-white/70 backdrop-blur-lg border border-white/60 rounded-[1.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.02)] items-center relative overflow-hidden transition-colors duration-500"
+                      className="group flex gap-4 p-3 bg-white border border-charcoal/8 hover:border-charcoal/20 items-center relative overflow-hidden transition-colors duration-500"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 group-hover:opacity-100 -translate-x-[100%] group-hover:translate-x-[100%] transition-all duration-1000 ease-out pointer-events-none" />
-
                       <Link
                         href={`/shop/${item.handle}`}
                         onClick={() => setOpen(false)}
-                        className="relative w-20 h-24 sm:w-24 sm:h-28 shrink-0 rounded-[1rem] overflow-hidden"
+                        className="relative w-20 h-24 sm:w-24 sm:h-28 shrink-0 overflow-hidden bg-warm-gray"
                       >
                         <Image
                           src={item.image}
@@ -267,13 +250,13 @@ export function CartDrawer() {
                           <Link
                             href={`/shop/${item.handle}`}
                             onClick={() => setOpen(false)}
-                            className="font-serif text-sm sm:text-base text-charcoal hover:text-gold transition-colors line-clamp-2 leading-tight pr-4"
+                            className="font-serif text-sm sm:text-base text-charcoal hover:text-gold-dark transition-colors line-clamp-2 leading-tight pr-4"
                           >
                             {item.title}
                           </Link>
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="absolute top-3 right-3 text-charcoal/20 hover:text-red-500 hover:bg-red-50/50 backdrop-blur-sm transition-all p-1.5 rounded-full z-10 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                            className="absolute top-3 right-3 text-charcoal/25 hover:text-charcoal transition-colors p-1.5 z-10 lg:opacity-0 lg:group-hover:opacity-100"
                             aria-label="Remove item"
                           >
                             <X className="h-3 w-3" strokeWidth={2} />
@@ -285,24 +268,24 @@ export function CartDrawer() {
                         </p>
 
                         <div className="flex items-end justify-between mt-4">
-                          <div className="flex items-center bg-white/50 border border-white/80 rounded-full p-0.5 shadow-sm backdrop-blur-sm">
+                          <div className="flex items-center border border-charcoal/15">
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="text-charcoal/50 hover:text-charcoal p-1.5 transition-colors hover:bg-white rounded-full"
+                              className="text-charcoal/50 hover:text-charcoal w-7 h-7 flex items-center justify-center transition-colors hover:bg-charcoal/5"
                             >
-                              <Minus className="h-2.5 w-2.5" strokeWidth={3} />
+                              <Minus className="h-2.5 w-2.5" strokeWidth={2} />
                             </button>
-                            <span className="text-[10px] font-sans font-bold w-6 text-center text-charcoal">
+                            <span className="text-[10px] font-sans font-bold w-7 text-center text-charcoal border-x border-charcoal/15 leading-7">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="text-charcoal/50 hover:text-charcoal p-1.5 transition-colors hover:bg-white rounded-full"
+                              className="text-charcoal/50 hover:text-charcoal w-7 h-7 flex items-center justify-center transition-colors hover:bg-charcoal/5"
                             >
-                              <Plus className="h-2.5 w-2.5" strokeWidth={3} />
+                              <Plus className="h-2.5 w-2.5" strokeWidth={2} />
                             </button>
                           </div>
-                          <p className="font-serif text-sm font-semibold text-charcoal tracking-wide bg-white/30 px-3 py-1.5 rounded-full border border-white/50">
+                          <p className="font-serif text-base text-charcoal">
                             {formatPrice((item.salePrice ?? item.price) * item.quantity)}
                           </p>
                         </div>
@@ -315,17 +298,17 @@ export function CartDrawer() {
           </div>
 
           {items.length > 0 && (
-            <div className="p-6 sm:p-8 bg-white/60 backdrop-blur-3xl border-t border-white/80 z-20 relative mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-              <div className="flex justify-between items-end mb-6 border-b border-charcoal/5 pb-4">
+            <div className="p-6 sm:p-8 bg-white border-t border-charcoal/10 z-20 relative mt-auto">
+              <div className="flex justify-between items-end mb-6 border-b border-charcoal/10 pb-4">
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold uppercase tracking-widest text-charcoal mb-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal/60 mb-0.5">
                     Subtotal
                   </span>
                   <p className="text-[10px] text-charcoal/50 font-medium">
                     Shipping & taxes calculated at checkout
                   </p>
                 </div>
-                <span className="font-sans font-medium text-2xl tracking-tight text-charcoal">
+                <span className="font-serif text-3xl font-light tracking-tight text-charcoal">
                   {formatPrice(subtotal)}
                 </span>
               </div>
@@ -333,7 +316,7 @@ export function CartDrawer() {
               {syncError && (
                 <p
                   role="alert"
-                  className="mb-4 text-[11px] font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                  className="mb-4 text-[11px] font-medium text-destructive bg-destructive/5 border border-destructive/20 border-l-2 border-l-destructive px-3 py-2"
                 >
                   {syncError}
                 </p>
@@ -358,7 +341,7 @@ export function CartDrawer() {
                     window.location.href = "/checkout";
                   }
                 }}
-                className="group relative w-full h-14 bg-charcoal text-white text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] rounded-full hover:bg-black transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-4"
+                className="group relative w-full h-14 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.25em] hover:bg-gold-dark transition-colors duration-400 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-4"
               >
                 {isSyncing ? (
                   <>
@@ -367,11 +350,8 @@ export function CartDrawer() {
                   </>
                 ) : (
                   <>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                     <span className="relative z-10 pt-0.5">Secure Checkout</span>
-                    <div className="relative z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-gold group-hover:text-charcoal transition-all duration-300">
-                      <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" strokeWidth={2} />
-                    </div>
+                    <ArrowRight className="relative z-10 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={1.5} />
                   </>
                 )}
               </button>
