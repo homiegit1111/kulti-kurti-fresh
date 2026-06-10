@@ -56,7 +56,7 @@ export default function ProductDetailPage({
     return (
       <>
         <Navbar />
-        <main className="flex-1 pt-20 lg:pt-32 min-h-screen bg-[#f7f6f2] flex items-center justify-center">
+        <main className="flex-1 pt-20 lg:pt-32 min-h-screen bg-warm-white flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
         </main>
         <Footer />
@@ -82,7 +82,7 @@ export default function ProductDetailPage({
   }
 
   return (
-    <div className="bg-[#f7f6f2] min-h-screen text-charcoal font-sans selection:bg-charcoal selection:text-white flex flex-col">
+    <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
       <Navbar />
       <main className="pt-20 lg:pt-32 flex-1 relative pb-24 lg:pb-0">
         <DashboardProductDetail product={product} />
@@ -194,10 +194,8 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
       <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
         {/* Mobile Header (Hidden on Desktop) */}
         <div className="flex flex-col lg:hidden mb-4 pt-4">
-          <p className="text-[10px] font-bold tracking-[0.3em] text-gold uppercase mb-2">
-            {product.category} COLLECTION
-          </p>
-          <h1 className="text-4xl sm:text-5xl font-serif tracking-tight leading-none mb-1">
+          <p className="eyebrow mb-2">{product.category} Collection</p>
+          <h1 className="text-4xl sm:text-5xl font-serif font-light tracking-tight leading-[1.05] mb-2">
             {product.title}
           </h1>
           <p className="text-lg font-serif text-charcoal font-medium">
@@ -211,22 +209,11 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
             <div className="flex flex-col gap-6">
               {/* Modern Minimalist Thumbnails Row */}
               <div className="flex gap-5 items-center pb-2">
-                <button
-                  disabled
-                  className="flex flex-col items-center justify-center gap-1 w-12 opacity-30 cursor-not-allowed"
-                  title="3D Model Coming Soon"
-                >
-                  <div className="w-10 h-10 rounded-full border border-charcoal text-charcoal flex items-center justify-center relative">
-                    <span className="text-[10px] font-bold tracking-widest">
-                      3D
-                    </span>
-                  </div>
-                  <span className="text-[7px] font-bold uppercase tracking-widest text-charcoal/50">
-                    Soon
-                  </span>
-                </button>
+                <span className="eyebrow eyebrow--bare !tracking-[0.3em] text-[9px]">
+                  Views
+                </span>
 
-                <div className="w-px h-8 bg-charcoal/20" />
+                <div className="w-px h-8 bg-charcoal/15" />
 
                 <div className="flex gap-4">
                   {product.images.slice(0, 4).map((img, i) => (
@@ -235,7 +222,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       onClick={() => setActiveImageIndex(i)}
                       className={`w-10 h-14 relative overflow-hidden transition-all duration-300 ${
                         activeImageIndex === i
-                          ? "opacity-100 ring-1 ring-charcoal ring-offset-4 ring-offset-[#f7f6f2]"
+                          ? "opacity-100 ring-1 ring-charcoal ring-offset-4 ring-offset-warm-white"
                           : "opacity-40 hover:opacity-100"
                       }`}
                     >
@@ -252,7 +239,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 </h3>
                 <div className="flex gap-4 h-40 xl:h-48">
                   {/* Video Block Placeholder */}
-                  <div className="flex-1 bg-white rounded-3xl relative overflow-hidden group cursor-pointer shadow-sm border border-charcoal/5">
+                  <div className="flex-1 bg-white relative overflow-hidden group cursor-pointer border border-charcoal/10">
                     <Image
                       src={product.images[1] || product.images[0]}
                       alt="Video Thumbnail"
@@ -270,7 +257,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   </div>
 
                   {/* Animated Vertical Color Selector */}
-                  <div className="w-16 xl:w-20 flex flex-col relative rounded-3xl overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] bg-white border border-charcoal/5">
+                  <div className="w-16 xl:w-20 flex flex-col relative overflow-hidden bg-white border border-charcoal/10">
                     {product.colors.map((color) => (
                       <button
                         key={color}
@@ -313,10 +300,10 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
             <div className="hidden lg:flex flex-col pb-4 mt-4">
               {/* Header */}
               <div className="flex items-end justify-between border-b border-charcoal/10 pb-4 mb-8">
-                <h2 className="text-3xl font-sans font-bold uppercase tracking-tighter leading-none">
-                  {selectedColor} {product.category}
+                <h2 className="font-serif text-3xl font-light capitalize tracking-tight leading-none">
+                  {selectedColor} <span className="italic text-charcoal/60">{product.category}</span>
                 </h2>
-                <span className="text-xl font-sans font-medium tracking-tight text-charcoal/60 leading-none">
+                <span className="font-serif text-2xl font-light text-charcoal leading-none">
                   {formatPrice(product.salePrice ?? product.price)}
                 </span>
               </div>
@@ -324,10 +311,8 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               {/* Typography Size Selector */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-8">
-                  <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-charcoal/40">
-                    Select Size
-                  </span>
-                  <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-charcoal hover:text-charcoal/60 transition-colors cursor-pointer border-b border-charcoal/20 pb-0.5">
+                  <span className="eyebrow eyebrow--bare">Select Size</span>
+                  <span className="link-luxe text-[10px] uppercase tracking-[0.25em] font-bold text-charcoal/70 hover:text-charcoal transition-colors cursor-pointer">
                     Size Guide
                   </span>
                 </div>
@@ -338,17 +323,17 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className="relative z-10 group py-2 px-4 bg-[#f7f6f2]"
+                      className="relative z-10 group py-2 px-4 bg-warm-white"
                     >
                       <span
-                        className={`text-2xl font-sans tracking-tighter transition-all duration-500 ${selectedSize === size ? "text-charcoal font-bold scale-110 inline-block" : "text-charcoal/20 font-medium group-hover:text-charcoal/40 inline-block"}`}
+                        className={`font-serif text-2xl tracking-tight transition-all duration-500 ${selectedSize === size ? "text-charcoal scale-110 inline-block" : "text-charcoal/35 group-hover:text-charcoal/70 inline-block"}`}
                       >
                         {size}
                       </span>
                       {selectedSize === size && (
                         <motion.div
                           layoutId="sizeIndicator"
-                          className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-charcoal rounded-full"
+                          className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-gold rounded-full"
                         />
                       )}
                     </button>
@@ -361,12 +346,12 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               <button
                 onClick={handleAddToCart}
                 disabled={!selectedSize || soldOut}
-                className={`group relative flex-1 h-16 rounded-full flex items-center justify-between px-2 pl-8 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${
+                className={`group relative flex-1 h-16 flex items-center justify-between px-2 pl-8 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${
                   added
-                    ? "bg-[#2a4d3e] text-white shadow-[0_20px_40px_rgba(42,77,62,0.3)]"
+                    ? "bg-[#2a4d3e] text-white shadow-[0_20px_40px_rgba(42,77,62,0.25)]"
                     : !selectedSize
-                      ? "bg-charcoal/5 text-charcoal/30 cursor-not-allowed"
-                      : "bg-charcoal text-white hover:bg-black hover:scale-[1.02] shadow-[0_20px_40px_rgba(0,0,0,0.15)]"
+                      ? "bg-transparent border border-charcoal/20 text-charcoal/45 cursor-not-allowed"
+                      : "bg-charcoal text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(0,0,0,0.12)]"
                 }`}
               >
                 <div className="relative z-10 overflow-hidden h-5 flex items-center">
@@ -399,12 +384,12 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   </AnimatePresence>
                 </div>
                 <div
-                  className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-700 ${
+                  className={`relative z-10 w-12 h-12 flex items-center justify-center transition-all duration-700 ${
                     added
                       ? "bg-white text-[#2a4d3e] scale-110"
                       : !selectedSize
                         ? "bg-transparent"
-                        : "bg-white text-charcoal group-hover:w-14"
+                        : "bg-white/10 border border-white/30 text-white group-hover:w-14 group-hover:bg-white group-hover:text-charcoal"
                   }`}
                 >
                   <AnimatePresence mode="wait">
@@ -435,10 +420,10 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 <button
                   onClick={handleBuyNow}
                   disabled={!selectedSize || soldOut}
-                  className={`h-16 px-6 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shrink-0 ${
+                  className={`h-16 px-7 font-bold uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shrink-0 ${
                     !selectedSize
-                      ? "bg-gold/20 text-gold/30 cursor-not-allowed"
-                      : "bg-gold text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(201,169,110,0.3)] hover:scale-[1.02]"
+                      ? "border border-gold/30 text-gold/40 cursor-not-allowed"
+                      : "bg-gold text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(201,169,110,0.3)]"
                   }`}
                 >
                   Buy Now
@@ -476,7 +461,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
           {/* ── 2. CENTER COLUMN (Image Viewer) ── */}
           <div className="lg:col-span-5 relative flex flex-col items-center justify-start py-6 lg:py-0 lg:pt-4 order-1 lg:order-2">
             {/* Hovering Action Pill (Fills Top Space) */}
-            <div className="hidden lg:flex items-center gap-4 bg-white/40 hover:bg-white backdrop-blur-md border border-charcoal/5 px-6 py-2.5 rounded-full mb-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] transition-colors duration-500">
+            <div className="hidden lg:flex items-center gap-4 bg-white/60 hover:bg-white backdrop-blur-md border border-charcoal/10 px-6 py-2.5 mb-8 transition-colors duration-500">
               <button
                 type="button"
                 onClick={() => toggleWishlist(product)}
@@ -510,7 +495,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               {/* Playful Help Button */}
               <Link
                 href="/contact"
-                className="flex items-center gap-2 group relative overflow-hidden bg-[#f7f6f2] hover:bg-gold/10 px-4 py-2 rounded-full transition-colors duration-500 ml-1 border border-charcoal/5 hover:border-gold/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
+                className="flex items-center gap-2 group relative overflow-hidden bg-warm-gray/60 hover:bg-gold/10 px-4 py-2 transition-colors duration-500 ml-1 border border-charcoal/10 hover:border-gold/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
               >
                 <MessageCircle className="w-3.5 h-3.5 text-charcoal/40 group-hover:text-gold transition-all duration-500 group-hover:scale-110 group-hover:-rotate-12" />
                 <div className="relative h-4 overflow-hidden w-[95px] flex items-center">
@@ -534,7 +519,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 }}
                 animate={{ filter: "brightness(1) blur(0px)", scale: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
-                className="relative w-full h-full rounded-[2.5rem] lg:rounded-[3.5rem] overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.15)]"
+                className="relative w-full h-full overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.15)]"
                 style={{
                   willChange: "transform, filter",
                   backfaceVisibility: "hidden",
@@ -556,10 +541,8 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
           <div className="lg:col-span-4 flex flex-col pt-2 lg:pt-4 lg:pl-8 order-3 lg:order-3">
             {/* Desktop Right Column Top: Product Title */}
             <div className="hidden lg:block mb-10 border-b border-charcoal/10 pb-6">
-              <p className="text-[10px] font-bold tracking-[0.3em] text-gold uppercase mb-2">
-                {product.category} COLLECTION
-              </p>
-              <h1 className="text-4xl lg:text-5xl font-serif tracking-tight leading-none mb-4">
+              <p className="eyebrow mb-3">{product.category} Collection</p>
+              <h1 className="text-4xl lg:text-5xl font-serif font-light tracking-tight leading-[1.05] mb-4">
                 {product.title}
               </h1>
               <div className="flex items-center justify-between">
@@ -582,7 +565,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   : "rgba(0,0,0,0.05)",
               }}
               transition={{ duration: 1 }}
-              className="flex flex-col lg:hidden gap-6 mb-8 bg-white/80 backdrop-blur-md rounded-[2rem] p-6 border relative overflow-hidden"
+              className="flex flex-col lg:hidden gap-6 mb-8 bg-white p-6 border relative overflow-hidden"
             >
               {/* Animated Inner Glow */}
               <motion.div
@@ -651,10 +634,10 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`h-12 flex-1 min-w-[60px] rounded-xl text-sm font-bold transition-all ${
+                      className={`h-12 flex-1 min-w-[60px] border text-sm font-semibold transition-all duration-300 ${
                         selectedSize === size
-                          ? "bg-charcoal text-white shadow-md"
-                          : "bg-[#f2f4f7] text-charcoal hover:bg-[#e4e7ec]"
+                          ? "bg-charcoal text-white border-charcoal"
+                          : "bg-transparent border-charcoal/15 text-charcoal hover:border-charcoal/50"
                       }`}
                     >
                       {size}
@@ -681,7 +664,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
             </motion.div>
 
             {/* Middle Section: Expandable Info Blocks */}
-            <div className="flex flex-col flex-1 bg-white lg:bg-transparent rounded-3xl lg:rounded-none p-6 lg:p-0 shadow-sm lg:shadow-none border border-charcoal/5 lg:border-none">
+            <div className="flex flex-col flex-1 bg-white lg:bg-transparent p-6 lg:p-0 border border-charcoal/10 lg:border-none">
               {/* Accordion 1 */}
               <div className="border-b lg:border-t-0 border-charcoal/10">
                 <button
@@ -774,7 +757,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
 
             {/* Designer's Note & Guarantees (Fills empty space on Desktop) */}
             <div className="hidden lg:flex flex-col mt-10 gap-6">
-              <div className="bg-[#f0efe9] rounded-3xl p-8 relative overflow-hidden group">
+              <div className="panel-luxe frame-luxe p-8 relative overflow-hidden group">
                 <div className="absolute -top-4 -right-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
                   <svg
                     className="w-40 h-40"
@@ -799,7 +782,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col items-center justify-center text-center py-6 px-4 border border-charcoal/5 rounded-3xl bg-white/40 hover:bg-white transition-colors">
+                <div className="flex flex-col items-center justify-center text-center py-6 px-4 border border-charcoal/10 bg-white/50 hover:bg-white transition-colors">
                   <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal mb-1.5">
                     Handcrafted
                   </span>
@@ -807,7 +790,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                     In India
                   </span>
                 </div>
-                <div className="flex flex-col items-center justify-center text-center py-6 px-4 border border-charcoal/5 rounded-3xl bg-white/40 hover:bg-white transition-colors">
+                <div className="flex flex-col items-center justify-center text-center py-6 px-4 border border-charcoal/10 bg-white/50 hover:bg-white transition-colors">
                   <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal mb-1.5">
                     Sustainable
                   </span>
@@ -830,12 +813,12 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
         <button
           onClick={handleAddToCart}
           disabled={!selectedSize || soldOut}
-          className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-500 font-bold uppercase tracking-widest text-xs overflow-hidden relative ${
+          className={`flex-1 h-14 flex items-center justify-center gap-3 transition-all duration-500 font-bold uppercase tracking-[0.2em] text-[11px] overflow-hidden relative ${
             added
-              ? "bg-[#2a4d3e] text-white scale-[0.98] shadow-lg shadow-[#2a4d3e]/20"
+              ? "bg-[#2a4d3e] text-white scale-[0.98]"
               : !selectedSize
-                ? "bg-[#f2f4f7] text-charcoal/30"
-                : "bg-charcoal text-white hover:bg-black active:scale-[0.98] shadow-xl shadow-charcoal/20"
+                ? "bg-transparent border border-charcoal/20 text-charcoal/45"
+                : "bg-charcoal text-white active:scale-[0.98]"
           }`}
         >
           <AnimatePresence mode="wait">
@@ -877,10 +860,10 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
           <button
             onClick={handleBuyNow}
             disabled={!selectedSize || soldOut}
-            className={`h-14 px-5 rounded-2xl font-bold uppercase tracking-widest text-xs flex items-center justify-center shrink-0 transition-all duration-500 ${
+            className={`h-14 px-5 font-bold uppercase tracking-[0.2em] text-[11px] flex items-center justify-center shrink-0 transition-all duration-500 ${
               !selectedSize
-                ? "bg-gold/20 text-gold/30"
-                : "bg-gold text-white hover:bg-gold-dark active:scale-[0.98] shadow-lg shadow-gold/20"
+                ? "border border-gold/30 text-gold/40"
+                : "bg-gold text-white hover:bg-gold-dark active:scale-[0.98]"
             }`}
           >
             Buy Now
@@ -894,18 +877,16 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex justify-between items-end mb-8 lg:mb-10">
             <div>
-              <span className="text-[10px] font-sans uppercase tracking-[0.4em] text-gold font-semibold mb-2 block">
-                Explore More
-              </span>
+              <span className="eyebrow mb-3">Explore More</span>
               <h2 className="font-serif text-3xl lg:text-5xl font-light">
-                You May Also <span className="italic text-gold">Like</span>
+                You May Also <span className="italic">Like</span>
               </h2>
             </div>
             <Link
               href="/shop"
-              className="hidden md:inline-flex items-center gap-2 border-b border-charcoal pb-1 text-xs font-bold uppercase tracking-widest hover:text-gold hover:border-gold transition-colors"
+              className="link-luxe hidden md:inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal hover:text-gold-dark transition-colors"
             >
-              View All <ChevronRight className="w-4 h-4" />
+              View All <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -916,7 +897,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 href={`/shop/${rp.handle}`}
                 className="w-[240px] lg:w-[320px] shrink-0 group snap-start"
               >
-                <div className="relative aspect-[3/4] bg-[#f7f6f2] rounded-[2rem] overflow-hidden mb-4 lg:mb-6">
+                <div className="relative aspect-[3/4] bg-warm-gray overflow-hidden mb-4 lg:mb-6">
                   <Image
                     src={rp.image}
                     alt={rp.title}
@@ -927,7 +908,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 </div>
                 <div className="flex justify-between items-start px-2">
                   <div className="flex flex-col">
-                    <h3 className="font-serif text-base lg:text-lg text-charcoal group-hover:text-gold transition-colors mb-1">
+                    <h3 className="font-serif text-base lg:text-lg text-charcoal group-hover:text-gold-dark transition-colors mb-1">
                       {rp.title}
                     </h3>
                     <p className="text-[9px] lg:text-[10px] font-bold tracking-widest text-charcoal/50 uppercase">
