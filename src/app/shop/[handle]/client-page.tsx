@@ -27,6 +27,8 @@ import {
   COLOR_MAP,
   type MockProduct,
 } from "@/lib/shopify";
+import ReviewsSection from "@/components/product/reviews-section";
+import StockAlertForm from "@/components/product/stock-alert-form";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
 import { isShopifyConfigured } from "@/lib/shopify";
@@ -431,6 +433,11 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               )}
               </div>
 
+              {/* Back-in-stock / size alert — capture lost demand */}
+              {soldOut && (
+                <StockAlertForm handle={product.handle} size={selectedSize} />
+              )}
+
               {/* Trust signals */}
               <div className="grid grid-cols-3 gap-2 mt-8 pt-6 border-t border-charcoal/10">
                 {[
@@ -634,7 +641,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`h-12 flex-1 min-w-[60px] border text-sm font-semibold transition-all duration-300 ${
+                      className={`tap-luxe h-12 flex-1 min-w-[60px] border text-sm font-semibold transition-all duration-300 ${
                         selectedSize === size
                           ? "bg-charcoal text-white border-charcoal"
                           : "bg-transparent border-charcoal/15 text-charcoal hover:border-charcoal/50"
@@ -871,6 +878,13 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
         )}
         </div>
       </div>
+
+      {/* ── Customer reviews with photos ── */}
+      <section className="w-full bg-warm-white">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-12 pb-20 lg:pb-28">
+          <ReviewsSection handle={product.handle} />
+        </div>
+      </section>
 
       {/* ── BOTTOM SECTION: Full Width Related Products ── */}
       <section className="w-full bg-white border-t border-charcoal/5 pt-16 lg:pt-20 pb-12 overflow-hidden">

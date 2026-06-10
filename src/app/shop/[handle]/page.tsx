@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getProductByHandle } from "@/lib/shopify";
+import { getPublishedReviews, summarize } from "@/lib/server/reviews";
 import ClientProductDetail from "./client-page";
 
 export async function generateMetadata(
@@ -60,6 +61,36 @@ export default async function ProductPage({
     .toISOString()
     .slice(0, 10);
 
+  // Customer reviews → star snippets in search results. Only emitted when
+  // real reviews exist (Google penalises fabricated aggregateRating data).
+  const reviews = await getPublishedReviews(handle, 10);
+  const reviewSummary = summarize(reviews);
+  const reviewLd =
+    reviewSummary.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviewSummary.average,
+            reviewCount: reviewSummary.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: reviews.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.author_name },
+            datePublished: r.created_at.slice(0, 10),
+            reviewBody: r.body,
+            ...(r.title ? { name: r.title } : {}),
+            reviewRating: {
+              "@type": "Rating",
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          })),
+        }
+      : {};
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -83,6 +114,7 @@ export default async function ProductPage({
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
     },
+    ...reviewLd,
   };
 
   // Breadcrumb trail (Home › Shop › Product) — lets Google render a breadcrumb
