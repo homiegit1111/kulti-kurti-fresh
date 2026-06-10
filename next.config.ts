@@ -22,43 +22,22 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "img.clerk.com",
       },
+      {
+        // Customer review photos (Supabase storage, public bucket).
+        protocol: "https",
+        hostname: "*.supabase.co",
+      },
     ],
   },
   // ── Baseline security headers ──────────────────────────────────────────────
   // Conservative, dependency-free hardening that won't break Clerk/Shopify.
   async headers() {
-    // ── Content-Security-Policy (ENFORCING) ──────────────────────────────────
-    // Graduated from report-only after verifying login + checkout in a real
-    // browser against Clerk, Shopify and Turnstile with no breakage. This now
-    // *blocks* anything outside the allow-lists. `report-uri` is kept so any
-    // future violation (e.g. a new 3rd-party script) still surfaces in
-    // /api/csp-report logs even while enforcing.
-    //
-    // `unsafe-inline`/`unsafe-eval` are retained on script-src because Clerk,
-    // Next.js and framer-motion inject inline/eval'd code without nonces; a
-    // nonce/hash-based lockdown is a future hardening step (tracked separately).
-    // Allow-lists cover: Clerk (auth + telemetry), Cloudflare Turnstile,
-    // Shopify, Google Analytics 4 (gtag), Sanity (lookbook CMS), Unsplash, and
-    // same-origin assets.
-    const csp = [
-      "default-src 'self'",
-      "base-uri 'self'",
-      "object-src 'none'",
-      "frame-ancestors 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com https://www.googletagmanager.com https://www.google-analytics.com",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
-      "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.sanity.io https://cdn.sanity.io",
-      "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
-      "worker-src 'self' blob:",
-      "form-action 'self' https://*.myshopify.com",
-      "upgrade-insecure-requests",
-      "report-uri /api/csp-report",
-    ].join("; ");
-
+    // ── Content-Security-Policy ──────────────────────────────────────────────
+    // The CSP moved to `src/proxy.ts` (middleware) so it can carry a fresh
+    // per-request nonce + 'strict-dynamic' — see `src/lib/server/csp.ts`.
+    // Defining it here too would double-send the header and browsers enforce
+    // the INTERSECTION of multiple CSPs, breaking nonce'd scripts.
     const securityHeaders = [
-      { key: "Content-Security-Policy", value: csp },
       // Force HTTPS for 2 years incl. subdomains (safe once the site is HTTPS).
       {
         key: "Strict-Transport-Security",
