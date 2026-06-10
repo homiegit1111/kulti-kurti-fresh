@@ -33,6 +33,7 @@ export function CartDrawer() {
     checkoutUrl,
     isSyncing,
     shopifyCartEnabled,
+    syncError,
   } = useCart();
 
   const handleMouseEnter = () => {
@@ -326,6 +327,15 @@ export function CartDrawer() {
                   {formatPrice(subtotal)}
                 </span>
               </div>
+
+              {syncError && (
+                <p
+                  role="alert"
+                  className="mb-4 text-[11px] font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2"
+                >
+                  {syncError}
+                </p>
+              )}
 
               <button
                 disabled={isSyncing}

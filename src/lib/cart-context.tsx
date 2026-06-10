@@ -58,6 +58,9 @@ interface CartContextType {
   checkoutUrl: string | null; // redirect here to pay — Shopify handles it
   isSyncing: boolean;
   shopifyCartEnabled: boolean;
+  // Last sync error (null when healthy) — surface this to the user
+  syncError: string | null;
+  clearSyncError: () => void;
   // Attach buyer email to cart (called after login)
   attachBuyerEmail: (email: string) => void;
 }
@@ -75,9 +78,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [cartId, setCartId] = useState<string | null>(null);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const shopifyCartEnabled = isShopifyConfigured();
-  const syncLock = useRef(false);
+
+  // ── Serialized Shopify mutation queue ────────────────────────────────────────
+  //   Shopify cart mutations must not run concurrently (line adds/removes can
+  //   race and clobber each other). We chain every mutation onto a single
+  //   promise so they run in order — and, crucially, none are ever dropped.
+  const syncQueue = useRef<Promise<void>>(Promise.resolve());
+  const pendingCount = useRef(0);
+
+  const enqueueSync = useCallback((task: () => Promise<void>) => {
+    pendingCount.current += 1;
+    setIsSyncing(true);
+    syncQueue.current = syncQueue.current
+      .then(() => task())
+      .catch((err) => {
+        console.error("[cart] Shopify sync failed:", err);
+        setSyncError(
+          "We couldn't sync your bag with checkout. Please retry in a moment.",
+        );
+      })
+      .finally(() => {
+        pendingCount.current -= 1;
+        if (pendingCount.current <= 0) {
+          pendingCount.current = 0;
+          setIsSyncing(false);
+        }
+      });
+    return syncQueue.current;
+  }, []);
+
+  const clearSyncError = useCallback(() => setSyncError(null), []);
 
   // ── Hydrate ──────────────────────────────────────────────────────────────────
 
@@ -134,54 +167,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
       size: string,
       color: string,
     ) => {
-      if (!shopifyCartEnabled || syncLock.current) return;
-      syncLock.current = true;
-      setIsSyncing(true);
+      if (!shopifyCartEnabled) return;
 
-      try {
-        let activeCartId = cartId;
+      let activeCartId = cartId;
 
-        if (!activeCartId) {
-          const newCart = await getOrCreateCart();
-          if (!newCart) return;
-          activeCartId = newCart.id;
-          setCartId(newCart.id);
-          setCheckoutUrl(newCart.checkoutUrl);
-          localStorage.setItem(SHOPIFY_CART_ID_KEY, newCart.id);
-        }
+      if (!activeCartId) {
+        const newCart = await getOrCreateCart();
+        if (!newCart) throw new Error("Could not create Shopify cart");
+        activeCartId = newCart.id;
+        setCartId(newCart.id);
+        setCheckoutUrl(newCart.checkoutUrl);
+        localStorage.setItem(SHOPIFY_CART_ID_KEY, newCart.id);
+      }
 
-        const updatedCart = await cartLinesAdd(activeCartId, [
-          {
-            merchandiseId: variantId,
-            quantity,
-            attributes: [
-              { key: "Size", value: size },
-              { key: "Color", value: color },
-            ],
-          },
-        ]);
+      const updatedCart = await cartLinesAdd(activeCartId, [
+        {
+          merchandiseId: variantId,
+          quantity,
+          attributes: [
+            { key: "Size", value: size },
+            { key: "Color", value: color },
+          ],
+        },
+      ]);
 
-        if (updatedCart) {
-          setCheckoutUrl(updatedCart.checkoutUrl);
+      if (!updatedCart) throw new Error("Shopify cartLinesAdd returned null");
 
-          // Find the new Shopify line ID by matching merchandiseId
-          const shopifyLine = updatedCart.lines.nodes.find(
-            (l) => l.merchandise.id === variantId,
-          );
+      setCheckoutUrl(updatedCart.checkoutUrl);
+      setSyncError(null);
 
-          if (shopifyLine) {
-            setItems((prev) =>
-              prev.map((item) =>
-                item.id === localId
-                  ? { ...item, lineId: shopifyLine.id }
-                  : item,
-              ),
-            );
-          }
-        }
-      } finally {
-        syncLock.current = false;
-        setIsSyncing(false);
+      // Find the new Shopify line ID by matching merchandiseId
+      const shopifyLine = updatedCart.lines.nodes.find(
+        (l) => l.merchandise.id === variantId,
+      );
+
+      if (shopifyLine) {
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === localId ? { ...item, lineId: shopifyLine.id } : item,
+          ),
+        );
       }
     },
     [cartId, shopifyCartEnabled],
@@ -214,11 +239,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
             quantity: existing.quantity + 1,
           };
 
-          // Sync quantity change to Shopify
+          // Sync quantity change to Shopify (serialized via queue)
           if (shopifyCartEnabled && cartId && existing.lineId) {
-            void cartLinesUpdate(cartId, [
-              { id: existing.lineId, quantity: existing.quantity + 1 },
-            ]).then((cart) => {
+            const lineId = existing.lineId;
+            const nextQty = existing.quantity + 1;
+            void enqueueSync(async () => {
+              const cart = await cartLinesUpdate(cartId, [
+                { id: lineId, quantity: nextQty },
+              ]);
               if (cart?.checkoutUrl) setCheckoutUrl(cart.checkoutUrl);
             });
           }
@@ -241,9 +269,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
           variantId,
         };
 
-        // Fire-and-forget Shopify sync
+        // Queue Shopify sync (serialized — never dropped)
         if (shopifyCartEnabled && variantId) {
-          void syncAddToShopify(newId, variantId, 1, size, resolvedColor);
+          void enqueueSync(() =>
+            syncAddToShopify(newId, variantId, 1, size, resolvedColor),
+          );
         }
 
         return [...prev, newItem];
@@ -251,7 +281,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       setIsOpen(true);
     },
-    [cartId, shopifyCartEnabled, syncAddToShopify],
+    [cartId, shopifyCartEnabled, syncAddToShopify, enqueueSync],
   );
 
   const removeItem = useCallback(
@@ -259,14 +289,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setItems((prev) => {
         const item = prev.find((i) => i.id === itemId);
         if (shopifyCartEnabled && cartId && item?.lineId) {
-          void cartLinesRemove(cartId, [item.lineId]).then((cart) => {
+          const lineId = item.lineId;
+          void enqueueSync(async () => {
+            const cart = await cartLinesRemove(cartId, [lineId]);
             if (cart?.checkoutUrl) setCheckoutUrl(cart.checkoutUrl);
           });
         }
         return prev.filter((i) => i.id !== itemId);
       });
     },
-    [cartId, shopifyCartEnabled],
+    [cartId, shopifyCartEnabled, enqueueSync],
   );
 
   const updateQuantity = useCallback(
@@ -279,17 +311,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         prev.map((item) => {
           if (item.id !== itemId) return item;
           if (shopifyCartEnabled && cartId && item.lineId) {
-            void cartLinesUpdate(cartId, [{ id: item.lineId, quantity }]).then(
-              (cart) => {
-                if (cart?.checkoutUrl) setCheckoutUrl(cart.checkoutUrl);
-              },
-            );
+            const lineId = item.lineId;
+            void enqueueSync(async () => {
+              const cart = await cartLinesUpdate(cartId, [
+                { id: lineId, quantity },
+              ]);
+              if (cart?.checkoutUrl) setCheckoutUrl(cart.checkoutUrl);
+            });
           }
           return { ...item, quantity };
         }),
       );
     },
-    [cartId, shopifyCartEnabled, removeItem],
+    [cartId, shopifyCartEnabled, removeItem, enqueueSync],
   );
 
   const clearCart = useCallback(() => {
@@ -376,6 +410,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       checkoutUrl,
       isSyncing,
       shopifyCartEnabled,
+      syncError,
+      clearSyncError,
       attachBuyerEmail,
     }),
     [
@@ -394,6 +430,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       checkoutUrl,
       isSyncing,
       shopifyCartEnabled,
+      syncError,
+      clearSyncError,
       attachBuyerEmail,
     ],
   );
