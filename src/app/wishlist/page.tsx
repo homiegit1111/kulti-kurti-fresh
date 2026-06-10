@@ -21,12 +21,10 @@ export default function WishlistPage() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <header className="mb-10 lg:mb-14">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold mb-3">
-              Saved For Later
-            </p>
+            <p className="eyebrow mb-3">Saved For Later</p>
             <div className="flex items-end justify-between gap-6 flex-wrap">
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none">
-                Your Wishlist
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight leading-none">
+                Your <span className="italic">Wishlist</span>
               </h1>
               {items.length > 0 && (
                 <p className="text-xs uppercase tracking-[0.2em] font-bold text-charcoal/40 pb-1.5">
@@ -63,23 +61,23 @@ export default function WishlistPage() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center text-center py-24 lg:py-32 border border-dashed border-charcoal/15 rounded-3xl bg-white/50">
-      <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-6">
-        <Heart className="w-6 h-6 text-gold" strokeWidth={1.5} />
+    <div className="relative flex flex-col items-center justify-center text-center py-24 lg:py-32 border border-charcoal/10 bg-white frame-luxe overflow-hidden">
+      <p className="font-serif text-[90px] lg:text-[130px] leading-none text-charcoal/[0.05] select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[80%] pointer-events-none">
+        Beloved
+      </p>
+      <div className="relative w-14 h-14 rounded-full border border-gold/40 flex items-center justify-center mb-6">
+        <Heart className="w-5 h-5 text-gold-dark" strokeWidth={1} />
       </div>
-      <h2 className="font-serif text-2xl sm:text-3xl mb-3">
-        Nothing saved yet
+      <h2 className="relative font-serif text-3xl sm:text-4xl font-light mb-4">
+        Nothing saved — <span className="italic">yet.</span>
       </h2>
-      <p className="text-sm text-charcoal/50 max-w-sm mb-8 leading-relaxed">
+      <p className="relative text-sm text-charcoal/50 max-w-sm mb-10 leading-relaxed">
         Tap the heart on any piece you love and it will wait for you here —
         from everyday cottons to festive silks.
       </p>
-      <Link
-        href="/shop"
-        className="group inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
-      >
+      <Link href="/shop" className="relative btn-luxe group">
         Explore the Collection
-        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
       </Link>
     </div>
   );

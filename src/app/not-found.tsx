@@ -12,31 +12,37 @@ export default function NotFound() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 bg-[#fcfbf9] relative min-h-screen flex flex-col items-center justify-center px-6 py-32 text-center">
-        <div className="inline-flex items-center gap-2 mb-5">
+      <main className="flex-1 bg-warm-white relative min-h-screen flex flex-col items-center justify-center px-6 py-32 text-center overflow-hidden">
+        <p
+          aria-hidden
+          className="absolute inset-x-0 top-1/2 -translate-y-1/2 font-serif text-[38vw] leading-none text-charcoal/[0.04] select-none pointer-events-none"
+        >
+          404
+        </p>
+        <div className="relative inline-flex items-center gap-2 mb-5">
           <span className="w-4 h-[1px] bg-gold" />
           <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold">
             404
           </span>
           <span className="w-4 h-[1px] bg-gold" />
         </div>
-        <h1 className="text-4xl md:text-6xl font-serif text-charcoal tracking-tight leading-[1.1]">
+        <h1 className="relative text-5xl md:text-7xl font-serif font-light text-charcoal tracking-tight leading-[1.1]">
           This thread <span className="text-charcoal/40 italic font-light">unravelled.</span>
         </h1>
-        <p className="text-sm md:text-base text-charcoal/55 max-w-sm mx-auto font-light leading-relaxed mt-5">
+        <p className="relative text-sm md:text-base text-charcoal/55 max-w-sm mx-auto font-light leading-relaxed mt-6">
           The page you&rsquo;re looking for has moved or never existed. Let&rsquo;s
           find you something beautiful instead.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 mt-10">
+        <div className="relative flex flex-wrap items-center justify-center gap-4 mt-12">
           <Link
             href="/shop"
-            className="h-12 px-8 inline-flex items-center justify-center rounded-full bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
+            className="btn-luxe"
           >
             Explore the Shop
           </Link>
           <Link
             href="/"
-            className="h-12 px-8 inline-flex items-center justify-center rounded-full border border-charcoal/15 text-charcoal text-[10px] font-bold uppercase tracking-[0.2em] hover:border-charcoal/40 transition-colors"
+            className="btn-luxe-outline"
           >
             Back Home
           </Link>

@@ -13,49 +13,17 @@ export default function HomePage() {
     <>
       <Navbar />
       <main className="flex-1 relative z-10 bg-warm-white overflow-hidden">
-        {/* Global Homepage Doodles & Aesthetic Space Fillers */}
+        {/* Quiet editorial accents — hairline geometry, no noise */}
         <div className="absolute inset-0 z-0 pointer-events-none hidden lg:block">
-          {/* Top-Right looping arrow */}
-          <svg
-            className="absolute right-[-2%] lg:right-[5%] top-[12%] w-48 h-48 lg:w-64 lg:h-64 text-charcoal/30 -rotate-12"
-            viewBox="0 0 200 200"
-            fill="none"
-            style={{ willChange: "transform", transform: "translateZ(0)" }}
-          >
-            <path
-              d="M50 150 Q 150 180 180 50 T 50 150"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeDasharray="5 5"
-              fill="none"
-            />
-            <path
-              d="M40 140 L 50 150 L 65 145"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <text
-              x="120"
-              y="80"
-              fontFamily="cursive"
-              fontSize="14"
-              fill="currentColor"
-              className="opacity-80 rotate-12"
-            >
-              Handcrafted
-            </text>
-          </svg>
-
-          {/* Abstract soft blob for warmth near Collections */}
-          <div 
-            className="absolute left-[-10%] top-[25%] w-96 h-96 bg-orange-300/30 rounded-full blur-[80px]" 
+          {/* Soft warm wash near Collections */}
+          <div
+            className="absolute left-[-12%] top-[24%] w-[480px] h-[480px] bg-gold/[0.07] rounded-full blur-[100px]"
             style={{ willChange: "transform", transform: "translateZ(0)" }}
           />
 
-          {/* Dotted spinning trail */}
+          {/* Slow-turning hairline ring */}
           <svg
-            className="absolute left-[5%] lg:left-[15%] top-[30%] w-32 h-32 lg:w-48 lg:h-48 text-charcoal/25 animate-[spin_60s_linear_infinite]"
+            className="absolute right-[6%] top-[14%] w-44 h-44 text-gold/25 animate-[spin_90s_linear_infinite]"
             viewBox="0 0 100 100"
             fill="none"
             style={{ willChange: "transform", transform: "translateZ(0)" }}
@@ -63,74 +31,24 @@ export default function HomePage() {
             <circle
               cx="50"
               cy="50"
-              r="40"
+              r="44"
               stroke="currentColor"
-              strokeWidth="1"
-              strokeDasharray="4 8"
+              strokeWidth="0.75"
+              strokeDasharray="2 6"
             />
-            <circle
-              cx="50"
-              cy="50"
-              r="30"
-              stroke="currentColor"
-              strokeWidth="0.5"
-            />
+            <circle cx="50" cy="50" r="32" stroke="currentColor" strokeWidth="0.5" />
           </svg>
 
-          {/* Fun little starburst near Founder Fav */}
+          {/* Vertical hairline rule with diamond, near Founder Fav */}
           <svg
-            className="absolute right-[2%] lg:right-[10%] top-[65%] w-24 h-24 lg:w-32 lg:h-32 text-charcoal/30"
-            viewBox="0 0 100 100"
+            className="absolute right-[8%] top-[62%] w-10 h-64 text-charcoal/15"
+            viewBox="0 0 40 260"
             fill="none"
             style={{ willChange: "transform", transform: "translateZ(0)" }}
           >
-            <path
-              d="M50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20"
-              stroke="currentColor"
-              strokeWidth="1"
-              strokeLinecap="round"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="1"
-              fill="none"
-            />
-            <text
-              x="50"
-              y="85"
-              fontFamily="cursive"
-              fontSize="12"
-              fill="currentColor"
-              textAnchor="middle"
-              className="opacity-80 rotate-6"
-            >
-              Vibes
-            </text>
-          </svg>
-
-          {/* Architectural grid floating near the bottom Heritage section */}
-          <svg
-            className="absolute left-[-5%] lg:left-[20%] bottom-[5%] w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] text-charcoal/15"
-            viewBox="0 0 100 100"
-            style={{ willChange: "transform", transform: "translateZ(0)" }}
-          >
-            <pattern
-              id="home-grid"
-              width="10"
-              height="10"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 10 0 L 0 0 0 10"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="0.5"
-              />
-            </pattern>
-            <rect width="100" height="100" fill="url(#home-grid)" />
+            <line x1="20" y1="0" x2="20" y2="110" stroke="currentColor" strokeWidth="1" />
+            <rect x="16" y="118" width="8" height="8" transform="rotate(45 20 122)" stroke="currentColor" strokeWidth="1" fill="none" />
+            <line x1="20" y1="138" x2="20" y2="260" stroke="currentColor" strokeWidth="1" />
           </svg>
         </div>
 
