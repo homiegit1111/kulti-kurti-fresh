@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/seo";
 import { SHOP_FAQS } from "./faqs";
 import ShopClient from "./shop-client";
+import { getProducts } from "@/lib/shopify";
 
 // Render on demand so the keyword H1, category copy and FAQ are in the raw HTML
 // Googlebot/AI crawlers receive (the client island reads ?cat/&sort/&color/&price,
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ShopPage() {
+export default async function ShopPage() {
   // CollectionPage + BreadcrumbList + FAQPage structured data. CollectionPage
   // tells Google/AI this is a category listing; FAQPage (mirrors the visible
   // accordion) is eligible for AI Overviews and rich results.
@@ -81,7 +82,7 @@ export default function ShopPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <ShopClient />
+      <ShopClient initialProducts={await getProducts()} />
     </>
   );
 }

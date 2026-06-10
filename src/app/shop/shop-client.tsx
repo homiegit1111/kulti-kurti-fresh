@@ -30,7 +30,11 @@ const priceBands = [
   { label: "₹5,000+", value: "5000-plus", test: (p: number) => p > 5000 },
 ];
 
-function ShopContent() {
+function ShopContent({
+  initialProducts,
+}: {
+  initialProducts?: MockProduct[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -45,8 +49,12 @@ function ShopContent() {
     "Co-ords",
     "Sarees",
   ]);
-  const [products, setProducts] = useState<MockProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Server-provided products ship real HTML on first paint (SEO/LCP);
+  // the client effect only runs as a fallback when SSR data is absent.
+  const [products, setProducts] = useState<MockProduct[]>(
+    initialProducts ?? [],
+  );
+  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
   // ── Filter state lives in the URL (shareable, SSR-friendly, back-button OK) ──
   const activeCategory = searchParams.get("cat") ?? "All";
@@ -69,6 +77,14 @@ function ShopContent() {
   const clearAll = () => router.replace(pathname, { scroll: false });
 
   useEffect(() => {
+    if (initialProducts?.length) {
+      const dynamicCategories = [
+        "All",
+        ...new Set(initialProducts.map((p) => p.category).filter(Boolean)),
+      ];
+      if (dynamicCategories.length > 1) setCategories(dynamicCategories);
+      return;
+    }
     getProducts().then((data) => {
       setProducts(data);
       const dynamicCategories = [
@@ -78,7 +94,7 @@ function ShopContent() {
       if (dynamicCategories.length > 1) setCategories(dynamicCategories);
       setIsLoading(false);
     });
-  }, []);
+  }, [initialProducts]);
 
   // Colors available across the catalog (for the swatch facet)
   const availableColors = useMemo(
@@ -352,10 +368,14 @@ function ShopContent() {
   );
 }
 
-export default function ShopClient() {
+export default function ShopClient({
+  initialProducts,
+}: {
+  initialProducts?: MockProduct[];
+}) {
   return (
     <Suspense fallback={<ShopLoading />}>
-      <ShopContent />
+      <ShopContent initialProducts={initialProducts} />
     </Suspense>
   );
 }
