@@ -7,8 +7,13 @@
 
 :root {
     --radius: 0.625rem;
-    --font-inter: "Inter", "Segoe UI", Arial, sans-serif;
-    --font-playfair: "Playfair Display", Georgia, "Times New Roman", serif;
+    /*
+     * NOTE: --font-inter / --font-playfair are intentionally NOT defined here.
+     * next/font injects them on <html> (see src/app/fonts.ts + layout.tsx) with
+     * size-adjusted fallback metrics. `:root` IS `<html>`, so re-declaring them
+     * here would collide with / override the next/font values and re-break the
+     * webfont loading. The @theme mapping below consumes the next/font vars.
+     */
 
     /* Luxury warm palette */
     --background: 40 20% 98%;

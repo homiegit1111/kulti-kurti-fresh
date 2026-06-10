@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { playfair, inter } from "./fonts";
 import { Providers } from "@/components/providers/providers";
+import { WebVitals } from "./web-vitals";
 import { ClerkProvider } from "@clerk/nextjs";
 
 export const viewport = {
@@ -82,7 +84,7 @@ export default function RootLayout({
           colorPrimary: "#1a1a1a", // charcoal
           colorText: "#1a1a1a",
           colorBackground: "#ffffff",
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "var(--font-inter), 'Segoe UI', sans-serif",
           borderRadius: "1rem",
         },
         elements: {
@@ -111,12 +113,16 @@ export default function RootLayout({
         }
       }}
     >
-      <html lang="en" className="h-full antialiased">
+      <html
+        lang="en"
+        className={`${playfair.variable} ${inter.variable} h-full antialiased`}
+      >
         <body className="min-h-full flex flex-col font-sans bg-warm-white text-charcoal relative">
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
+          <WebVitals />
           <Providers>{children}</Providers>
         </body>
       </html>

@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import Hero from "@/components/sections/hero";
 import { Marquee } from "@/components/ui/marquee";
 import FeaturedProducts from "@/components/sections/featured-products";
-import MobileTikTokFeed from "@/components/sections/mobile-tiktok-feed";
+import MobileTikTokFeed from "@/components/sections/mobile-tiktok-feed.lazy";
 import FounderFav from "@/components/sections/founder-fav";
 import Heritage from "@/components/sections/heritage";
 import Collections from "@/components/sections/collections";
