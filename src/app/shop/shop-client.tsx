@@ -62,6 +62,25 @@ function ShopContent({
   const activeColor = searchParams.get("color");
   const activePrice = searchParams.get("price");
 
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isManualExpand, setIsManualExpand] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+        setIsManualExpand(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // initialize
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const shouldShowFiltersMobile = !isScrolled || isManualExpand;
+
   const setParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(Array.from(searchParams.entries()));
     if (!value || value === "All" || value === "newest") params.delete(key);
@@ -151,7 +170,32 @@ function ShopContent({
 
         {/* ── REFINED STICKY FILTER BAR ── */}
         <div className="sticky top-[72px] lg:top-20 z-40 bg-warm-white/95 backdrop-blur-xl border-y border-charcoal/10 mb-14">
-          <div className="max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
+          
+          {/* Mobile Toggle Button (Only visible when scrolled down) */}
+          <div
+            className={`md:hidden overflow-hidden transition-all duration-300 ${
+              isScrolled ? "max-h-12 border-b border-charcoal/10" : "max-h-0"
+            }`}
+          >
+            <button
+              onClick={() => setIsManualExpand(!isManualExpand)}
+              className="w-full flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal hover:text-gold transition-colors focus-visible:outline-none"
+            >
+              {isManualExpand ? "Hide Filters" : "Filters & Sort"}
+              <ChevronDown
+                className={`w-3 h-3 transition-transform duration-300 ${
+                  isManualExpand ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+          </div>
+
+          <div
+            className={`transition-all duration-500 overflow-hidden md:max-h-none md:opacity-100 ${
+              shouldShowFiltersMobile ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
 
             {/* Pill Categories */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 hide-scrollbar">
@@ -266,6 +310,7 @@ function ShopContent({
                 <X className="w-3 h-3" /> Clear filters
               </button>
             )}
+          </div>
           </div>
         </div>
 
