@@ -357,12 +357,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const attachBuyerEmail = useCallback(
     (email: string) => {
+      // Capture a snapshot for abandoned-cart recovery (no-op server-side
+      // unless Supabase is configured). Fire-and-forget; never blocks UX.
+      if (items.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        const recoveryId =
+          cartId ??
+          (() => {
+            let id = localStorage.getItem("rangat-pehnawa-recovery-id");
+            if (!id) {
+              id = `local-${crypto.randomUUID()}`;
+              localStorage.setItem("rangat-pehnawa-recovery-id", id);
+            }
+            return id;
+          })();
+
+        void fetch("/api/cart/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cartId: recoveryId,
+            email,
+            subtotal,
+            checkoutUrl,
+            items: items.map((i) => ({
+              productId: i.productId,
+              title: i.title,
+              handle: i.handle,
+              image: i.image,
+              price: i.salePrice ?? i.price,
+              quantity: i.quantity,
+              size: i.size,
+            })),
+          }),
+        }).catch(() => undefined);
+      }
+
       if (!shopifyCartEnabled || !cartId) return;
       void updateCartBuyerEmail(cartId, email).then((cart) => {
         if (cart?.checkoutUrl) setCheckoutUrl(cart.checkoutUrl);
       });
     },
-    [cartId, shopifyCartEnabled],
+    [cartId, shopifyCartEnabled, items, subtotal, checkoutUrl],
   );
 
   // ── Reconcile with Shopify on first hydration ────────────────────────────────

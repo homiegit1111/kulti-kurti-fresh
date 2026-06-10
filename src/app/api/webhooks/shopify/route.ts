@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { markRecoveredByEmail } from "@/lib/server/abandoned-cart";
 
 // HMAC verification needs the Node crypto runtime + the raw request body.
 export const runtime = "nodejs";
@@ -71,6 +72,11 @@ export async function POST(req: NextRequest) {
       if (typeof handle === "string" && handle) {
         revalidatePath(`/collections/${handle}`);
       }
+    } else if (topic.startsWith("orders/")) {
+      // Order placed → reconcile abandoned-cart recovery so we never nag a
+      // customer who has already checked out (matched by buyer email).
+      const email = typeof payload.email === "string" ? payload.email : null;
+      if (email) await markRecoveredByEmail(email);
     }
   } catch (err) {
     console.error("[shopify-webhook] revalidate failed:", err);
