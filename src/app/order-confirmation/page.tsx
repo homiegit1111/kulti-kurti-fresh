@@ -46,19 +46,18 @@ function OrderConfirmationContent() {
       <Navbar />
       <main className="flex-1 bg-warm-white pt-32 pb-24 min-h-screen">
         <div className="container mx-auto px-4 max-w-2xl">
-          <div className="bg-white border border-charcoal/5 shadow-[0_20px_40px_rgba(0,0,0,0.03)] rounded-2xl overflow-hidden">
-            <div className="h-2 bg-gold" />
+          <div className="panel-luxe frame-luxe overflow-hidden">
+            <div className="h-1 bg-gold" />
             <div className="px-8 py-12 lg:px-12 lg:py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-gold/10 flex items-center justify-center mx-auto mb-8">
-                <CheckCircle2 className="w-10 h-10 text-gold" strokeWidth={1.5} />
+              <div className="w-20 h-20 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-8">
+                <CheckCircle2 className="w-9 h-9 text-gold-dark" strokeWidth={1} />
               </div>
 
-              <p className="text-[10px] uppercase tracking-[0.3em] text-charcoal/40 font-bold mb-4">
+              <p className="eyebrow eyebrow--bare mb-4">
                 Thank you for your order
               </p>
-              <h1 className="font-serif text-4xl lg:text-5xl text-charcoal mb-6">
-                Your order is{" "}
-                <span className="italic text-gold">confirmed</span>
+              <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal mb-6">
+                Your order is <span className="italic">confirmed</span>
               </h1>
 
               {orderName ? (
@@ -96,15 +95,15 @@ function OrderConfirmationContent() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/account"
-                  className="inline-flex items-center gap-2 bg-charcoal text-white text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full hover:bg-black transition-all"
+                  className="btn-luxe"
                 >
-                  <Package className="w-4 h-4" /> View My Orders
+                  <Package className="w-3.5 h-3.5" /> View My Orders
                 </Link>
                 <Link
                   href="/shop"
-                  className="inline-flex items-center gap-2 text-charcoal/70 text-[10px] font-bold uppercase tracking-widest px-8 py-4 rounded-full border border-charcoal/15 hover:border-gold/40 hover:text-charcoal transition-all"
+                  className="btn-luxe-outline"
                 >
-                  Continue Shopping <ArrowRight className="w-4 h-4" />
+                  Continue Shopping <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
 

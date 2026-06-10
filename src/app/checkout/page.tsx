@@ -153,36 +153,20 @@ export default function CheckoutPage() {
     return (
       <>
         <Navbar />
-        <main className="min-h-[70vh] flex flex-col items-center justify-center pt-32 pb-20 px-6">
-          <div className="w-20 h-20 bg-warm-gray rounded-full flex items-center justify-center mb-6">
-            <svg
-              className="w-8 h-8 text-charcoal"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-            <ShoppingBag className="w-16 h-16 text-charcoal/20" strokeWidth={1} />
-            <h3 className="font-serif text-2xl text-charcoal mt-6 mb-2">
-              Your cart is empty
-            </h3>
+        <main className="min-h-[70vh] flex flex-col items-center justify-center pt-32 pb-20 px-6 bg-warm-white text-center">
+          <div className="w-20 h-20 rounded-full border border-gold/40 flex items-center justify-center mb-8">
+            <ShoppingBag className="w-7 h-7 text-charcoal/40" strokeWidth={1} />
           </div>
-          <p className="text-muted-foreground mb-8 text-center max-w-md">
+          <h3 className="font-serif text-3xl md:text-4xl font-light text-charcoal mb-4">
+            Your cart is <span className="italic">empty</span>
+          </h3>
+          <p className="text-sm text-charcoal/50 mb-10 max-w-md leading-relaxed">
             Looks like you haven&apos;t added any beautiful pieces to your
             wardrobe yet.
           </p>
-          <Link
-            href="/shop"
-            className="group h-12 px-8 flex items-center justify-center gap-3 bg-charcoal text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-black transition-colors"
-          >
+          <Link href="/shop" className="btn-luxe group">
             <span>Explore Collection</span>
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </main>
         <Footer />
@@ -195,9 +179,9 @@ export default function CheckoutPage() {
       <>
         <Navbar />
         <main className="min-h-[70vh] flex flex-col items-center justify-center pt-32 pb-20 px-6">
-          <div className="w-12 h-12 border-4 border-charcoal/20 border-t-charcoal rounded-full animate-spin mb-6"></div>
-          <h1 className="font-serif text-2xl text-charcoal mb-2">
-            Taking you to Secure Checkout...
+          <div className="w-12 h-12 border border-gold/30 border-t-gold rounded-full animate-spin mb-8"></div>
+          <h1 className="font-serif text-3xl font-light text-charcoal mb-3">
+            Taking you to <span className="italic">Secure Checkout</span>
           </h1>
           <p className="text-muted-foreground text-sm">
             Please wait while we redirect you to Shopify.
@@ -219,12 +203,12 @@ export default function CheckoutPage() {
               <div key={step.key} className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
+                    className={`w-9 h-9 border flex items-center justify-center text-[11px] font-semibold transition-colors duration-300 ${
                       currentStep === step.key
-                        ? "bg-charcoal text-white"
+                        ? "bg-charcoal border-charcoal text-white"
                         : steps.findIndex((s) => s.key === currentStep) > idx
-                          ? "bg-gold text-white"
-                          : "bg-charcoal/10 text-muted-foreground"
+                          ? "border-gold text-gold-dark"
+                          : "border-charcoal/15 text-charcoal/35"
                     }`}
                   >
                     {steps.findIndex((s) => s.key === currentStep) > idx ? (
@@ -234,7 +218,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <span
-                    className={`text-xs uppercase tracking-widest font-semibold hidden sm:inline ${
+                    className={`text-[10px] uppercase tracking-[0.22em] font-bold hidden sm:inline ${
                       currentStep === step.key
                         ? "text-charcoal"
                         : "text-muted-foreground"
@@ -244,7 +228,7 @@ export default function CheckoutPage() {
                   </span>
                 </div>
                 {idx < steps.length - 1 && (
-                  <div className="w-12 h-px bg-charcoal/20" />
+                  <div className="w-14 h-px bg-charcoal/15" />
                 )}
               </div>
             ))}
@@ -261,15 +245,18 @@ export default function CheckoutPage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     onSubmit={handleShippingSubmit}
-                    className="space-y-6"
+                    className="space-y-8"
                   >
-                    <h2 className="font-serif text-2xl text-charcoal mb-6">
-                      Shipping Details
-                    </h2>
+                    <div className="mb-10">
+                      <p className="eyebrow mb-3">Step One</p>
+                      <h2 className="font-serif text-3xl md:text-4xl font-light text-charcoal">
+                        Shipping <span className="italic">Details</span>
+                      </h2>
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           First Name *
                         </label>
                         <input
@@ -282,11 +269,11 @@ export default function CheckoutPage() {
                               firstName: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           Last Name *
                         </label>
                         <input
@@ -299,14 +286,14 @@ export default function CheckoutPage() {
                               lastName: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           Email *
                         </label>
                         <input
@@ -319,11 +306,11 @@ export default function CheckoutPage() {
                               email: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           Phone *
                         </label>
                         <input
@@ -336,14 +323,14 @@ export default function CheckoutPage() {
                               phone: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                           placeholder="+91"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                      <label className="field-label">
                         Address *
                       </label>
                       <input
@@ -356,13 +343,13 @@ export default function CheckoutPage() {
                             address: e.target.value,
                           })
                         }
-                        className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                        className="field-luxe"
                       />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-8">
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           City *
                         </label>
                         <input
@@ -375,11 +362,11 @@ export default function CheckoutPage() {
                               city: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           State *
                         </label>
                         <input
@@ -392,11 +379,11 @@ export default function CheckoutPage() {
                               state: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2 block">
+                        <label className="field-label">
                           Pincode *
                         </label>
                         <input
@@ -409,7 +396,7 @@ export default function CheckoutPage() {
                               pincode: e.target.value,
                             })
                           }
-                          className="w-full h-11 px-4 text-sm bg-white border border-charcoal/20 focus:border-gold focus:outline-none transition-colors"
+                          className="field-luxe"
                           pattern="[0-9]{6}"
                           maxLength={6}
                         />
@@ -419,7 +406,7 @@ export default function CheckoutPage() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full h-12 flex items-center justify-center gap-3 bg-charcoal text-white text-xs font-semibold uppercase tracking-widest hover:bg-gold transition-colors mt-8 disabled:opacity-70"
+                      className="btn-luxe w-full mt-10"
                     >
                       {isSubmitting ? (
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -441,11 +428,14 @@ export default function CheckoutPage() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <h2 className="font-serif text-2xl text-charcoal mb-6">
-                      Payment
-                    </h2>
+                    <div className="mb-10">
+                      <p className="eyebrow mb-3">Step Two</p>
+                      <h2 className="font-serif text-3xl md:text-4xl font-light text-charcoal">
+                        Payment
+                      </h2>
+                    </div>
 
-                    <div className="bg-warm-gray p-6 border border-charcoal/10">
+                    <div className="panel-luxe p-8">
                       <div className="flex items-center gap-3 mb-4">
                         <CreditCard className="h-5 w-5 text-gold" />
                         <p className="text-sm font-semibold text-charcoal">
@@ -485,7 +475,7 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Shopify checkout notice */}
-                    <div className="bg-warm-gray/50 p-4 border border-charcoal/5 rounded-sm">
+                    <div className="bg-white p-4 border border-gold/25 border-l-2 border-l-gold">
                       <div className="flex items-start gap-3">
                         <Lock className="h-4 w-4 text-gold shrink-0 mt-0.5" />
                         <p className="text-xs text-muted-foreground leading-relaxed">
@@ -498,7 +488,7 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Shipping summary */}
-                    <div className="bg-white p-6 border border-charcoal/10">
+                    <div className="panel-luxe p-8">
                       <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">
                         Shipping To
                       </p>
@@ -514,7 +504,7 @@ export default function CheckoutPage() {
                       </p>
                       <button
                         onClick={() => setCurrentStep("shipping")}
-                        className="text-[10px] text-gold uppercase tracking-wider mt-3 hover:underline"
+                        className="link-luxe text-[10px] text-gold-dark font-bold uppercase tracking-[0.18em] mt-4"
                       >
                         Edit Address
                       </button>
@@ -524,14 +514,14 @@ export default function CheckoutPage() {
                       <button
                         onClick={() => setCurrentStep("shipping")}
                         disabled={isSubmitting}
-                        className="h-12 px-6 flex items-center gap-2 border border-charcoal/20 text-xs font-semibold uppercase tracking-widest text-charcoal hover:bg-charcoal/5 transition-colors disabled:opacity-70"
+                        className="btn-luxe-outline"
                       >
                         <ArrowLeft className="h-4 w-4" /> Back
                       </button>
                       <button
                         onClick={handleShopifyCheckout}
                         disabled={!(preparedCheckoutUrl || checkoutUrl)}
-                        className="flex-1 h-12 flex items-center justify-center gap-3 bg-charcoal text-white text-xs font-semibold uppercase tracking-widest hover:bg-gold transition-colors disabled:opacity-50"
+                        className="btn-luxe flex-1"
                       >
                         <Lock className="h-4 w-4" />
                         <span>Pay with Shopify</span>
@@ -547,11 +537,11 @@ export default function CheckoutPage() {
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-12"
                   >
-                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                      <Check className="h-8 w-8 text-green-600" />
+                    <div className="w-16 h-16 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-8">
+                      <Check className="h-7 w-7 text-gold-dark" strokeWidth={1} />
                     </div>
-                    <h2 className="font-serif text-3xl text-charcoal mb-3">
-                      Order Confirmed! 🎉
+                    <h2 className="font-serif text-4xl font-light text-charcoal mb-4">
+                      Order <span className="italic">Confirmed</span>
                     </h2>
                     <p className="text-sm text-muted-foreground mb-2 max-w-md mx-auto">
                       Thank you for shopping with Rangat Pehnawa. Your order has
@@ -563,10 +553,10 @@ export default function CheckoutPage() {
                     <div className="flex gap-4 justify-center">
                       <Link
                         href="/shop"
-                        className="inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 text-xs font-semibold uppercase tracking-widest hover:bg-gold transition-colors"
+                        className="btn-luxe"
                       >
                         Continue Shopping
-                        <ArrowRight className="h-4 w-4" />
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </div>
                   </motion.div>
@@ -577,15 +567,18 @@ export default function CheckoutPage() {
             {/* Order Summary Sidebar */}
             {currentStep !== "confirmation" && (
               <div className="lg:col-span-1">
-                <div className="bg-warm-gray p-6 sticky top-32">
-                  <h3 className="font-serif text-lg text-charcoal mb-6 pb-4 border-b border-charcoal/10">
-                    Order Summary ({itemCount})
-                  </h3>
+                <div className="panel-luxe frame-luxe p-8 sticky top-32">
+                  <div className="mb-6 pb-5 border-b border-charcoal/10">
+                    <p className="eyebrow eyebrow--bare mb-1.5">Summary</p>
+                    <h3 className="font-serif text-2xl font-light text-charcoal">
+                      {itemCount} {itemCount === 1 ? "Piece" : "Pieces"}
+                    </h3>
+                  </div>
 
                   <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-3">
-                        <div className="relative w-14 h-18 shrink-0 overflow-hidden bg-white">
+                        <div className="relative w-14 h-18 shrink-0 overflow-hidden bg-warm-gray">
                           <Image
                             src={item.image}
                             alt={item.title}
@@ -623,15 +616,15 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Shipping</span>
-                      <span className="text-green-600 text-xs uppercase tracking-wider font-medium">
-                        Free
+                      <span className="font-serif italic text-sm text-gold-dark">
+                        Complimentary
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-4 pt-4 border-t border-charcoal/10">
-                    <span className="font-serif text-lg">Total</span>
-                    <span className="font-serif text-lg font-semibold">
+                  <div className="flex justify-between items-end mt-4 pt-5 border-t border-gold/40">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal/60 pb-1">Total</span>
+                    <span className="font-serif text-3xl font-light">
                       {formatPrice(total)}
                     </span>
                   </div>
