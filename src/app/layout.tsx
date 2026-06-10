@@ -3,6 +3,8 @@ import "./globals.css";
 import { playfair, inter } from "./fonts";
 import { Providers } from "@/components/providers/providers";
 import { WebVitals } from "./web-vitals";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { ConsentBanner } from "@/components/analytics/consent-banner";
 import { ClerkProvider } from "@clerk/nextjs";
 
 export const viewport = {
@@ -151,8 +153,10 @@ export default function RootLayout({
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
           />
+          <GoogleAnalytics />
           <WebVitals />
           <Providers>{children}</Providers>
+          <ConsentBanner />
         </body>
       </html>
     </ClerkProvider>

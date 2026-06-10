@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { type MockProduct, isShopifyConfigured } from "@/lib/shopify";
+import { trackAddToCart } from "@/lib/analytics";
 import {
   SHOPIFY_CART_ID_KEY,
   cartLinesAdd,
@@ -226,6 +227,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setSyncError("Sorry — this piece is currently sold out.");
         return;
       }
+
+      // GA4 ecommerce event (no-op unless analytics is configured + consented).
+      trackAddToCart({
+        item_id: product.id,
+        item_name: product.title,
+        price: product.salePrice ?? product.price,
+        quantity: 1,
+        item_category: product.category,
+        item_variant: size,
+      });
 
       const resolvedColor = color || product.colors[0] || "default";
       const variantId =

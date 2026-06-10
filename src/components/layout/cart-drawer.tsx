@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/shopify";
+import { trackCheckoutStart } from "@/lib/checkout";
+import { ShopPayButton } from "@/components/checkout/shop-pay-button";
 import { Minus, Plus, X, ArrowRight, Loader2, ShoppingBag, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -337,10 +339,13 @@ export function CartDrawer() {
                 </p>
               )}
 
+              <ShopPayButton className="mb-3" />
+
               <button
                 disabled={isSyncing}
                 onClick={async (e) => {
                   e.preventDefault();
+                  trackCheckoutStart(items, subtotal);
                   if (checkoutUrl) {
                     window.location.href = checkoutUrl;
                   } else if (shopifyCartEnabled) {

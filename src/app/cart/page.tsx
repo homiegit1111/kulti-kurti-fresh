@@ -16,6 +16,8 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice, COLOR_MAP } from "@/lib/shopify";
+import { trackCheckoutStart } from "@/lib/checkout";
+import { ShopPayButton } from "@/components/checkout/shop-pay-button";
 
 const doodleFont = {
   fontFamily: '"Kalam", "Caveat", "Comic Sans MS", cursive',
@@ -394,12 +396,15 @@ export default function CartPage() {
                         </svg>
                       </div>
 
-                      {/* Checkout Button */}
+                      {/* Shop Pay express lane (appears only when enabled) */}
+                      <ShopPayButton className="mb-3" />
+
                       {/* Checkout Button */}
                       <button
                         disabled={isSyncing}
                         onClick={async (e) => {
                           e.preventDefault();
+                          trackCheckoutStart(items, subtotal);
                           if (checkoutUrl) {
                             window.location.href = checkoutUrl;
                           } else if (shopifyCartEnabled) {
