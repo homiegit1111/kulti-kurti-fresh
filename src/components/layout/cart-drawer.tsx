@@ -11,7 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/medusa";
+import { formatPrice } from "@/lib/shopify";
 import { Minus, Plus, X, ArrowRight, Loader2, ShoppingBag, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 

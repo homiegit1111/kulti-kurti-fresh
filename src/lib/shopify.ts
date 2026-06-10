@@ -31,9 +31,6 @@ const endpoint = () =>
  */
 export const isShopifyConfigured = (): boolean => Boolean(SHOPIFY_DOMAIN());
 
-// Keep old name so imports in cart-context.tsx etc don't break
-export const isMedusaConfigured = isShopifyConfigured;
-
 // ── GraphQL client ─────────────────────────────────────────────────────────────
 
 interface GqlResponse<T> {

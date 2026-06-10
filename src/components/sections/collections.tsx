@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { MOCK_COLLECTIONS, getCollections } from "@/lib/medusa";
+import { MOCK_COLLECTIONS, getCollections } from "@/lib/shopify";
 
 export default function Collections() {
   const [collections, setCollections] = useState(MOCK_COLLECTIONS.slice(0, 4));

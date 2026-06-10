@@ -9,7 +9,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import { type MockProduct } from "@/lib/medusa";
+import { type MockProduct } from "@/lib/shopify";
 
 // ── Types ──
 interface WishlistContextType {

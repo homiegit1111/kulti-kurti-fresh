@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Heart, Plus } from "lucide-react";
-import { formatPrice, type MockProduct } from "@/lib/medusa";
+import { formatPrice, type MockProduct } from "@/lib/shopify";
 import { useCart } from "@/lib/cart-context";
 
 interface LivingProductCardProps {

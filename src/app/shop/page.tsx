@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { getProducts, type MockProduct } from "@/lib/medusa";
+import { getProducts, type MockProduct } from "@/lib/shopify";
 import ShopLoading from "@/app/shop/loading";
 import { useWishlist } from "@/lib/wishlist-context";
 import { LivingProductCard } from "@/components/ui/living-product-card";
