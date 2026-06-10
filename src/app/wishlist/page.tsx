@@ -1,301 +1,233 @@
 "use client";
 
-import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
-import { ShoppingBag, X } from "lucide-react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { Heart, ShoppingBag, X, ArrowRight, Check } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useWishlist } from "@/lib/wishlist-context";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/shopify";
-
-// A playful handwritten font style
-const doodleFont = {
-  fontFamily: '"Kalam", "Caveat", "Comic Sans MS", cursive',
-};
+import { formatPrice, type MockProduct } from "@/lib/shopify";
 
 export default function WishlistPage() {
-  const { items, removeFromWishlist, clearWishlist } = useWishlist();
-  const { addItem } = useCart();
+  const { items, removeFromWishlist } = useWishlist();
 
-  // ── EMPTY CANVAS STATE ──
-  if (items.length === 0) {
-    return (
-      <div className="bg-[#fcfbf9] min-h-screen text-charcoal flex flex-col font-sans selection:bg-gold selection:text-white">
-        <Navbar />
-        <main className="flex-1 relative flex flex-col items-center justify-center pt-32 pb-24 px-6 overflow-hidden">
-          {/* Subtle Background Glows */}
-          <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="absolute left-1/4 top-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-300/10 rounded-full blur-[120px]" />
-            <div className="absolute right-1/4 bottom-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[100px]" />
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative z-10 w-full max-w-lg text-center flex flex-col items-center"
-          >
-            {/* The Empty Frame Doodle */}
-            <div className="relative w-48 h-48 mb-8">
-              <svg
-                viewBox="0 0 100 100"
-                className="w-full h-full text-charcoal/20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                {/* Hand drawn frame */}
-                <path
-                  d="M10,10 Q50,8 90,12 Q92,50 88,90 Q50,92 12,88 Q8,50 10,10 Z"
-                  strokeDasharray="5 5"
-                />
-                <path d="M12,12 L88,10 L90,88 L10,90 Z" />
-                {/* Question mark doodle */}
-                <path d="M40,35 C40,25 60,25 60,35 C60,45 50,45 50,55" />
-                <circle cx="50" cy="65" r="2" fill="currentColor" />
-              </svg>
-
-              {/* Cute heart doodle floating */}
-              <motion.svg
-                animate={{ y: [-5, 5, -5], rotate: [-5, 5, -5] }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-                viewBox="0 0 24 24"
-                className="absolute -top-4 -right-4 w-10 h-10 text-gold"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              >
-                <path
-                  d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                />
-              </motion.svg>
-            </div>
-
-            <h1 className="font-serif text-4xl text-charcoal mb-4 relative">
-              Your canvas is empty...
-              {/* Scribble underline */}
-              <svg
-                className="absolute -bottom-2 left-0 w-full h-3 text-gold/60"
-                viewBox="0 0 100 10"
-                preserveAspectRatio="none"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M0,5 Q20,0 40,8 T80,2 T100,6" />
-              </svg>
-            </h1>
-
-            <p className="text-xl text-charcoal/50 mb-12" style={doodleFont}>
-              Start pinning your favorite pieces here!
-            </p>
-
-            <div className="relative">
-              <Link
-                href="/shop"
-                className="relative z-10 px-8 py-4 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-black hover:scale-[1.02] transition-all duration-300 shadow-[0_10px_20px_rgba(0,0,0,0.1)] inline-block"
-              >
-                Explore Collection
-              </Link>
-
-              {/* Arrow pointing to button */}
-              <svg
-                className="absolute -top-16 -left-16 w-20 h-20 text-charcoal/40 -rotate-12"
-                viewBox="0 0 100 100"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10,80 Q30,20 80,40" />
-                <path d="M70,30 L80,40 L70,50" />
-              </svg>
-            </div>
-          </motion.div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // ── MOODBOARD FILLED STATE ──
   return (
-    <div className="bg-[#f2efe9] min-h-screen text-charcoal flex flex-col font-sans selection:bg-gold selection:text-white">
+    <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
       <Navbar />
-
-      <main className="flex-1 relative z-10 pt-28 pb-32 overflow-hidden">
-        {/* Subtle Background Glows */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute left-1/4 top-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-300/10 rounded-full blur-[120px]" />
-          <div className="absolute right-1/4 bottom-1/4 translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[100px]" />
-        </div>
-
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-16 relative z-10">
-          {/* Header - Doodle Style */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 relative">
-            <div className="relative">
-              <p className="text-2xl text-gold mb-1" style={doodleFont}>
-                My Dream Board
-              </p>
-              <h1 className="font-serif text-5xl md:text-7xl text-charcoal tracking-tighter">
-                The Collection
+      <main className="flex-1 pt-28 lg:pt-36 pb-24 px-4 sm:px-6 lg:px-12">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <header className="mb-10 lg:mb-14">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gold mb-3">
+              Saved For Later
+            </p>
+            <div className="flex items-end justify-between gap-6 flex-wrap">
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none">
+                Your Wishlist
               </h1>
-              <svg
-                className="absolute -bottom-6 -right-12 w-24 h-24 text-charcoal/20"
-                viewBox="0 0 100 100"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path
-                  d="M20,20 Q80,20 80,80 Q20,80 20,20"
-                  strokeDasharray="4 4"
-                />
-                <path d="M30,50 L50,70 L70,30" />
-              </svg>
-            </div>
-
-            <div className="flex items-center gap-6 relative z-10">
-              <div className="flex flex-col items-end">
-                <p className="text-xl text-charcoal/60" style={doodleFont}>
-                  {items.length} piece{items.length !== 1 ? "s" : ""} pinned
+              {items.length > 0 && (
+                <p className="text-xs uppercase tracking-[0.2em] font-bold text-charcoal/40 pb-1.5">
+                  {items.length} {items.length === 1 ? "Piece" : "Pieces"}
                 </p>
-              </div>
-              <button
-                onClick={clearWishlist}
-                className="group relative px-6 py-3 bg-white border border-charcoal/10 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal transition-all hover:bg-red-50 hover:text-red-600 hover:border-red-100 shadow-sm"
-              >
-                Clear Board
-              </button>
+              )}
             </div>
-          </div>
+          </header>
 
-          {/* Polaroid Scatter Layout */}
-          <div className="relative min-h-[60vh] w-full flex flex-wrap justify-center md:justify-start gap-8 md:gap-12 lg:gap-16 pt-8">
-            <AnimatePresence>
-              {items.map((product, idx) => {
-                // Deterministic pseudo-randomness based on index so it doesn't hydrate mismatch
-                const rotate = (idx % 2 === 0 ? 1 : -1) * (2 + (idx % 4) * 1.5);
-                const translateY = (idx % 3) * 15;
-                const tapeColor =
-                  idx % 2 === 0 ? "bg-[#e2dac3]/80" : "bg-white/60";
-
-                return (
-                  <motion.div
+          {items.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <motion.ul
+              layout
+              className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12"
+            >
+              <AnimatePresence mode="popLayout">
+                {items.map((product) => (
+                  <WishlistCard
                     key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.8, rotate: rotate - 10 }}
-                    animate={{ opacity: 1, scale: 1, rotate, y: translateY }}
-                    exit={{ opacity: 0, scale: 0.8, rotate: 0 }}
-                    transition={{
-                      duration: 0.5,
-                      type: "spring",
-                      stiffness: 100,
-                      damping: 15,
-                    }}
-                    className="relative group cursor-grab active:cursor-grabbing w-[280px] sm:w-[320px] shrink-0 z-10 hover:z-50"
-                  >
-                    {/* The Polaroid Card */}
-                    <div className="bg-white p-4 pb-12 shadow-[2px_10px_30px_rgba(0,0,0,0.1)] group-hover:shadow-[10px_30px_50px_rgba(0,0,0,0.2)] transition-shadow duration-500 border border-charcoal/5 relative">
-                      {/* Masking Tape */}
-                      <div
-                        className={`absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 ${tapeColor} backdrop-blur-sm -rotate-2 shadow-sm z-20`}
-                        style={{
-                          clipPath:
-                            "polygon(0% 10%, 5% 0%, 95% 5%, 100% 15%, 98% 90%, 95% 100%, 5% 95%, 0% 85%)",
-                        }}
-                      />
-
-                      {/* Close button (looks like a red scribble mark on hover) */}
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          removeFromWishlist(product.id);
-                        }}
-                        className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-charcoal/40 hover:text-red-500 transition-colors z-30 opacity-0 group-hover:opacity-100"
-                        title="Remove from board"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-
-                      {/* Image */}
-                      <Link
-                        href={`/shop/${product.handle}`}
-                        className="block relative aspect-[3/4] bg-[#f4efe6] overflow-hidden mb-4"
-                      >
-                        <Image
-                          src={product.image}
-                          alt={product.title}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-[1s]"
-                          sizes="(max-width: 768px) 100vw, 320px"
-                        />
-                      </Link>
-
-                      {/* Info & Add to Cart */}
-                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
-                        <div>
-                          <p
-                            className="text-xl text-charcoal/80 leading-none"
-                            style={doodleFont}
-                          >
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                              Add to Cart
-                            </span>
-                            {product.title.length > 18
-                              ? product.title.slice(0, 18) + "..."
-                              : product.title}
-                          </p>
-                          <p className="text-xs font-bold text-charcoal/40 uppercase tracking-widest mt-1">
-                            {formatPrice(product.salePrice ?? product.price)}
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={() => addItem(product, product.sizes[0])}
-                          className="w-10 h-10 rounded-full border border-charcoal/20 flex items-center justify-center text-charcoal hover:bg-charcoal hover:border-charcoal hover:text-white transition-all shadow-sm hover:scale-105"
-                          title="Acquire"
-                        >
-                          <ShoppingBag className="w-4 h-4" />
-                        </button>
-                      </div>
-
-                      {/* Random Doodle Annotations (Only visible on hover) */}
-                      <svg
-                        className="absolute -bottom-6 -left-6 w-16 h-16 text-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                        viewBox="0 0 100 100"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        {idx % 2 === 0 ? (
-                          <path d="M20,50 Q50,20 80,50 Q50,80 20,50" />
-                        ) : (
-                          <path d="M20,20 L80,80 M80,20 L20,80" />
-                        )}
-                      </svg>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
+                    product={product}
+                    onRemove={() => removeFromWishlist(product.id)}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.ul>
+          )}
         </div>
       </main>
       <Footer />
     </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center text-center py-24 lg:py-32 border border-dashed border-charcoal/15 rounded-3xl bg-white/50">
+      <div className="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-6">
+        <Heart className="w-6 h-6 text-gold" strokeWidth={1.5} />
+      </div>
+      <h2 className="font-serif text-2xl sm:text-3xl mb-3">
+        Nothing saved yet
+      </h2>
+      <p className="text-sm text-charcoal/50 max-w-sm mb-8 leading-relaxed">
+        Tap the heart on any piece you love and it will wait for you here —
+        from everyday cottons to festive silks.
+      </p>
+      <Link
+        href="/shop"
+        className="group inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-black transition-colors"
+      >
+        Explore the Collection
+        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+      </Link>
+    </div>
+  );
+}
+
+function WishlistCard({
+  product,
+  onRemove,
+}: {
+  product: MockProduct;
+  onRemove: () => void;
+}) {
+  const { addItem } = useCart();
+  const [sizeOpen, setSizeOpen] = useState(false);
+  const [added, setAdded] = useState(false);
+  const soldOut = product.availableForSale === false;
+  const onSale =
+    product.salePrice != null && product.salePrice < product.price;
+
+  const handleAdd = (size: string) => {
+    addItem(product, size, product.colors[0]);
+    setSizeOpen(false);
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1600);
+  };
+
+  return (
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+      className="group relative flex flex-col"
+    >
+      {/* Image */}
+      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#efece6] mb-4">
+        <Link href={`/shop/${product.handle}`} className="block w-full h-full">
+          <Image
+            src={product.images[0]}
+            alt={product.title}
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-[1.04]"
+          />
+        </Link>
+
+        {/* Remove */}
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${product.title} from wishlist`}
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-charcoal/60 hover:text-charcoal hover:bg-white shadow-sm transition-all"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {soldOut && (
+          <span className="absolute top-3 left-3 bg-charcoal/85 text-white text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full">
+            Sold Out
+          </span>
+        )}
+        {!soldOut && onSale && (
+          <span className="absolute top-3 left-3 bg-gold text-white text-[9px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full">
+            On Sale
+          </span>
+        )}
+
+        {/* Quick add — size pop-over */}
+        {!soldOut && (
+          <div className="absolute inset-x-3 bottom-3">
+            <AnimatePresence mode="wait">
+              {sizeOpen ? (
+                <motion.div
+                  key="sizes"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.2 }}
+                  className="bg-white/95 backdrop-blur-md rounded-xl p-2 shadow-lg"
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-charcoal/40 text-center mb-1.5 mt-1">
+                    Select Size
+                  </p>
+                  <div className="flex gap-1.5 justify-center flex-wrap">
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleAdd(size)}
+                        className="min-w-9 h-9 px-2 rounded-lg text-xs font-bold bg-[#f2efe9] hover:bg-charcoal hover:text-white transition-colors"
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.button
+                  key="cta"
+                  type="button"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.2 }}
+                  onClick={() => setSizeOpen(true)}
+                  className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] shadow-md transition-all lg:translate-y-2 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 ${
+                    added
+                      ? "bg-[#2a4d3e] text-white"
+                      : "bg-white/95 backdrop-blur-md text-charcoal hover:bg-charcoal hover:text-white"
+                  }`}
+                >
+                  {added ? (
+                    <>
+                      <Check className="w-4 h-4" /> Added to Cart
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-4 h-4" /> Add to Cart
+                    </>
+                  )}
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      {/* Meta */}
+      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-gold mb-1.5">
+        {product.category}
+      </p>
+      <Link
+        href={`/shop/${product.handle}`}
+        className="font-serif text-base sm:text-lg leading-snug mb-1 hover:text-gold-dark transition-colors"
+      >
+        {product.title}
+      </Link>
+      <p className="text-sm">
+        <span className="font-medium">
+          {formatPrice(product.salePrice ?? product.price)}
+        </span>
+        {onSale && (
+          <span className="ml-2 text-charcoal/35 line-through text-xs">
+            {formatPrice(product.price)}
+          </span>
+        )}
+      </p>
+    </motion.li>
   );
 }
