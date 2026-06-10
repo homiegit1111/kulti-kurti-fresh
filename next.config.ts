@@ -24,6 +24,35 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // ── Baseline security headers ──────────────────────────────────────────────
+  // Conservative, dependency-free hardening that won't break Clerk/Shopify.
+  // NOTE: a strict Content-Security-Policy is intentionally NOT set here yet —
+  // it needs to be verified in a real browser against Clerk's inline scripts,
+  // Shopify checkout redirects, and framer-motion inline styles before enabling.
+  async headers() {
+    const securityHeaders = [
+      // Force HTTPS for 2 years incl. subdomains (safe once the site is HTTPS).
+      {
+        key: "Strict-Transport-Security",
+        value: "max-age=63072000; includeSubDomains; preload",
+      },
+      // Block MIME-type sniffing.
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      // Disallow framing (clickjacking protection).
+      { key: "X-Frame-Options", value: "SAMEORIGIN" },
+      // Send only the origin on cross-origin navigations.
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      // Lock down powerful browser features we don't use.
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+      },
+      // Limit cross-origin resource leakage.
+      { key: "X-DNS-Prefetch-Control", value: "on" },
+    ];
+
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
 };
 
 export default nextConfig;
