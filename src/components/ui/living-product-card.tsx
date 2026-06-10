@@ -32,6 +32,20 @@ export const LivingProductCard = memo(function LivingProductCard({
   // Inventory guard: disable quick-add when Shopify reports it unavailable.
   const soldOut = product.availableForSale === false;
 
+  // Pricing / merchandising state.
+  const onSale =
+    typeof product.salePrice === "number" && product.salePrice < product.price;
+  const discountPct = onSale
+    ? Math.round(((product.price - (product.salePrice as number)) / product.price) * 100)
+    : 0;
+  const badge = soldOut
+    ? { label: "Sold Out", tone: "muted" as const }
+    : onSale
+      ? { label: `${discountPct}% Off`, tone: "sale" as const }
+      : product.isNew
+        ? { label: "New", tone: "new" as const }
+        : null;
+
   const showVideo = Boolean(videoUrl) && (isLiving ? !isHovered : isHovered);
 
   useEffect(() => {
@@ -97,6 +111,21 @@ export const LivingProductCard = memo(function LivingProductCard({
         {/* Formal Action Overlay (Crosshair style) */}
         <div className="absolute inset-0 z-20 bg-charcoal/0 group-hover:bg-charcoal/10 transition-colors duration-500 pointer-events-none" />
 
+        {/* Merchandising badge — Sale / New / Sold Out (top-left) */}
+        {badge && (
+          <span
+            className={`absolute top-3 left-3 md:top-4 md:left-4 z-30 px-2.5 py-1 text-[8.5px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm ${
+              badge.tone === "sale"
+                ? "bg-charcoal text-white"
+                : badge.tone === "new"
+                  ? "bg-gold/90 text-charcoal"
+                  : "bg-white/85 text-charcoal/50"
+            }`}
+          >
+            {badge.label}
+          </span>
+        )}
+
         {/* Wishlist Button - Top Right, Minimal */}
         <button
           onClick={(e) => {
@@ -153,15 +182,28 @@ export const LivingProductCard = memo(function LivingProductCard({
         </p>
         <Link
           href={`/shop/${product.handle}`}
-          className="group-hover:text-gold transition-colors"
+          className="transition-colors"
         >
-          <h3 className="font-serif text-base md:text-lg text-charcoal font-light tracking-tight leading-snug mb-1 line-clamp-2">
+          <h3 className="font-serif text-base md:text-lg text-charcoal font-light tracking-tight leading-snug mb-1.5 line-clamp-2 group-hover:text-gold transition-colors">
             {product.title}
           </h3>
+          {/* Gold underline reveal on hover */}
+          <span className="mx-auto block h-px w-0 bg-gold/70 transition-all duration-500 ease-out group-hover:w-6" />
         </Link>
-        <p className="text-[10px] font-medium text-charcoal/60 tracking-widest">
-          {formatPrice(product.salePrice ?? product.price)}
-        </p>
+        {onSale ? (
+          <p className="mt-2 flex items-baseline justify-center gap-2 tracking-widest">
+            <span className="text-[10px] font-semibold text-charcoal">
+              {formatPrice(product.salePrice as number)}
+            </span>
+            <span className="text-[10px] font-medium text-charcoal/35 line-through">
+              {formatPrice(product.price)}
+            </span>
+          </p>
+        ) : (
+          <p className="mt-2 text-[10px] font-medium text-charcoal/60 tracking-widest">
+            {formatPrice(product.price)}
+          </p>
+        )}
       </div>
     </div>
   );

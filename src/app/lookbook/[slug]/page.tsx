@@ -11,6 +11,25 @@ import {
   type EditorialDetail,
 } from "@/lib/sanity/queries";
 import { sanityImageUrl, isSanityConfigured } from "@/lib/sanity/client";
+import { LookbookPortableText } from "@/components/lookbook/portable-text";
+import type { PortableTextBlock } from "@portabletext/react";
+
+// Tiny helpers to author the built-in fallback bodies as valid Portable Text
+// (so the rich renderer is showcased before Sanity is connected).
+let keySeq = 0;
+const k = () => `k${(keySeq += 1)}`;
+const span = (text: string, marks: string[] = []) => ({
+  _type: "span",
+  _key: k(),
+  text,
+  marks,
+});
+const block = (
+  children: ReturnType<typeof span>[],
+  style = "normal",
+  markDefs: { _key: string; _type: string; href: string }[] = [],
+): PortableTextBlock =>
+  ({ _type: "block", _key: k(), style, markDefs, children }) as PortableTextBlock;
 
 export const revalidate = 3600;
 
@@ -24,6 +43,33 @@ const FALLBACK: Record<string, EditorialDetail> = {
     category: "craft",
     excerpt:
       "A journey through the handlooms and dyeing traditions that shape every Rangat piece.",
+    body: [
+      block([
+        span("Every Rangat Pehnawa piece begins not on a sketchpad, but at a "),
+        span("handloom", ["strong"]),
+        span(
+          " — where a single weaver may spend days coaxing a length of cloth into being. We travel to the clusters of Bhuj, Bagru and Chanderi to work directly with the artisans who keep these traditions alive.",
+        ),
+      ]),
+      block([span("The colour of memory")], "h2"),
+      block([
+        span(
+          "Our dyes are drawn from the earth — indigo, madder root, pomegranate rind. Each batch is mixed by hand, which means no two bolts of cloth are ever identical. We consider that a feature, not a flaw.",
+        ),
+      ]),
+      block(
+        [span("A garment should carry the fingerprints of the hands that made it.")],
+        "blockquote",
+      ),
+      block([
+        span("What that means for you", ["em"]),
+        span(
+          " is a wardrobe with provenance — pieces designed to be worn for seasons, then passed down. Explore the current collection in the ",
+        ),
+        span("shop", ["L1"]),
+        span("."),
+      ], "normal", [{ _key: "L1", _type: "link", href: "/shop" }]),
+    ],
   },
   "the-festive-edit": {
     _id: "f2",
@@ -76,18 +122,6 @@ export async function generateMetadata({
   };
 }
 
-/** Minimal Portable Text → plain paragraphs (no extra dependency). */
-function renderBody(body: unknown[] | undefined): string[] {
-  if (!Array.isArray(body)) return [];
-  return body
-    .filter(
-      (b): b is { _type: string; children?: { text?: string }[] } =>
-        typeof b === "object" && b !== null && (b as { _type?: string })._type === "block",
-    )
-    .map((block) => (block.children ?? []).map((c) => c.text ?? "").join(""))
-    .filter((t) => t.trim().length > 0);
-}
-
 export default async function EditorialDetailPage({
   params,
 }: {
@@ -98,7 +132,9 @@ export default async function EditorialDetailPage({
   if (!entry) notFound();
 
   const cover = sanityImageUrl(entry.coverImageRef, 1600) ?? "/images/hero.png";
-  const paragraphs = renderBody(entry.body);
+  const body = Array.isArray(entry.body)
+    ? (entry.body as PortableTextBlock[])
+    : [];
 
   return (
     <>
@@ -138,15 +174,11 @@ export default async function EditorialDetailPage({
             />
           </div>
 
-          {paragraphs.length > 0 && (
-            <div className="prose prose-lg max-w-none mt-10 font-serif text-charcoal/80 leading-relaxed space-y-5">
-              {paragraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+          {body.length > 0 ? (
+            <div className="mt-12">
+              <LookbookPortableText value={body} />
             </div>
-          )}
-
-          {paragraphs.length === 0 && (
+          ) : (
             <p className="text-sm text-charcoal/40 font-light mt-10 italic">
               {isSanityConfigured()
                 ? "This story is being written."

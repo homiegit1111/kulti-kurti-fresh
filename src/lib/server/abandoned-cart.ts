@@ -18,6 +18,7 @@
 //   Table DDL: supabase/abandoned_carts_schema.sql
 
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { renderAbandonedCartEmail } from "./abandoned-cart-email";
 
 const TABLE = "abandoned_carts";
 
@@ -133,30 +134,55 @@ export async function findAbandonedCarts(): Promise<AbandonedCartRow[]> {
 }
 
 /**
- * Send a single win-back email.
+ * Send a single win-back email via Resend.
  *
- * TODO(provider): wire your ESP here. Example with Resend:
+ * The provider degrades gracefully: with no `RESEND_API_KEY` it logs and
+ * returns false (so the cart stays queued, not silently dropped) — keeping the
+ * app buildable and runnable in every environment. The branded HTML/text body
+ * is rendered in `abandoned-cart-email.ts`.
  *
- *   import { Resend } from "resend";
- *   const resend = new Resend(process.env.RESEND_API_KEY);
- *   await resend.emails.send({
- *     from: "Rangat Pehnawa <hello@rangatpehnawa.com>",
- *     to: cart.email,
- *     subject: "You left something beautiful behind",
- *     html: renderAbandonedCartEmail(cart), // build from cart.items + checkoutUrl
- *   });
- *
- * Returns true if the email was dispatched. Until a provider is wired it logs
- * and returns false (so the cart stays queued, not silently dropped).
+ * The "from" identity is env-driven (`ABANDONED_CART_FROM`) so it can point at a
+ * verified Resend domain without a code change; it falls back to a sensible
+ * default. Returns true only when Resend confirms the send.
  */
 export async function sendAbandonedCartEmail(
   cart: AbandonedCartRow,
 ): Promise<boolean> {
-  console.log(
-    `[abandoned-cart] would email ${cart.email} — ${cart.items.length} item(s), subtotal ${cart.subtotal}. (No ESP wired yet.)`,
-  );
-  // Return false until a provider is configured — keeps the cart in the queue.
-  return false;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.log(
+      `[abandoned-cart] would email ${cart.email} — ${cart.items.length} item(s), subtotal ${cart.subtotal}. (RESEND_API_KEY not set.)`,
+    );
+    return false;
+  }
+
+  const from =
+    process.env.ABANDONED_CART_FROM ||
+    "Rangat Pehnawa <hello@rangatpehnawa.com>";
+
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(apiKey);
+    const { subject, html, text } = renderAbandonedCartEmail(cart);
+
+    const { error } = await resend.emails.send({
+      from,
+      to: cart.email,
+      subject,
+      html,
+      text,
+      headers: { "X-Entity-Ref-ID": cart.cart_id },
+    });
+
+    if (error) {
+      console.error(`[abandoned-cart] Resend error for ${cart.email}:`, error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error(`[abandoned-cart] send failed for ${cart.email}:`, err);
+    return false;
+  }
 }
 
 /** Stamp that a recovery email was sent (so we don't re-send). */

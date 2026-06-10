@@ -287,7 +287,7 @@ export function Navbar() {
                     fill="none"
                   />
                 </svg>
-                <div className="absolute left-[-20%] bottom-[20%] w-[400px] h-[400px] bg-orange-300/20 rounded-full blur-[100px]" />
+                <div className="absolute left-[-20%] bottom-[20%] w-[400px] h-[400px] bg-gold/15 rounded-full blur-[100px]" />
                 <svg
                   className="absolute left-[10%] top-[40%] w-32 h-32 text-charcoal/5 animate-[spin_120s_linear_infinite]"
                   viewBox="0 0 100 100"
