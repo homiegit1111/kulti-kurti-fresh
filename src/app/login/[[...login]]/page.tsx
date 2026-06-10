@@ -2,109 +2,282 @@
 
 import * as React from "react";
 import { useSignIn, useSignUp, useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, MoveRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { ArrowLeft, Check, Loader2, MoveRight, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+/* -------------------------------------------------------------------------- */
+/*  Clerk error helpers                                                        */
+/*  The Future/signals API returns `{ error }`. That error can be a single     */
+/*  ClerkError ({ code, message, longMessage }) OR a ClerkAPIResponseError     */
+/*  ({ errors: [...] }). We read both shapes so the user always sees a real    */
+/*  reason instead of a generic fallback.                                      */
+/* -------------------------------------------------------------------------- */
+type ClerkLikeError = {
+  code?: string;
+  message?: string;
+  longMessage?: string;
+  errors?: Array<{ code?: string; message?: string; longMessage?: string }>;
+};
+
+function errorCodes(error: unknown): string[] {
+  const e = error as ClerkLikeError | null | undefined;
+  if (!e || typeof e !== "object") return [];
+  const codes: string[] = [];
+  if (Array.isArray(e.errors)) {
+    for (const x of e.errors) if (x?.code) codes.push(x.code);
+  }
+  if (e.code) codes.push(e.code);
+  return codes;
+}
+
+// Friendly copy for the codes a passwordless email-code flow actually hits.
+const FRIENDLY: Record<string, string> = {
+  form_code_incorrect: "That code isn't right. Double-check and try again.",
+  verification_expired: "This code has expired — request a fresh one below.",
+  verification_failed: "Too many attempts. Please request a new code.",
+  form_identifier_exists: "An account already exists for this email. Signing you in instead…",
+  form_param_format_invalid: "Please enter a valid email address.",
+  client_state_invalid: "Your session reset. Please start again.",
+};
+
+function errorMessage(error: unknown, fallback: string): string {
+  const e = error as ClerkLikeError | null | undefined;
+  if (!e || typeof e !== "object") return fallback;
+  for (const code of errorCodes(error)) {
+    if (FRIENDLY[code]) return FRIENDLY[code];
+  }
+  if (Array.isArray(e.errors) && e.errors.length) {
+    const f = e.errors[0];
+    return f.longMessage || f.message || fallback;
+  }
+  return e.longMessage || e.message || fallback;
+}
 
 type Step = "email" | "name" | "otp";
 type AuthFlow = "signin" | "signup" | null;
 
-// Clerk surfaces field-level errors on an `errors` array; this narrows the
-// unknown error object so we can read messages without `any`.
-type ClerkFieldError = { code?: string; longMessage?: string; message?: string };
-function clerkFieldErrors(error: unknown): ClerkFieldError[] {
-  if (
-    error &&
-    typeof error === "object" &&
-    "errors" in error &&
-    Array.isArray((error as { errors?: unknown }).errors)
-  ) {
-    return (error as { errors: ClerkFieldError[] }).errors;
-  }
-  return [];
-}
+const RESEND_SECONDS = 30;
 
 const QUOTES = [
-  "Welcome to Pehnawa — The Art of Rangat.",
-  "Elegance woven into every thread.",
-  "Tradition meets contemporary luxury.",
-  "Welcome to Pehnawa — The Art of Rangat.",
-  "Crafted for the modern connoisseur.",
-  "Your heritage, redefined.",
-  "Welcome to Pehnawa — The Art of Rangat.",
-  "Unapologetically authentic.",
+  "The Art of Rangat — colour, woven into every thread.",
+  "Heritage craft, reimagined for the modern wardrobe.",
+  "Tailored elegance. Unapologetically authentic.",
+  "Where tradition meets contemporary luxury.",
 ];
 
+/* -------------------------------------------------------------------------- */
+/*  Segmented OTP input — premium, paste-aware, auto-advancing                 */
+/* -------------------------------------------------------------------------- */
+function OtpInput({
+  value,
+  onChange,
+  onComplete,
+  disabled,
+  error,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onComplete: (v: string) => void;
+  disabled?: boolean;
+  error?: boolean;
+}) {
+  const refs = React.useRef<Array<HTMLInputElement | null>>([]);
+  const cells = Array.from({ length: 6 }, (_, i) => value[i] ?? "");
+
+  const focusIndex = (i: number) => {
+    const el = refs.current[Math.max(0, Math.min(5, i))];
+    el?.focus();
+    el?.select();
+  };
+
+  const setChar = (i: number, char: string) => {
+    const next = (value.slice(0, i) + char + value.slice(i + 1)).slice(0, 6);
+    onChange(next);
+    return next;
+  };
+
+  const handleChange = (i: number, raw: string) => {
+    const digit = raw.replace(/\D/g, "");
+    if (!digit) return;
+    // Support fast typing / multiple chars landing in one cell.
+    let next = value;
+    let idx = i;
+    for (const d of digit.split("")) {
+      next = (next.slice(0, idx) + d + next.slice(idx + 1)).slice(0, 6);
+      idx++;
+    }
+    onChange(next);
+    focusIndex(idx);
+    if (next.length === 6) onComplete(next);
+  };
+
+  const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      if (value[i]) {
+        setChar(i, "");
+      } else if (i > 0) {
+        setChar(i - 1, "");
+        focusIndex(i - 1);
+      }
+    } else if (e.key === "ArrowLeft") {
+      focusIndex(i - 1);
+    } else if (e.key === "ArrowRight") {
+      focusIndex(i + 1);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    onChange(pasted);
+    focusIndex(pasted.length - 1);
+    if (pasted.length === 6) onComplete(pasted);
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2 sm:gap-3" role="group" aria-label="One-time code">
+      {cells.map((char, i) => (
+        <input
+          key={i}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          inputMode="numeric"
+          autoComplete={i === 0 ? "one-time-code" : "off"}
+          pattern="[0-9]*"
+          maxLength={1}
+          disabled={disabled}
+          value={char}
+          aria-label={`Digit ${i + 1}`}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={handlePaste}
+          onFocus={(e) => e.target.select()}
+          className={`h-14 w-full min-w-0 rounded-2xl border bg-warm-white/60 text-center font-serif text-2xl text-charcoal outline-none transition-all disabled:opacity-50 ${
+            error
+              ? "border-red-300 bg-red-50/50"
+              : char
+                ? "border-charcoal/30 bg-white shadow-sm"
+                : "border-charcoal/10 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)]"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Page                                                                       */
+/* -------------------------------------------------------------------------- */
 export default function UnifiedAuthPage() {
   const { signIn, fetchStatus: signInFetchStatus } = useSignIn();
   const { signUp, fetchStatus: signUpFetchStatus } = useSignUp();
   const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/account";
 
   const [step, setStep] = React.useState<Step>("email");
   const [authFlow, setAuthFlow] = React.useState<AuthFlow>(null);
   const [localError, setLocalError] = React.useState("");
-  const [focused, setFocused] = React.useState(false);
+  const [notice, setNotice] = React.useState("");
   const [quoteIndex, setQuoteIndex] = React.useState(0);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [oauthLoading, setOauthLoading] = React.useState(false);
+  const [success, setSuccess] = React.useState(false);
+  const [resendIn, setResendIn] = React.useState(0);
 
-  // Form Fields
+  // Form fields
   const [emailAddress, setEmailAddress] = React.useState("");
   const [firstName, setFirstName] = React.useState("");
   const [lastName, setLastName] = React.useState("");
   const [code, setCode] = React.useState("");
+  const [codeError, setCodeError] = React.useState(false);
 
+  const fetching =
+    signInFetchStatus === "fetching" || signUpFetchStatus === "fetching";
+  const busy = isSubmitting || fetching;
+
+  // Redirect already-authenticated users away from the auth screen.
   React.useEffect(() => {
-    if (isSignedIn) {
-      router.push("/account");
-    }
-  }, [isSignedIn, router]);
+    if (isLoaded && isSignedIn) router.replace(redirectTo);
+  }, [isLoaded, isSignedIn, router, redirectTo]);
 
+  // Rotate the editorial quote on the email step only.
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % QUOTES.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
+    if (step !== "email") return;
+    const id = setInterval(() => setQuoteIndex((p) => (p + 1) % QUOTES.length), 5000);
+    return () => clearInterval(id);
+  }, [step]);
 
-  const isLoading = !isLoaded || isSubmitting;
+  // Resend cooldown ticker.
+  React.useEffect(() => {
+    if (resendIn <= 0) return;
+    const id = setInterval(() => setResendIn((s) => (s > 0 ? s - 1 : 0)), 1000);
+    return () => clearInterval(id);
+  }, [resendIn]);
 
-  const handleOAuth = async (strategy: "oauth_google") => {
-    if (!isLoaded || !signIn) return;
+  const startCooldown = () => setResendIn(RESEND_SECONDS);
+
+  const goToOtp = () => {
+    setCode("");
+    setCodeError(false);
+    setStep("otp");
+    startCooldown();
+  };
+
+  /* ------------------------------ handlers ------------------------------ */
+  const handleOAuth = async () => {
+    if (!isLoaded || !signIn || oauthLoading) return;
+    setLocalError("");
+    setOauthLoading(true);
     try {
-      await signIn.sso({
-        strategy,
-        redirectUrl: "/account",
+      const { error } = await signIn.sso({
+        strategy: "oauth_google",
+        // Final destination once the OAuth round-trip completes.
+        redirectUrl: redirectTo,
+        // Intermediate page that mounts <AuthenticateWithRedirectCallback />.
         redirectCallbackUrl: "/sso-callback",
       });
-    } catch {
-      setLocalError("An error occurred during SSO.");
+      if (error) {
+        setLocalError(errorMessage(error, "Couldn't start Google sign-in. Please try again."));
+        setOauthLoading(false);
+      }
+      // On success the browser redirects away — keep the spinner.
+    } catch (err) {
+      setLocalError(errorMessage(err, "Couldn't start Google sign-in. Please try again."));
+      setOauthLoading(false);
     }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded || !signIn) return;
+    if (!isLoaded || !signIn || busy) return;
     setLocalError("");
+    setNotice("");
     setIsSubmitting(true);
-
     try {
       const { error } = await signIn.emailCode.sendCode({ emailAddress });
-
       if (error) {
-        const isNotFound = clerkFieldErrors(error).some((e) => e.code === "form_identifier_not_found");
-        if (isNotFound) {
+        if (errorCodes(error).includes("form_identifier_not_found")) {
+          // No existing account → seamlessly continue into sign-up.
           setAuthFlow("signup");
           setStep("name");
         } else {
-          setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Something went wrong.");
+          setLocalError(errorMessage(error, "We couldn't send a code. Please try again."));
         }
-      } else {
-        setAuthFlow("signin");
-        setStep("otp");
+        return;
       }
+      setAuthFlow("signin");
+      setNotice(`We sent a 6-digit code to ${emailAddress}.`);
+      goToOtp();
+    } catch (err) {
+      setLocalError(errorMessage(err, "We couldn't send a code. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -112,441 +285,515 @@ export default function UnifiedAuthPage() {
 
   const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded || !signUp) return;
+    if (!isLoaded || !signUp || busy) return;
     setLocalError("");
+    setNotice("");
     setIsSubmitting(true);
-
     try {
       const { error: createError } = await signUp.create({
         emailAddress,
-        firstName,
-        lastName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
       });
-
       if (createError) {
-        setLocalError(clerkFieldErrors(createError)[0]?.longMessage || "Sign up failed. Please try again.");
+        setLocalError(errorMessage(createError, "Sign up failed. Please try again."));
         return;
       }
-
       const { error: sendError } = await signUp.verifications.sendEmailCode();
-
       if (sendError) {
-        setLocalError(clerkFieldErrors(sendError)[0]?.longMessage || "Failed to send code.");
-      } else {
-        setStep("otp");
+        setLocalError(errorMessage(sendError, "We couldn't send a code. Please try again."));
+        return;
       }
+      setNotice(`We sent a 6-digit code to ${emailAddress}.`);
+      goToOtp();
+    } catch (err) {
+      setLocalError(errorMessage(err, "Sign up failed. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleOtpVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoaded || !signIn || !signUp) return;
-    setLocalError("");
-    setIsSubmitting(true);
+  const completeAndRedirect = async (flow: "signin" | "signup") => {
+    // Don't gate on the (possibly stale) `status` snapshot — finalize() is the
+    // single source of truth. It converts a complete attempt into an active
+    // session and surfaces an error if more steps are genuinely required.
+    const finalize = flow === "signin" ? signIn?.finalize : signUp?.finalize;
+    if (!finalize) {
+      setLocalError("Something went wrong. Please try again.");
+      return;
+    }
+    const { error } = await finalize({
+      navigate: ({ decorateUrl }) => router.push(decorateUrl(redirectTo)),
+    });
+    if (error) {
+      setLocalError(
+        errorMessage(error, "We verified your code but couldn't finish signing you in. Please try again.")
+      );
+      return;
+    }
+    setSuccess(true);
+  };
 
+  const handleOtpVerify = async (submitted?: string) => {
+    const value = submitted ?? code;
+    if (!isLoaded || !signIn || !signUp || busy) return;
+    if (value.length !== 6) return;
+    setLocalError("");
+    setCodeError(false);
+    setIsSubmitting(true);
     try {
       if (authFlow === "signin") {
-        const { error } = await signIn.emailCode.verifyCode({ code });
-        
+        const { error } = await signIn.emailCode.verifyCode({ code: value });
         if (error) {
-          setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
+          setCodeError(true);
+          setCode("");
+          setLocalError(errorMessage(error, "That code isn't right. Please try again."));
           return;
         }
-
-        if (signIn.status === "complete") {
-          await signIn.finalize({
-            navigate: ({ decorateUrl }) => router.push(decorateUrl("/account")),
-          });
-        } else {
-          setLocalError("Additional verification needed.");
-        }
-      } else if (authFlow === "signup") {
-        const { error } = await signUp.verifications.verifyEmailCode({ code });
-        
+        await completeAndRedirect("signin");
+      } else {
+        const { error } = await signUp.verifications.verifyEmailCode({ code: value });
         if (error) {
-          setLocalError(clerkFieldErrors(error)[0]?.longMessage || "Invalid verification code.");
+          setCodeError(true);
+          setCode("");
+          setLocalError(errorMessage(error, "That code isn't right. Please try again."));
           return;
         }
-
-        if (signUp.status === "complete") {
-          await signUp.finalize({
-            navigate: ({ decorateUrl }) => router.push(decorateUrl("/account")),
-          });
-        } else {
-          setLocalError("Sign up verification incomplete.");
-        }
+        await completeAndRedirect("signup");
       }
+    } catch (err) {
+      setCodeError(true);
+      setLocalError(errorMessage(err, "Verification failed. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleResend = async () => {
+    if (resendIn > 0 || busy || !isLoaded) return;
+    setLocalError("");
+    setCodeError(false);
+    setCode("");
+    setIsSubmitting(true);
+    try {
+      const { error } =
+        authFlow === "signin"
+          ? await signIn!.emailCode.sendCode({ emailAddress })
+          : await signUp!.verifications.sendEmailCode();
+      if (error) {
+        setLocalError(errorMessage(error, "Couldn't resend the code. Please try again."));
+        return;
+      }
+      setNotice(`A new code is on its way to ${emailAddress}.`);
+      startCooldown();
+    } catch (err) {
+      setLocalError(errorMessage(err, "Couldn't resend the code. Please try again."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetToEmail = () => {
+    setStep("email");
+    setAuthFlow(null);
+    setCode("");
+    setCodeError(false);
+    setLocalError("");
+    setNotice("");
+    signIn?.reset?.();
+    signUp?.reset?.();
+  };
+
+  /* ------------------------------ render -------------------------------- */
+  // Initial SDK boot — keep it minimal and on-brand (no heavy animation).
   if (!isLoaded) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#FAFAF9]">
-        <motion.div 
-          animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="w-4 h-4 bg-charcoal rounded-full"
-        />
+      <div className="flex min-h-screen w-full items-center justify-center bg-warm-white">
+        <Loader2 className="h-5 w-5 animate-spin text-charcoal/40" />
       </div>
     );
   }
 
+  const subtitle =
+    step === "email"
+      ? QUOTES[quoteIndex]
+      : step === "name"
+        ? "A few details to personalise your wardrobe."
+        : `Enter the code we sent to ${emailAddress}`;
+
   return (
-    <div className="min-h-screen relative flex items-center justify-center bg-[#FAFAF9] overflow-hidden selection:bg-charcoal/10">
-      {/* ── Soothing Fluid Aura Background & Doodles ── */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[#FAFAF9] mix-blend-overlay z-10 opacity-50" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay z-20" />
-        
-        {/* Soft Aura Orbs using Brand Colors */}
-        <motion.div 
-          animate={{ 
-            x: ["0%", "20%", "-10%", "0%"], 
-            y: ["0%", "-20%", "10%", "0%"],
-            scale: [1, 1.1, 0.9, 1] 
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-terracotta/15 rounded-full blur-[100px] opacity-80 z-0"
+    <div className="min-h-screen w-full bg-warm-white text-charcoal lg:grid lg:grid-cols-[1.1fr_1fr]">
+      {/* ───────────────────────── Editorial image panel ───────────────────────── */}
+      <aside className="relative hidden overflow-hidden lg:block">
+        <Image
+          src="/images/hero.png"
+          alt="Rangat Pehnawa"
+          fill
+          priority
+          sizes="55vw"
+          className="object-cover object-center"
         />
-        <motion.div 
-          animate={{ 
-            x: ["0%", "-20%", "20%", "0%"], 
-            y: ["0%", "20%", "-10%", "0%"],
-            scale: [0.9, 1.2, 0.8, 0.9] 
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-gold/15 rounded-full blur-[120px] opacity-80 z-0"
-        />
-
-        {/* Global Doodles matching homepage (Responsive) */}
-        <div className="absolute inset-0 z-30 opacity-70">
-          {/* Top-Right looping arrow */}
-          <svg
-            className="absolute right-[-10%] sm:right-[5%] top-[5%] sm:top-[12%] w-40 h-40 sm:w-64 sm:h-64 text-charcoal/20 sm:text-charcoal/30 -rotate-12"
-            viewBox="0 0 200 200"
-            fill="none"
-          >
-            <path d="M50 150 Q 150 180 180 50 T 50 150" stroke="currentColor" strokeWidth="1.5" strokeDasharray="5 5" fill="none" />
-            <path d="M40 140 L 50 150 L 65 145" stroke="currentColor" strokeWidth="1.5" fill="none" />
-            <text x="120" y="80" fontFamily="cursive" fontSize="14" fill="currentColor" className="opacity-80 rotate-12">
-              Exclusive
-            </text>
-          </svg>
-
-          {/* Dotted spinning trail */}
-          <svg
-            className="absolute left-[-5%] sm:left-[10%] top-[60%] sm:top-[70%] w-32 h-32 sm:w-48 sm:h-48 text-charcoal/20 sm:text-charcoal/25 animate-[spin_60s_linear_infinite]"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="1" strokeDasharray="4 8" />
-            <circle cx="50" cy="50" r="30" stroke="currentColor" strokeWidth="0.5" />
-          </svg>
-
-          {/* Fun little starburst */}
-          <svg
-            className="absolute right-[5%] sm:right-[15%] bottom-[10%] sm:bottom-[15%] w-20 h-20 sm:w-32 sm:h-32 text-charcoal/20 sm:text-charcoal/30"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <path d="M50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-            <circle cx="50" cy="50" r="10" stroke="currentColor" strokeWidth="1" fill="none" />
-            <text x="50" y="85" fontFamily="cursive" fontSize="12" fill="currentColor" textAnchor="middle" className="opacity-80 rotate-6">
-              Vibes
-            </text>
-          </svg>
-
-          {/* Top-Left squiggly line */}
-          <svg
-            className="absolute left-[5%] sm:left-[10%] top-[10%] sm:top-[15%] w-24 h-24 sm:w-32 sm:h-32 text-charcoal/20 sm:text-charcoal/30"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <path d="M 10 50 Q 25 20 40 50 T 70 50 T 100 50" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" fill="none" />
-          </svg>
+        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/25 to-charcoal/40" />
+        <div className="absolute inset-0 flex flex-col justify-between p-12 xl:p-16">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-10 bg-gold" />
+            <span className="font-sans text-xs font-semibold uppercase tracking-[0.4em] text-white/80">
+              Rangat Pehnawa
+            </span>
+          </div>
+          <div className="max-w-md">
+            <p className="font-sans text-xs font-semibold uppercase tracking-[0.4em] text-gold">
+              The Art of Rangat
+            </p>
+            <h2 className="mt-5 font-serif text-4xl leading-[1.15] tracking-tight text-white xl:text-5xl">
+              Heritage craft, woven for the modern wardrobe.
+            </h2>
+            <p className="mt-5 max-w-sm font-sans text-sm leading-relaxed text-white/70">
+              Sign in to track orders, save your favourites, and unlock members-only edits.
+            </p>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      <Link
-        href="/"
-        className="absolute top-6 left-6 sm:top-10 sm:left-10 z-50 inline-flex items-center gap-2 text-charcoal/50 hover:text-charcoal transition-colors text-xs font-semibold tracking-widest uppercase bg-white/50 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-charcoal/5"
-      >
-        <ArrowLeft className="w-3 h-3" /> Return
-      </Link>
+      {/* ───────────────────────────── Auth panel ──────────────────────────────── */}
+      <main className="relative flex min-h-screen items-center justify-center px-6 py-12 sm:px-10">
+        {/* faint gold wash, brand-aligned, GPU-cheap (static) */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -right-24 top-[-10%] h-80 w-80 rounded-full bg-gold/10 blur-[110px]" />
+          <div className="absolute -left-20 bottom-[-10%] h-72 w-72 rounded-full bg-gold/[0.07] blur-[110px]" />
+        </div>
 
-      {/* ── Compact Dynamic Capsule ── */}
-      <motion.div 
-        layout
-        transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
-        className="relative z-40 w-full max-w-[420px] mx-4"
-      >
-        <div className={`relative bg-white/70 backdrop-blur-[40px] border transition-colors duration-500 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden ${focused ? 'border-charcoal/20 shadow-[0_20px_60px_-15px_rgb(0,0,0,0.1)]' : 'border-white/50'}`}>
-          <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
-          
-          <div className="relative p-8 sm:p-10">
-            {/* Minimalist Header with Changing Quotes */}
-            <motion.div layout="position" className="mb-10 flex flex-col items-center text-center">
-              {/* Logo with Heartbeat Animation */}
-              <motion.div 
-                className="relative w-64 h-24 mb-4"
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1, 1.05, 1, 1.05, 1] }}
-                transition={{ 
-                  delay: 2, // Starts 2 seconds after loading
-                  duration: 1.5, 
-                  ease: "easeInOut",
-                  times: [0, 0.2, 0.4, 0.6, 0.8, 1], // Double thump timing
-                  repeatDelay: 5,
-                  repeat: Infinity // Repeats every 5 seconds
-                }}
-                whileHover={{ scale: [1, 1.05, 1, 1.05, 1], transition: { duration: 0.6, repeat: 0 } }}
-                whileTap={{ scale: 0.95 }}
+        <Link
+          href="/"
+          className="absolute left-6 top-6 z-20 inline-flex items-center gap-2 rounded-full border border-charcoal/10 bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-charcoal/60 backdrop-blur-sm transition-colors hover:text-charcoal"
+        >
+          <ArrowLeft className="h-3 w-3" /> Store
+        </Link>
+
+        <div className="relative z-10 w-full max-w-[400px]">
+          {/* Wordmark / logo */}
+          <div className="mb-9 flex flex-col items-center text-center">
+            <div className="relative mb-6 h-16 w-52">
+              <Image
+                src="/images/RangatPehnawa.png"
+                alt="Rangat Pehnawa"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={step}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.3 }}
+                className="font-serif text-3xl tracking-tight text-charcoal"
               >
-                <Image
-                  src="/images/RangatPehnawa.png"
-                  alt="Rangat Pehnawa"
-                  fill
-                  className="object-contain object-center drop-shadow-sm"
-                  priority
-                />
-              </motion.div>
-
-              {/* Dynamic Title for inner steps only */}
-              <AnimatePresence mode="wait">
-                {step !== "email" && (
-                  <motion.h1 
-                    key="step-title"
-                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    animate={{ opacity: 1, height: "auto", marginBottom: 12 }}
-                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
-                    className="font-serif text-2xl text-charcoal tracking-tight"
+                {step === "email" && "Welcome"}
+                {step === "name" && "Create your profile"}
+                {step === "otp" && "Verify your email"}
+              </motion.h1>
+            </AnimatePresence>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="h-px w-6 bg-gold/60" />
+              <div className="relative flex h-8 items-center">
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={subtitle}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="text-center font-sans text-[11px] uppercase leading-relaxed tracking-[0.18em] text-charcoal/55"
                   >
-                    {step === "name" && "Create Profile"}
-                    {step === "otp" && "Verify Email"}
-                  </motion.h1>
-                )}
-              </AnimatePresence>
-              
-              {/* Elegant Quotes / Subtitle */}
-              <div className="relative w-full flex flex-col items-center justify-center">
-                <div className="w-8 h-[1px] bg-charcoal/30 mb-4" />
-                <div className="h-12 relative w-full overflow-hidden flex items-center justify-center text-center px-4">
-                  <AnimatePresence mode="wait">
-                    <motion.p
-                      key={step === "email" ? quoteIndex : step}
-                      initial={{ opacity: 0, filter: "blur(4px)", y: 5 }}
-                      animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-                      exit={{ opacity: 0, filter: "blur(4px)", y: -5 }}
-                      transition={{ duration: 0.5 }}
-                      className="text-[10px] sm:text-xs text-charcoal/80 font-sans tracking-[0.2em] uppercase font-semibold absolute leading-relaxed"
-                    >
-                      {step === "email" ? QUOTES[quoteIndex] : (
-                        step === "name" ? "Just a few details to get started." : `Sent to ${emailAddress}`
-                      )}
-                    </motion.p>
-                  </AnimatePresence>
-                </div>
+                    {subtitle}
+                  </motion.p>
+                </AnimatePresence>
               </div>
+              <span className="h-px w-6 bg-gold/60" />
+            </div>
+          </div>
+
+          {/* Alerts */}
+          <AnimatePresence mode="wait">
+            {localError ? (
+              <motion.div
+                key="err"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                role="alert"
+                className="mb-5 rounded-xl border border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600"
+              >
+                {localError}
+              </motion.div>
+            ) : notice ? (
+              <motion.div
+                key="notice"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="mb-5 rounded-xl border border-charcoal/10 bg-white/70 px-4 py-3 text-center text-xs font-medium text-charcoal/70"
+              >
+                {notice}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          {/* Success overlay */}
+          {success ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-4 rounded-3xl border border-charcoal/5 bg-white/70 px-8 py-12 text-center"
+            >
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-charcoal text-white">
+                <Check className="h-6 w-6" />
+              </span>
+              <p className="font-serif text-xl text-charcoal">You&apos;re in</p>
+              <p className="flex items-center gap-2 text-xs text-charcoal/50">
+                <Loader2 className="h-3 w-3 animate-spin" /> Taking you to your account…
+              </p>
             </motion.div>
-
-            <AnimatePresence mode="popLayout" initial={false}>
-              {localError && (
-                <motion.div
-                  key="error"
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-red-50/80 text-red-600 text-xs font-medium p-3 rounded-xl mb-6 text-center border border-red-100"
-                >
-                  {localError}
-                </motion.div>
-              )}
-
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              {/* ---------------------------- EMAIL ---------------------------- */}
               {step === "email" && (
                 <motion.div
-                  key="step-email"
-                  initial={{ opacity: 0, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, filter: "blur(4px)" }}
-                  transition={{ duration: 0.3 }}
+                  key="email"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.25 }}
                 >
                   <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
-                    <div className="relative">
-                      <input
-                        id="email"
-                        type="email"
-                        required
-                        value={emailAddress}
-                        onChange={(e) => setEmailAddress(e.target.value)}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
-                        className="w-full bg-charcoal/5 hover:bg-charcoal/[0.07] focus:bg-white border border-transparent focus:border-charcoal/10 rounded-2xl px-5 py-4 text-sm font-medium text-charcoal transition-all outline-none placeholder:text-charcoal/40"
-                        placeholder="name@example.com"
-                      />
-                    </div>
-                    
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="group relative w-full h-14 bg-charcoal text-white rounded-2xl text-xs font-semibold tracking-wide transition-all hover:bg-black hover:shadow-lg hover:shadow-charcoal/20 disabled:opacity-50 flex items-center justify-center overflow-hidden"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>Continue</span>
-                          <MoveRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </div>
-                      )}
-                    </button>
+                    <label htmlFor="email" className="sr-only">
+                      Email address
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      disabled={busy}
+                      value={emailAddress}
+                      onChange={(e) => setEmailAddress(e.target.value)}
+                      className="h-14 w-full rounded-2xl border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                      placeholder="name@example.com"
+                    />
+                    <PrimaryButton busy={busy} label="Continue" loadingLabel="Sending code…" />
                   </form>
 
-                  <div className="flex items-center gap-4 my-8">
-                    <div className="h-[1px] bg-charcoal/5 flex-1" />
-                    <span className="text-[10px] uppercase tracking-widest text-charcoal/30 font-semibold">Or</span>
-                    <div className="h-[1px] bg-charcoal/5 flex-1" />
+                  <div className="my-7 flex items-center gap-4">
+                    <span className="h-px flex-1 bg-charcoal/10" />
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal/35">
+                      or
+                    </span>
+                    <span className="h-px flex-1 bg-charcoal/10" />
                   </div>
 
                   <button
                     type="button"
-                    onClick={() => handleOAuth("oauth_google")}
-                    className="w-full flex items-center justify-center gap-3 bg-white border border-charcoal/5 hover:border-charcoal/20 transition-all h-14 rounded-2xl shadow-sm text-xs font-semibold tracking-wide text-charcoal"
+                    onClick={handleOAuth}
+                    disabled={oauthLoading || busy}
+                    className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-charcoal/10 bg-white text-xs font-semibold tracking-wide text-charcoal shadow-sm transition-all hover:border-charcoal/25 disabled:opacity-60"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22.56 12.25C22.56 11.47 22.49 10.72 22.36 10H12V14.26H17.92C17.66 15.63 16.88 16.8 15.7 17.58V20.34H19.27C21.36 18.42 22.56 15.6 22.56 12.25Z" fill="#4285F4"/>
-                      <path d="M12 23C14.97 23 17.46 22.02 19.27 20.34L15.7 17.58C14.72 18.24 13.46 18.64 12 18.64C9.18 18.64 6.78 16.73 5.92 14.18H2.23V17.04C4.04 20.64 7.72 23 12 23Z" fill="#34A853"/>
-                      <path d="M5.92 14.18C5.7 13.52 5.57 12.78 5.57 12C5.57 11.22 5.7 10.48 5.92 9.82V6.96H2.23C1.49 8.44 1.05 10.15 1.05 12C1.05 13.85 1.49 15.56 2.23 17.04L5.92 14.18Z" fill="#FBBC05"/>
-                      <path d="M12 5.36C13.62 5.36 15.07 5.92 16.22 7.02L19.34 3.9C17.45 2.14 14.97 1 12 1C7.72 1 4.04 3.36 2.23 6.96L5.92 9.82C6.78 7.27 9.18 5.36 12 5.36Z" fill="#EA4335"/>
-                    </svg>
-                    Continue with Google
+                    {oauthLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <GoogleIcon />
+                        Continue with Google
+                      </>
+                    )}
                   </button>
+
+                  <p className="mt-7 text-center text-[11px] leading-relaxed text-charcoal/40">
+                    No password needed — we&apos;ll email you a secure 6-digit code.
+                  </p>
                 </motion.div>
               )}
 
+              {/* ----------------------------- NAME ---------------------------- */}
               {step === "name" && (
                 <motion.div
-                  key="step-name"
-                  initial={{ opacity: 0, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, filter: "blur(4px)" }}
-                  transition={{ duration: 0.3 }}
+                  key="name"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.25 }}
                 >
                   <form onSubmit={handleNameSubmit} className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <input
-                        id="firstName"
                         type="text"
+                        autoComplete="given-name"
                         required
+                        disabled={busy}
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
-                        className="w-full bg-charcoal/5 hover:bg-charcoal/[0.07] focus:bg-white border border-transparent focus:border-charcoal/10 rounded-2xl px-5 py-4 text-sm font-medium text-charcoal transition-all outline-none placeholder:text-charcoal/40"
+                        className="h-14 w-full rounded-2xl border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
                         placeholder="First name"
                       />
                       <input
-                        id="lastName"
                         type="text"
+                        autoComplete="family-name"
                         required
+                        disabled={busy}
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
-                        className="w-full bg-charcoal/5 hover:bg-charcoal/[0.07] focus:bg-white border border-transparent focus:border-charcoal/10 rounded-2xl px-5 py-4 text-sm font-medium text-charcoal transition-all outline-none placeholder:text-charcoal/40"
+                        className="h-14 w-full rounded-2xl border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
                         placeholder="Last name"
                       />
                     </div>
-                    
+                    <PrimaryButton busy={busy} label="Continue" loadingLabel="Creating account…" />
                     <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="group relative w-full h-14 bg-charcoal text-white rounded-2xl text-xs font-semibold tracking-wide transition-all hover:bg-black hover:shadow-lg hover:shadow-charcoal/20 disabled:opacity-50 flex items-center justify-center"
+                      type="button"
+                      onClick={resetToEmail}
+                      disabled={busy}
+                      className="mt-1 py-2 text-xs font-medium text-charcoal/40 transition-colors hover:text-charcoal disabled:opacity-50"
                     >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>Complete Profile</span>
-                          <MoveRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </div>
-                      )}
-                    </button>
-
-                    <button 
-                      type="button" 
-                      onClick={() => setStep("email")}
-                      className="text-xs text-charcoal/40 hover:text-charcoal font-medium transition-colors py-2 mt-2"
-                    >
-                      Go Back
+                      Use a different email
                     </button>
                   </form>
                 </motion.div>
               )}
 
+              {/* ----------------------------- OTP ----------------------------- */}
               {step === "otp" && (
                 <motion.div
-                  key="step-otp"
-                  initial={{ opacity: 0, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, filter: "blur(4px)" }}
-                  transition={{ duration: 0.3 }}
+                  key="otp"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                  transition={{ duration: 0.25 }}
                 >
-                  <form onSubmit={handleOtpVerify} className="flex flex-col gap-4">
-                    <div className="relative">
-                      <input
-                        id="code"
-                        type="text"
-                        required
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
-                        className="w-full bg-charcoal/5 hover:bg-charcoal/[0.07] focus:bg-white border border-transparent focus:border-charcoal/10 rounded-2xl px-5 py-5 text-2xl font-mono text-center tracking-[0.5em] text-charcoal transition-all outline-none placeholder:text-charcoal/20"
-                        placeholder="------"
-                        maxLength={6}
-                        autoComplete="one-time-code"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isLoading || code.length !== 6}
-                      className="group relative w-full h-14 bg-charcoal text-white rounded-2xl text-xs font-semibold tracking-wide transition-all hover:bg-black hover:shadow-lg hover:shadow-charcoal/20 disabled:opacity-50 flex items-center justify-center"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span>Verify Access</span>
-                          <MoveRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </div>
-                      )}
-                    </button>
-
-                    <button 
-                      type="button" 
-                      onClick={() => {
-                        setStep("email");
-                        setCode("");
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleOtpVerify();
+                    }}
+                    className="flex flex-col gap-5"
+                  >
+                    <OtpInput
+                      value={code}
+                      onChange={(v) => {
+                        setCode(v);
+                        if (codeError) setCodeError(false);
                       }}
-                      className="text-xs text-charcoal/40 hover:text-charcoal font-medium transition-colors py-2 mt-2"
-                    >
-                      Wrong email address?
-                    </button>
+                      onComplete={(v) => handleOtpVerify(v)}
+                      disabled={busy}
+                      error={codeError}
+                    />
+                    <PrimaryButton
+                      busy={busy}
+                      disabled={code.length !== 6}
+                      label="Verify & continue"
+                      loadingLabel="Verifying…"
+                    />
                   </form>
+
+                  <div className="mt-6 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={resendIn > 0 || busy}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-charcoal/50 transition-colors hover:text-charcoal disabled:cursor-not-allowed disabled:text-charcoal/30"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetToEmail}
+                      disabled={busy}
+                      className="text-xs font-medium text-charcoal/40 transition-colors hover:text-charcoal disabled:opacity-50"
+                    >
+                      Wrong email?
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
-        </div>
+          )}
 
-        {/* Required by Clerk for Bot Protection */}
-        <div id="clerk-captcha" className="hidden" />
-      </motion.div>
+          {/* Clerk Smart CAPTCHA mount point (bot protection) */}
+          <div id="clerk-captcha" className="mt-6 empty:mt-0 flex justify-center" />
+
+          <p className="mt-8 text-center text-[10px] leading-relaxed text-charcoal/35">
+            By continuing you agree to our{" "}
+            <Link href="/terms" className="underline underline-offset-2 hover:text-charcoal/60">
+              Terms
+            </Link>{" "}
+            &amp;{" "}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-charcoal/60">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
+      </main>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Small presentational helpers                                               */
+/* -------------------------------------------------------------------------- */
+function PrimaryButton({
+  busy,
+  disabled,
+  label,
+  loadingLabel,
+}: {
+  busy: boolean;
+  disabled?: boolean;
+  label: string;
+  loadingLabel: string;
+}) {
+  return (
+    <button
+      type="submit"
+      disabled={busy || disabled}
+      aria-busy={busy}
+      className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-2xl bg-charcoal text-xs font-semibold uppercase tracking-[0.18em] text-white transition-all hover:bg-black hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {busy ? (
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {loadingLabel}
+        </span>
+      ) : (
+        <span className="flex items-center gap-2">
+          {label}
+          <MoveRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </span>
+      )}
+    </button>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        d="M22.56 12.25C22.56 11.47 22.49 10.72 22.36 10H12V14.26H17.92C17.66 15.63 16.88 16.8 15.7 17.58V20.34H19.27C21.36 18.42 22.56 15.6 22.56 12.25Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23C14.97 23 17.46 22.02 19.27 20.34L15.7 17.58C14.72 18.24 13.46 18.64 12 18.64C9.18 18.64 6.78 16.73 5.92 14.18H2.23V17.04C4.04 20.64 7.72 23 12 23Z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.92 14.18C5.7 13.52 5.57 12.78 5.57 12C5.57 11.22 5.7 10.48 5.92 9.82V6.96H2.23C1.49 8.44 1.05 10.15 1.05 12C1.05 13.85 1.49 15.56 2.23 17.04L5.92 14.18Z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.36C13.62 5.36 15.07 5.92 16.22 7.02L19.34 3.9C17.45 2.14 14.97 1 12 1C7.72 1 4.04 3.36 2.23 6.96L5.92 9.82C6.78 7.27 9.18 5.36 12 5.36Z"
+        fill="#EA4335"
+      />
+    </svg>
   );
 }
