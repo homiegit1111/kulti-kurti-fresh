@@ -20,6 +20,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
 import { getProductByHandle, type MockProduct } from "@/lib/shopify";
+import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -67,6 +68,9 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  const rl = checkRateLimit(req, "wishlist", { limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl);
+
   const { userId } = await auth();
   if (!userId) return json({ error: "Unauthorized" }, 401);
 
@@ -103,6 +107,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
+  const rl = checkRateLimit(req, "wishlist", { limit: 60, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl);
+
   const { userId } = await auth();
   if (!userId) return json({ error: "Unauthorized" }, 401);
 

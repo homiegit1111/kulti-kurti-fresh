@@ -26,35 +26,38 @@ const nextConfig: NextConfig = {
   },
   // ── Baseline security headers ──────────────────────────────────────────────
   // Conservative, dependency-free hardening that won't break Clerk/Shopify.
-  // NOTE: a strict Content-Security-Policy is intentionally NOT set here yet —
-  // it needs to be verified in a real browser against Clerk's inline scripts,
-  // Shopify checkout redirects, and framer-motion inline styles before enabling.
   async headers() {
-    // ── Content-Security-Policy (REPORT-ONLY phase) ──────────────────────────
-    // This does NOT block anything yet — browsers only report what *would* be
-    // blocked to /api/csp-report. Watch those logs, tighten the allow-lists
-    // below, then graduate to an enforcing `Content-Security-Policy` header.
-    // Allow-lists cover: Clerk (auth), Cloudflare Turnstile, Shopify, Unsplash.
-    const cspReportOnly = [
+    // ── Content-Security-Policy (ENFORCING) ──────────────────────────────────
+    // Graduated from report-only after verifying login + checkout in a real
+    // browser against Clerk, Shopify and Turnstile with no breakage. This now
+    // *blocks* anything outside the allow-lists. `report-uri` is kept so any
+    // future violation (e.g. a new 3rd-party script) still surfaces in
+    // /api/csp-report logs even while enforcing.
+    //
+    // `unsafe-inline`/`unsafe-eval` are retained on script-src because Clerk,
+    // Next.js and framer-motion inject inline/eval'd code without nonces; a
+    // nonce/hash-based lockdown is a future hardening step (tracked separately).
+    // Allow-lists cover: Clerk (auth + telemetry), Cloudflare Turnstile,
+    // Shopify, Unsplash, and same-origin assets.
+    const csp = [
       "default-src 'self'",
       "base-uri 'self'",
       "object-src 'none'",
       "frame-ancestors 'self'",
-      // framer-motion / Clerk inject inline; keep unsafe-inline/eval while in
-      // report-only so we can measure before locking down with nonces/hashes.
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://*.myshopify.com https://challenges.cloudflare.com",
+      "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com",
       "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
       "worker-src 'self' blob:",
       "form-action 'self' https://*.myshopify.com",
+      "upgrade-insecure-requests",
       "report-uri /api/csp-report",
     ].join("; ");
 
     const securityHeaders = [
-      { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+      { key: "Content-Security-Policy", value: csp },
       // Force HTTPS for 2 years incl. subdomains (safe once the site is HTTPS).
       {
         key: "Strict-Transport-Security",

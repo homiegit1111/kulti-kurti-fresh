@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import { Turnstile } from "@/components/ui/turnstile";
 
 /* ── Brand icons (removed from lucide-react v1.x) ── */
 function InstagramIcon({ className }: { className?: string }) {
@@ -160,6 +162,86 @@ function FooterLinkColumn({
   );
 }
 
+function NewsletterForm() {
+  const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
+    "idle",
+  );
+  const [message, setMessage] = useState("");
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (status === "loading") return;
+    setStatus("loading");
+    setMessage("");
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, turnstileToken: token }),
+      });
+      if (res.ok) {
+        setStatus("done");
+        setEmail("");
+        setMessage("You're in. Welcome to the Inner Circle.");
+      } else {
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        setStatus("error");
+        setMessage(data.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please try again.");
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <form
+        onSubmit={handleSubmit}
+        className="relative flex items-center border-b border-white/20 pb-3 pt-4 group"
+      >
+        <Input
+          type="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Your email address"
+          className="w-full bg-transparent border-none outline-none px-0 text-base text-white placeholder:text-white/30 font-serif focus-visible:ring-0 rounded-none"
+          required
+          disabled={status === "loading"}
+        />
+        <button
+          type="submit"
+          aria-label="Subscribe"
+          disabled={status === "loading"}
+          className="absolute right-0 rounded-full px-2 py-2 text-gold uppercase text-[10px] tracking-[0.2em] font-bold hover:text-white transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 disabled:opacity-50"
+        >
+          {status === "loading" ? "..." : "Subscribe"}
+        </button>
+        <div className="absolute bottom-[-1px] left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-focus-within:w-full" />
+      </form>
+
+      {/* Bot protection — renders only when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set. */}
+      <Turnstile onVerify={setToken} onExpire={() => setToken("")} theme="dark" />
+
+      {message ? (
+        <p
+          className={`text-xs font-serif ${
+            status === "error" ? "text-red-400" : "text-gold"
+          }`}
+          role="status"
+        >
+          {message}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function Footer() {
   return (
     <footer className="relative bg-charcoal text-warm-white pt-24 overflow-hidden border-t border-white/10">
@@ -179,25 +261,7 @@ export function Footer() {
             inbox.
           </p>
 
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="relative flex items-center border-b border-white/20 pb-3 pt-4 group"
-          >
-            <Input
-              type="email"
-              placeholder="Your email address"
-              className="w-full bg-transparent border-none outline-none px-0 text-base text-white placeholder:text-white/30 font-serif focus-visible:ring-0 rounded-none"
-              required
-            />
-            <button
-              type="submit"
-              aria-label="Subscribe"
-              className="absolute right-0 rounded-full px-2 py-2 text-gold uppercase text-[10px] tracking-[0.2em] font-bold hover:text-white transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70"
-            >
-              Subscribe
-            </button>
-            <div className="absolute bottom-[-1px] left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-focus-within:w-full" />
-          </form>
+          <NewsletterForm />
         </div>
 
         {/* Right: Brand Mini-Manifesto */}

@@ -1,13 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { ensureShopifyCustomer, isShopifyAdminConfigured } from "@/lib/server/shopify-admin";
+import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
 
 export const runtime = "nodejs";
 
 const json = (body: Record<string, unknown>, status = 200) =>
   NextResponse.json(body, { status });
 
-export async function POST(): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Rate limit: 20 syncs / minute / IP.
+  const rl = checkRateLimit(req, "sync-shopify", {
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (!rl.ok) return tooManyRequests(rl);
+
   const { userId } = await auth();
 
   if (!userId) {
