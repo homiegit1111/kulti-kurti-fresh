@@ -1,8 +1,4 @@
 {
   "name": "kurti",
-  "crons": [
-    { "path": "/api/cron/abandoned-cart", "schedule": "0 8 * * *" },
-    { "path": "/api/cron/wishlist-nudge", "schedule": "0 9 * * *" },
-    { "path": "/api/cron/stock-alerts", "schedule": "0 10 * * *" }
-  ]
+  "crons": [{ "path": "/api/cron/daily", "schedule": "0 8 * * *" }]
 }
