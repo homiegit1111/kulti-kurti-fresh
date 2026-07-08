@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth/client";
-import { type MockProduct } from "@/lib/shopify";
+import { type MockProduct } from "@/lib/commerce/catalog";
 
 // ── Types ──
 interface WishlistContextType {

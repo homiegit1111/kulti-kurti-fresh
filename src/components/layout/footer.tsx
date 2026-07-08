@@ -1,11 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Turnstile } from "@/components/ui/turnstile";
+import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
 
-/* ── Brand icons (removed from lucide-react v1.x) ── */
+/* Brand icons removed from lucide-react v1.x. */
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -78,14 +79,14 @@ function PinterestIcon({ className }: { className?: string }) {
   );
 }
 
-/* ── Data ── */
+/* Data */
 const shopLinks = [
-  { label: "New Arrivals", href: "/shop" },
-  { label: "Kurtis", href: "/shop" },
-  { label: "Lehengas", href: "/shop" },
-  { label: "Sarees", href: "/shop" },
-  { label: "Co-ord Sets", href: "/shop" },
-  { label: "Sale", href: "/shop" },
+  { label: "Kurti Catalog", href: "/shop" },
+  { label: "Bulk Deals", href: "/bulk-order" },
+  { label: "Wishlist", href: "/wishlist" },
+  { label: "Kurti Sets", href: "/shop" },
+  { label: "New Drops", href: "/shop" },
+  { label: "WhatsApp Inquiry", href: "/contact" },
 ];
 
 const companyLinks = [
@@ -99,9 +100,9 @@ const companyLinks = [
 const supportLinks = [
   { label: "Contact Us", href: "/contact" },
   { label: "FAQs", href: "/contact" },
-  { label: "Shipping & Returns", href: "/contact" },
-  { label: "Size Guide", href: "/shop" },
-  { label: "Track Order", href: "/contact" },
+  { label: "MOQ & Pricing", href: "/shop" },
+  { label: "Invoice Support", href: "/contact" },
+  { label: "Dispatch Support", href: "/contact" },
 ];
 
 const socialLinks = [
@@ -133,7 +134,7 @@ const bottomLinks = [
   { label: "Cookies", href: "/privacy" },
 ];
 
-/* ── Reusable column component ── */
+/* Reusable column component */
 function FooterLinkColumn({
   title,
   links,
@@ -184,7 +185,7 @@ function NewsletterForm() {
       if (res.ok) {
         setStatus("done");
         setEmail("");
-        setMessage("You're in. Welcome to the Inner Circle.");
+        setMessage("You are subscribed to wholesale updates.");
       } else {
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
@@ -225,7 +226,7 @@ function NewsletterForm() {
         <div className="absolute bottom-[-1px] left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-focus-within:w-full" />
       </form>
 
-      {/* Bot protection — renders only when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set. */}
+      {/* Bot protection renders only when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set. */}
       <Turnstile onVerify={setToken} onExpire={() => setToken("")} theme="dark" />
 
       {message ? (
@@ -245,20 +246,18 @@ function NewsletterForm() {
 export function Footer() {
   return (
     <footer className="relative bg-charcoal text-warm-white pt-24 overflow-hidden border-t border-white/10">
-      {/* ── Top Section: Newsletter & Brand Story ── */}
+      {/* Newsletter and brand story */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 mb-20 lg:mb-32 grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
         {/* Left: Newsletter */}
         <div className="space-y-6 max-w-md">
-          <p className="text-[10px] font-sans uppercase tracking-[0.4em] text-gold font-semibold">
-            The Newsletter
+          <p className="text-[10px] font-sans uppercase tracking-[0.24em] text-gold font-semibold">
+            Fresh Drops
           </p>
           <h2 className="font-serif text-4xl lg:text-5xl text-warm-white font-light leading-[1.1]">
-            Join the <span className="italic text-gold">Inner Circle</span>
+            Fresh kurti drops, price-smart picks, and catalog alerts.
           </h2>
           <p className="text-sm text-white/50 leading-relaxed font-serif">
-            Exclusive access to our latest collections, behind-the-scenes
-            artisan stories, and private events. Delivered elegantly to your
-            inbox.
+            New kurti drops, reseller notes, and catalog updates for shoppers, boutique owners, and online sellers.
           </p>
 
           <NewsletterForm />
@@ -271,14 +270,18 @@ export function Footer() {
               Rangat
             </h2>
             <span className="font-sans text-[10px] font-medium tracking-[0.3em] text-gold uppercase pt-1">
-              Pehnawa
+              Pehnawa Studio
             </span>
           </div>
           <p className="text-sm text-white/50 leading-relaxed font-serif max-w-md">
-            We believe in the quiet luxury of Indian craftsmanship. Every piece
-            we create is a tribute to the artisans who weave our history into
-            modern silhouettes. Slow fashion, beautifully realized.
+            Rangat Pehnawa brings modern kurti drops, practical prices, and WhatsApp-first ordering for shoppers, boutiques, and online sellers across India.
           </p>
+          <a
+            href={buildCatalogRequestUrl()}
+            className="mt-6 inline-flex w-fit border border-gold/40 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-charcoal"
+          >
+            Get WhatsApp Catalog
+          </a>
           <div className="mt-8 flex gap-6">
             {socialLinks.map((social) => {
               const Icon = social.icon;
@@ -299,7 +302,7 @@ export function Footer() {
         </div>
       </div>
 
-      {/* ── Middle Section: Link Columns ── */}
+      {/* Link columns */}
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-16 lg:pb-24 grid grid-cols-2 md:grid-cols-4 gap-12 lg:gap-8 border-t border-white/10 pt-16">
         <FooterLinkColumn title="Shop" links={shopLinks} />
         <FooterLinkColumn title="Company" links={companyLinks} />
@@ -340,31 +343,19 @@ export function Footer() {
         </div>
       </div>
 
-      {/* ── Giant Footer Typography & Bottom Bar ── */}
-      <div className="relative w-full flex flex-col items-center justify-end overflow-hidden pt-10 lg:pt-0">
-        {/* Giant decorative wordmark — not a heading (aria-hidden, div) */}
-        <div
-          aria-hidden="true"
-          className="text-[13vw] font-serif leading-[0.75] tracking-tighter whitespace-nowrap text-white/[0.04] select-none pointer-events-none"
-        >
-          RANGAT PEHNAWA
-        </div>
-
-        {/* Soft Fade at Bottom */}
-        <div className="absolute bottom-0 inset-x-0 h-1/2 bg-gradient-to-t from-charcoal to-transparent pointer-events-none" />
-
-        {/* Bottom Bar Content */}
-        <div className="absolute bottom-0 inset-x-0 w-full max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 px-6 py-6 lg:px-12">
+      {/* Bottom bar */}
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row lg:px-12">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-serif font-bold text-[10px]">
               R
             </div>
             <p className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-medium">
-              © {new Date().getFullYear()} Rangat Pehnawa. All rights reserved.
+              Copyright {new Date().getFullYear()} Rangat Pehnawa. All rights reserved.
             </p>
           </div>
 
-          <div className="flex items-center gap-6 text-[9px] uppercase tracking-[0.2em] text-white/40 font-medium z-10">
+          <div className="flex items-center gap-6 text-[9px] uppercase tracking-[0.2em] text-white/40 font-medium">
             {bottomLinks.map((link) => (
               <Link
                 key={link.label}

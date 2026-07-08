@@ -10,9 +10,11 @@ import {
   formatPrice,
   COLOR_MAP,
   type MockProduct,
-} from "@/lib/shopify";
+} from "@/lib/commerce/catalog";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
+import { B2B_CONFIG } from "@/lib/b2b/config";
+import { getPerPiecePrice } from "@/lib/b2b/pricing";
 
 // Local media avoids third-party video latency on mobile networks.
 const PRODUCT_REEL_VIDEO = "/videos/background.mp4";
@@ -100,12 +102,16 @@ const FeedItem = memo(function FeedItem({
   toggleWishlist,
 }: {
   product: MockProduct & { videoUrl?: string };
-  addItem: (product: MockProduct, size: string, color?: string) => void;
+  addItem: (
+    product: MockProduct,
+    size: string,
+    color?: string,
+    sets?: number,
+  ) => void;
   isWishlisted: boolean;
   toggleWishlist: () => void;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string>("M");
   const [selectedColor, setSelectedColor] = useState<string>(product.colors[0]);
   const [addingToCart, setAddingToCart] = useState(false);
   const [added, setAdded] = useState(false);
@@ -139,7 +145,7 @@ const FeedItem = memo(function FeedItem({
 
     setAddingToCart(true);
     addTimeoutRef.current = setTimeout(() => {
-      addItem(product, selectedSize, selectedColor);
+      addItem(product, "Set", selectedColor, 1);
       setAddingToCart(false);
       setAdded(true);
       addTimeoutRef.current = null;
@@ -149,7 +155,7 @@ const FeedItem = memo(function FeedItem({
         closeTimeoutRef.current = null;
       }, 1500);
     }, 600);
-  }, [addItem, product, selectedColor, selectedSize]);
+  }, [addItem, product, selectedColor]);
 
   useEffect(() => {
     return () => {
@@ -203,7 +209,11 @@ const FeedItem = memo(function FeedItem({
             {product.title}
           </h3>
           <p className="text-sm font-semibold text-white/90 shadow-black drop-shadow-md">
-            {formatPrice(product.salePrice ?? product.price)}
+            From {formatPrice(product.salePrice ?? product.price)}/set
+          </p>
+          <p className="text-xs text-white/65 shadow-black drop-shadow-md">
+            {formatPrice(getPerPiecePrice(product.salePrice ?? product.price))}
+            /pc
           </p>
         </div>
 
@@ -240,7 +250,7 @@ const FeedItem = memo(function FeedItem({
               />
             </div>
             <span className="text-[9px] uppercase tracking-wider text-white font-semibold">
-              Buy
+              Sets
             </span>
           </button>
         </div>
@@ -270,7 +280,10 @@ const FeedItem = memo(function FeedItem({
                     {product.title}
                   </h4>
                   <p className="text-sm text-gold font-semibold">
-                    {formatPrice(product.salePrice ?? product.price)}
+                    From {formatPrice(product.salePrice ?? product.price)}/set
+                  </p>
+                  <p className="text-xs text-charcoal/45">
+                    1 set = {B2B_CONFIG.setSize} pcs
                   </p>
                 </div>
                 <button
@@ -282,25 +295,17 @@ const FeedItem = memo(function FeedItem({
                 </button>
               </div>
 
-              {/* Size Selection */}
+              {/* Ratio Pack */}
               <div className="mb-6">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">
-                  Select Size
+                  Size-ratio pack
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((sz) => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      className={`h-11 w-11 border text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 ${
-                        selectedSize === sz
-                          ? "border-charcoal bg-charcoal text-white"
-                          : "border-charcoal/10 hover:border-gold hover:text-gold text-charcoal"
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
+                  <span
+                    className="h-11 px-4 border border-charcoal bg-charcoal text-white text-xs font-medium uppercase tracking-[0.16em] flex items-center"
+                  >
+                    S/M/L/XL
+                  </span>
                 </div>
               </div>
 
@@ -341,7 +346,7 @@ const FeedItem = memo(function FeedItem({
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      <Plus className="h-4 w-4" /> Add to Cart
+                      <Plus className="h-4 w-4" /> Add 1 Set
                     </>
                   )}
                 </button>

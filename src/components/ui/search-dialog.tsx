@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { Search, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MOCK_PRODUCTS, formatPrice } from "@/lib/shopify";
+import { MOCK_PRODUCTS, formatPrice } from "@/lib/commerce/catalog";
+import { getPerPiecePrice } from "@/lib/b2b/pricing";
 
 export function SearchDialog({
   isOpen,
@@ -164,7 +165,7 @@ export function SearchDialog({
                   <div className="animate-fade-in pb-20">
                     <div className="flex items-center justify-between mb-8 border-b border-charcoal/10 pb-4">
                       <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-muted-foreground font-semibold">
-                        Found {results.length} Pieces
+                        Found {results.length} Styles
                       </p>
                       <Link
                         href="/shop"
@@ -209,9 +210,17 @@ export function SearchDialog({
                                 </h4>
                               </div>
                               <p className="text-xs font-semibold text-charcoal mt-3">
+                                From{" "}
+                                {formatPrice(product.salePrice ?? product.price)}
+                                /set
+                              </p>
+                              <p className="text-[10px] uppercase tracking-[0.14em] text-charcoal/35">
                                 {formatPrice(
-                                  product.salePrice ?? product.price,
+                                  getPerPiecePrice(
+                                    product.salePrice ?? product.price,
+                                  ),
                                 )}
+                                /pc
                               </p>
                             </div>
                           </Link>

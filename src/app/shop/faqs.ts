@@ -1,7 +1,6 @@
 /**
- * Shop FAQ content — single source of truth for both the visible accordion
- * (shop-client.tsx) and the FAQPage JSON-LD (page.tsx). Keeping them in sync
- * is what makes the structured data trustworthy to Google + AI search.
+ * Shop FAQ content - single source of truth for both the visible accordion
+ * (shop-client.tsx) and the FAQPage JSON-LD.
  */
 export interface Faq {
   q: string;
@@ -10,23 +9,23 @@ export interface Faq {
 
 export const SHOP_FAQS: Faq[] = [
   {
-    q: "What kinds of kurtis do you sell?",
-    a: "We offer premium women's kurtis and ethnic wear — breathable cotton kurtis for daily wear, hand-finished co-ord sets, festive anarkalis, lehengas and sarees. Each piece is selected for fabric quality, fit and craft.",
+    q: "Do you sell kurtis wholesale online in India?",
+    a: "Yes. Rangat Pehnawa is being set up as a wholesale kurti catalog for boutique owners, resellers, online sellers, and distributors across India.",
   },
   {
-    q: "What sizes are available?",
-    a: "Our kurtis are available from XS to XXL. Every product page lists a detailed size guide along with fit notes and the model's height and size worn, so you can choose the right fit with confidence.",
+    q: "What is the minimum wholesale order?",
+    a: "The minimum order is 4 sets total. Each set has 4 pieces in the S/M/L/XL size ratio, so the minimum wholesale order is 16 pieces across one or more styles.",
   },
   {
-    q: "Do you offer Cash on Delivery (COD) in India?",
-    a: "Yes. Cash on Delivery is available across India, alongside UPI, cards and net banking. We confirm COD orders before dispatch to make sure your delivery arrives smoothly.",
+    q: "How does wholesale pricing work?",
+    a: "Prices are shown per set with a per-piece equivalent. Orders of 8-19 sets unlock a 5% discount, and 20+ sets unlock a 10% discount.",
   },
   {
-    q: "What are your shipping and return policies?",
-    a: "We ship pan-India with free shipping on orders over ₹1,999 and offer easy 7-day returns. Most orders are dispatched within 1–2 business days, and you'll receive tracking updates until delivery.",
+    q: "How do I place a wholesale order?",
+    a: "Add styles as sets, review your MOQ progress, and send the order on WhatsApp. The team confirms availability, GST invoice details, dispatch city, and Razorpay payment link before shipping.",
   },
   {
-    q: "How do I care for my kurti?",
-    a: "Most of our handloom cotton and printed kurtis are best gently hand-washed in cold water and dried in the shade to keep colours rich. Detailed fabric and care instructions are listed on each product page.",
+    q: "Do you provide GST invoices and all-India dispatch?",
+    a: "GST invoice support is available on request, and orders can be dispatched across India after stock and payment confirmation.",
   },
 ];

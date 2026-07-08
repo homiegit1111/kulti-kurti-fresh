@@ -10,6 +10,11 @@ export const runtime = "nodejs";
 type ContactPayload = {
   name?: string;
   email?: string;
+  subject?: string;
+  businessType?: string;
+  city?: string;
+  whatsapp?: string;
+  monthlyBuying?: string;
   message?: string;
   turnstileToken?: string;
 };
@@ -69,6 +74,11 @@ export async function POST(req: NextRequest) {
   console.log("[contact] new enquiry", {
     name,
     email,
+    subject: body.subject,
+    businessType: body.businessType,
+    city: body.city,
+    whatsapp: body.whatsapp,
+    monthlyBuying: body.monthlyBuying,
     length: message.length,
     turnstileEnforced: verdict.enforced,
   });

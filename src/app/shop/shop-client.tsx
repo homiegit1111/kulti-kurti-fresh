@@ -1,18 +1,19 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { getProducts, type MockProduct, COLOR_MAP } from "@/lib/shopify";
+import { getProducts, type MockProduct, COLOR_MAP } from "@/lib/commerce/catalog";
 import ShopLoading from "@/app/shop/loading";
 import { useWishlist } from "@/lib/wishlist-context";
 import { LivingProductCard } from "@/components/ui/living-product-card";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, MessageCircle, Table2, X } from "lucide-react";
 import { SHOP_FAQS } from "./faqs";
-
-const PRODUCT_REEL_VIDEO = "/videos/background.mp4";
+import { StickyMobileB2BCta } from "@/components/b2b/sticky-mobile-b2b-cta";
+import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
+import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
 
 const sortOptions = [
   { label: "Newest", value: "newest" },
@@ -21,13 +22,13 @@ const sortOptions = [
 ];
 
 const priceBands = [
-  { label: "Under ₹2,000", value: "under-2000", test: (p: number) => p < 2000 },
+  { label: "Under Rs2,000", value: "under-2000", test: (p: number) => p < 2000 },
   {
-    label: "₹2,000 – ₹5,000",
+    label: "Rs2,000 - Rs5,000",
     value: "2000-5000",
     test: (p: number) => p >= 2000 && p <= 5000,
   },
-  { label: "₹5,000+", value: "5000-plus", test: (p: number) => p > 5000 },
+  { label: "Rs5,000+", value: "5000-plus", test: (p: number) => p > 5000 },
 ];
 
 function ShopContent({
@@ -56,7 +57,7 @@ function ShopContent({
   );
   const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
-  // ── Filter state lives in the URL (shareable, SSR-friendly, back-button OK) ──
+    // Filter state lives in the URL (shareable, SSR-friendly, back-button OK).
   const activeCategory = searchParams.get("cat") ?? "All";
   const sortBy = searchParams.get("sort") ?? "newest";
   const activeColor = searchParams.get("color");
@@ -146,7 +147,7 @@ function ShopContent({
       <Navbar />
 
       <main className="flex-1 relative z-10 pt-28 lg:pt-36 pb-32">
-        {/* ── EDITORIAL HEADER ── */}
+        {/* Editorial header */}
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 mb-12">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -155,21 +156,70 @@ function ShopContent({
             className="flex flex-col md:flex-row md:items-end md:justify-between gap-6"
           >
             <div>
-              <p className="eyebrow mb-3">The Atelier</p>
+              <p className="eyebrow mb-3">Fresh Kurti Catalog</p>
               <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-charcoal font-light tracking-tight">
-                Kurtis &amp; Ethnic Wear{" "}
-                <span className="italic text-charcoal/70">for Women</span>
+                Modern kurtis{" "}
+                <span className="italic text-gold-dark">for real wardrobes</span>
               </h1>
             </div>
             <p className="text-sm font-sans text-charcoal/50 max-w-xs leading-relaxed md:text-right md:pb-2">
-              Daily kurtis, co-ord sets, lehengas &amp; sarees — modern
-              heirlooms crafted for everyday elegance.
+              Price-smart cottons, office fits, and color-pop styles for
+              shoppers, boutiques, and online resellers.
             </p>
           </motion.div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href={buildCatalogRequestUrl()} className="btn-luxe-outline">
+              Get Catalog on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
+            </a>
+            <a href="/bulk-order" className="btn-luxe">
+              Open Bulk Deals <Table2 className="h-3.5 w-3.5" />
+            </a>
+          </div>
+          <div className="mt-6 grid gap-3 border-y border-charcoal/10 py-4 sm:grid-cols-4">
+            {[
+              ["Low-mid", "to high-mid range"],
+              ["Fresh", "newness first"],
+              [`MOQ ${B2B_CONFIG.minimumOrderSets}`, "bulk friendly"],
+              ["WhatsApp", "stock support"],
+            ].map(([value, label]) => (
+              <div key={value}>
+                <p className="text-xl font-black text-charcoal">{value}</p>
+                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-charcoal/45">
+                  {label}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* ── REFINED STICKY FILTER BAR ── */}
-        <div className="sticky top-[72px] lg:top-20 z-40 bg-warm-white/95 backdrop-blur-xl border-y border-charcoal/10 mb-14">
+        <div className="mb-10 border-y border-charcoal bg-charcoal py-3 text-white">
+          <div className="flex w-max animate-marquee gap-8 whitespace-nowrap px-4">
+            {[
+              "Daily cotton kurtis",
+              "Office-ready fits",
+              "Fresh color drops",
+              "Bulk deals",
+              "WhatsApp catalog",
+              "Price-smart styles",
+              "Daily cotton kurtis",
+              "Office-ready fits",
+              "Fresh color drops",
+              "Bulk deals",
+              "WhatsApp catalog",
+              "Price-smart styles",
+            ].map((item, index) => (
+              <span
+                key={`${item}-${index}`}
+                className="text-[11px] font-bold uppercase tracking-[0.18em]"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Sticky filter bar */}
+        <div className="sticky top-[72px] z-40 mb-12 border-y border-charcoal/10 bg-warm-white/95 lg:top-[72px]">
           
           {/* Mobile Toggle Button (Only visible when scrolled down) */}
           <div
@@ -191,7 +241,7 @@ function ShopContent({
           </div>
 
           <div
-            className={`transition-all duration-500 overflow-hidden md:max-h-none md:opacity-100 ${
+            className={`overflow-hidden transition-all duration-300 md:max-h-none md:opacity-100 ${
               shouldShowFiltersMobile ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
             }`}
           >
@@ -203,7 +253,7 @@ function ShopContent({
                 <button
                   key={cat}
                   onClick={() => setParam("cat", cat)}
-                  className={`relative px-1 py-2 text-[10px] font-bold uppercase tracking-[0.22em] transition-colors duration-300 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 after:absolute after:left-0 after:-bottom-px after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-gold after:transition-transform after:duration-400 mr-5 last:mr-0 ${
+                  className={`relative mr-5 shrink-0 px-1 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-colors duration-200 after:absolute after:left-0 after:-bottom-px after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-gold after:transition-transform last:mr-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
                     activeCategory === cat
                       ? "text-charcoal after:scale-x-100 after:origin-left"
                       : "text-charcoal/40 hover:text-charcoal hover:after:scale-x-100 hover:after:origin-left"
@@ -217,7 +267,7 @@ function ShopContent({
             {/* Meta & Sort Dropdown */}
             <div className="flex items-center justify-between w-full md:w-auto gap-6 shrink-0 relative">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal/35 hidden lg:block">
-                {filtered.length} Pieces
+                {filtered.length} Styles
               </span>
 
               <div className="relative">
@@ -260,7 +310,7 @@ function ShopContent({
             </div>
           </div>
 
-          {/* ── FACETS: price bands + color swatches ── */}
+          {/* Facets: price bands + color swatches */}
           <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
             <div className="flex gap-2 flex-wrap">
               {priceBands.map((band) => (
@@ -314,16 +364,11 @@ function ShopContent({
           </div>
         </div>
 
-        {/* ── DENSER PRODUCT GRID (4 columns on lg) ── */}
+        {/* Product grid */}
         <div className="max-w-[1600px] mx-auto px-4 lg:px-12">
           <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-6 md:gap-y-12">
             <AnimatePresence mode="popLayout">
-              {filtered.map((product, idx) => {
-                const hasVideo = idx % 5 === 0;
-                const videoUrl = hasVideo ? PRODUCT_REEL_VIDEO : undefined;
-                const isLiving = idx % 5 === 0;
-
-                return (
+              {filtered.map((product) => (
                   <motion.div
                     key={product.id}
                     layout
@@ -336,62 +381,65 @@ function ShopContent({
                       product={product}
                       isWishlisted={isWishlisted(product.id)}
                       onToggleWishlist={() => toggleWishlist(product)}
-                      videoUrl={videoUrl}
-                      isLiving={isLiving}
                     />
                   </motion.div>
-                );
-              })}
+              ))}
             </AnimatePresence>
           </motion.div>
 
-          {/* Loading state (grid only — page chrome + SEO copy stay server-rendered) */}
+          {/* Loading state */}
           {isLoading && (
             <div className="text-center py-32">
               <p className="font-serif text-2xl text-charcoal/40 italic">
-                Loading the collection…
+                Loading the collection...
               </p>
             </div>
           )}
 
           {/* Minimal Empty State */}
           {!isLoading && filtered.length === 0 && (
-            <div className="text-center py-32">
-              <p className="font-serif text-2xl text-charcoal/40 italic">
-                Nothing found in this collection.
+            <div className="mx-auto max-w-2xl border border-charcoal/10 bg-white px-6 py-16 text-center">
+              <p className="eyebrow eyebrow--bare mb-3">No Matching Styles</p>
+              <h2 className="font-serif text-3xl font-light text-charcoal">
+                Adjust filters or ask for the latest wholesale catalog.
+              </h2>
+              <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-charcoal/55">
+                Some trade drops sell through quickly. WhatsApp us for current
+                stock, new arrivals, and style-code availability.
               </p>
               {hasActiveFacets && (
                 <button
                   onClick={clearAll}
-                  className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal underline underline-offset-4 hover:text-gold transition-colors"
+                  className="mt-8 btn-luxe-outline"
                 >
                   Clear all filters
                 </button>
               )}
+              <a href={buildCatalogRequestUrl()} className="ml-3 mt-8 inline-flex btn-luxe">
+                WhatsApp Catalog <MessageCircle className="h-3.5 w-3.5" />
+              </a>
             </div>
           )}
         </div>
 
-        {/* ── SEO / GEO content: crawlable copy + FAQ (mirrors FAQPage JSON-LD) ── */}
+        {/* SEO content and FAQ */}
         <section className="max-w-3xl mx-auto px-6 lg:px-12 mt-32 border-t border-charcoal/10 pt-20">
-          <p className="eyebrow mb-4">The House</p>
+          <p className="eyebrow mb-4">The Shop</p>
           <h2 className="font-serif text-3xl text-charcoal font-light mb-6">
-            Shop Premium Kurtis <span className="italic">Online in India</span>
+            Modern kurti catalog <span className="italic">online in India</span>
           </h2>
           <div className="space-y-4 text-sm leading-relaxed text-charcoal/60 font-sans">
             <p>
-              Rangat Pehnawa is a premium Indian ethnic-wear label for the woman who
-              wants pieces that feel considered, wearable and a little special. Our
-              women&rsquo;s kurti collection spans breathable cotton kurtis for daily
-              wear, hand-finished co-ord sets, festive anarkalis, lehengas and sarees —
-              each made to move easily from a workday to an evening celebration.
+              Rangat Pehnawa is a modern kurti catalog for shoppers, boutique
+              owners, online sellers and distributors. The edit spans
+              breathable daily cottons, clean workday kurtis, festive color
+              wear, hand-finished co-ord sets, anarkalis, lehengas, and sarees
+              at practical low-mid to high-mid price points.
             </p>
             <p>
-              Every kurti is chosen for fabric, fit and craft: handloom cottons that
-              breathe through Indian summers, clean silhouettes that flatter every
-              frame, and prints rooted in traditional techniques like handblock and
-              chikankari. Sizes run XS&ndash;XXL, with Cash on Delivery, free shipping
-              over &#8377;1,999 and easy 7-day returns across India.
+              Bulk buyers can order S/M/L/XL sets with MOQ starting at 4 sets.
+              Current stock, invoice details, dispatch, and payment are
+              confirmed on WhatsApp.
             </p>
           </div>
 
@@ -414,6 +462,7 @@ function ShopContent({
         </section>
       </main>
 
+      <StickyMobileB2BCta />
       <Footer />
     </div>
   );

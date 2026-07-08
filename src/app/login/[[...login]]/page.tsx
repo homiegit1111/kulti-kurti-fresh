@@ -483,8 +483,9 @@ function UnifiedAuthInner() {
                 src="/images/RangatPehnawa.png"
                 alt="Rangat Pehnawa"
                 fill
-                priority
+                sizes="(max-width: 768px) 208px, 208px"
                 className="object-contain"
+                priority
               />
             </div>
             <AnimatePresence mode="wait">

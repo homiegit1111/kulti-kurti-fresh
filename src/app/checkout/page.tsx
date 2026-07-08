@@ -1,640 +1,626 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Check, CreditCard, Lock, ShoppingBag } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowRight,
+  Loader2,
+  MessageCircle,
+  ShieldCheck,
+  ShoppingBag,
+} from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { MoqProgress } from "@/components/b2b/moq-progress";
+import { WholesaleTrustBar } from "@/components/b2b/wholesale-trust-bar";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/shopify";
-import { updateCartBuyerIdentity } from "@/lib/shopify-cart";
+import { isAuthEnabled } from "@/lib/auth/client";
+import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
+import { calculateLineTotal, calculateWholesaleTotals } from "@/lib/b2b/pricing";
+import { validateCartMOQ } from "@/lib/b2b/validation";
+import { buildPaymentHelpUrl, buildWholesaleWhatsAppUrl } from "@/lib/b2b/whatsapp";
+import { getStyleCode } from "@/lib/b2b/style-code";
+import { formatPrice } from "@/lib/commerce/catalog";
+import {
+  trackBeginWhatsappOrder,
+  trackEvent,
+  trackMoqBlockedCheckout,
+} from "@/lib/analytics";
 
-type Step = "shipping" | "payment" | "confirmation";
+type BuyerForm = {
+  buyerName: string;
+  businessName: string;
+  businessType: string;
+  city: string;
+  whatsappPhone: string;
+  email: string;
+  gstin: string;
+  wantsGstInvoice: boolean;
+  buyerReference: string;
+  accountSource: "anonymous_checkout" | "checkout_form" | "wholesale_profile";
+};
+
+type WholesaleProfileBuyer = {
+  email?: string;
+  name?: string;
+  businessName?: string;
+  businessType?: string;
+  city?: string;
+  phone?: string;
+  gstin?: string;
+  buyerReference?: string;
+  accountSource?: "anonymous_checkout" | "checkout_form" | "wholesale_profile";
+};
+
+type RazorpayResponse = {
+  razorpay_payment_id?: string;
+  razorpay_order_id?: string;
+  razorpay_signature?: string;
+};
+
+type RazorpayOptions = {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  notes?: Record<string, string>;
+  handler: (response: RazorpayResponse) => void;
+  modal?: { ondismiss?: () => void };
+  prefill?: { name?: string; contact?: string };
+  theme?: { color?: string };
+};
+
+type CommerceCheckoutResponse = {
+  ok?: boolean;
+  orderId?: string;
+  reason?: string;
+  error?: string;
+};
+
+type RazorpayVerifyResponse = {
+  ok?: boolean;
+  verified?: boolean;
+  error?: string;
+  message?: string;
+  paymentId?: string;
+};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => { open: () => void };
+  }
+}
+
+const initialBuyer: BuyerForm = {
+  buyerName: "",
+  businessName: "",
+  businessType: "",
+  city: "",
+  whatsappPhone: "",
+  email: "",
+  gstin: "",
+  wantsGstInvoice: true,
+  buyerReference: "",
+  accountSource: "checkout_form",
+};
 
 export default function CheckoutPage() {
-  const {
-    items,
-    itemCount,
-    subtotal,
-    total,
-    cartId,
-    checkoutUrl,
-    shopifyCartEnabled,
-  } = useCart();
+  const { items } = useCart();
+  const [buyer, setBuyer] = useState<BuyerForm>(initialBuyer);
+  const [status, setStatus] = useState("");
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const totals = calculateWholesaleTotals(items);
+  const moq = validateCartMOQ(items);
 
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const updateBuyer = <K extends keyof BuyerForm>(
+    key: K,
+    value: BuyerForm[K],
+  ) => setBuyer((current) => ({ ...current, [key]: value }));
 
   useEffect(() => {
-    if (checkoutUrl) {
-      const timer = setTimeout(() => {
-        setIsRedirecting(true);
-        window.location.href = checkoutUrl;
-      }, 0);
-      return () => clearTimeout(timer);
-    }
+    if (!isAuthEnabled) return;
 
-    // Safety net: If we arrived here but checkoutUrl is missing, try to regenerate it!
-    if (items.length > 0 && shopifyCartEnabled) {
-      let isMounted = true;
-      const timer = setTimeout(() => {
-        setIsRedirecting(true);
-      }, 0);
-      import("@/lib/shopify-cart").then(({ createCart }) => {
-        const lines = items
-          .filter((i) => i.variantId)
-          .map((i) => ({
-            merchandiseId: i.variantId!,
-            quantity: i.quantity,
-            attributes: [
-              { key: "Size", value: i.size },
-              { key: "Color", value: i.color },
-            ],
-          }));
+    fetch("/api/wholesale-profile", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { buyer?: WholesaleProfileBuyer | null } | null) => {
+        const profileBuyer = data?.buyer;
+        if (!profileBuyer) return;
 
-        if (lines.length > 0) {
-          createCart(lines)
-            .then((cart) => {
-              if (isMounted && cart?.checkoutUrl) {
-                window.location.href = cart.checkoutUrl;
-              } else if (isMounted) {
-                setIsRedirecting(false); // Fallback to custom form if it fails
-              }
-            })
-            .catch(() => {
-              if (isMounted) setIsRedirecting(false);
-            });
-        } else {
-          if (isMounted) setIsRedirecting(false);
-        }
-      });
-      return () => {
-        isMounted = false;
-        clearTimeout(timer);
-      };
-    }
-  }, [checkoutUrl, items, shopifyCartEnabled]);
-
-  const [currentStep, setCurrentStep] = useState<Step>("shipping");
-  const [shippingInfo, setShippingInfo] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    city: "",
-    state: "",
-    pincode: "",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [preparedCheckoutUrl, setPreparedCheckoutUrl] = useState<string | null>(
-    null,
-  );
-
-  const steps: { key: Step; label: string; number: number }[] = [
-    { key: "shipping", label: "Shipping", number: 1 },
-    { key: "payment", label: "Payment", number: 2 },
-    { key: "confirmation", label: "Confirmation", number: 3 },
-  ];
-
-  const formatIndianPhone = (phone: string) => {
-    const trimmed = phone.trim();
-    if (!trimmed) return "";
-    if (trimmed.startsWith("+")) return trimmed;
-    const digits = trimmed.replace(/\D/g, "");
-    return digits.length === 10 ? `+91${digits}` : `+${digits}`;
+        setBuyer((current) => ({
+          ...current,
+          businessName: current.businessName || profileBuyer.businessName || "",
+          businessType: current.businessType || profileBuyer.businessType || "",
+          city: current.city || profileBuyer.city || "",
+          whatsappPhone: current.whatsappPhone || profileBuyer.phone || "",
+          gstin: current.gstin || profileBuyer.gstin || "",
+          buyerReference: current.buyerReference || profileBuyer.buyerReference || "",
+          accountSource: profileBuyer.accountSource || "wholesale_profile",
+        }));
+      })
+      .catch(() => {});
+  }, []);
+  const buyerInfo = {
+    buyerName: buyer.buyerName,
+    businessName: buyer.businessName,
+    city: buyer.city,
+    whatsappPhone: buyer.whatsappPhone,
+    email: buyer.email,
+    gstin: buyer.gstin,
+    wantsGstInvoice: buyer.wantsGstInvoice,
+    shippingCity: buyer.city,
   };
 
-  const handleShippingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const beginWhatsappOrder = () => {
+    if (!moq.ok) {
+      trackMoqBlockedCheckout({
+        total_sets: moq.totalSets,
+        remaining_sets: moq.remainingSets,
+        source: "checkout_page",
+      });
+      setStatus(`You need ${moq.remainingSets} more sets to place a wholesale order.`);
+      return;
+    }
+    trackBeginWhatsappOrder({
+      total_sets: totals.totalSets,
+      total_pieces: totals.totalPieces,
+      value: totals.subtotal,
+      source: "checkout_page",
+    });
+    window.location.href = buildWholesaleWhatsAppUrl(items, buyerInfo);
+  };
 
-    // Prefill Shopify checkout with the contact + delivery details entered here.
-    // Shopify checkout remains the source of truth if the customer edits them there.
-    if (shopifyCartEnabled && cartId && shippingInfo.email) {
-      const updatedCart = await updateCartBuyerIdentity(cartId, {
-        email: shippingInfo.email,
-        phone: formatIndianPhone(shippingInfo.phone),
-        countryCode: "IN",
-        address: {
-          firstName: shippingInfo.firstName,
-          lastName: shippingInfo.lastName,
-          phone: formatIndianPhone(shippingInfo.phone),
-          address1: shippingInfo.address,
-          city: shippingInfo.city,
-          province: shippingInfo.state,
-          zip: shippingInfo.pincode,
-          country: "India",
+  async function loadRazorpayScript(): Promise<boolean> {
+    if (window.Razorpay) return true;
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  }
+
+  async function createCommerceCheckoutDraft(): Promise<string | null> {
+    const res = await fetch("/api/commerce/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...buyer, items }),
+    });
+    const data = (await res.json().catch(() => ({}))) as CommerceCheckoutResponse;
+
+    if (res.ok && data.ok && data.orderId) {
+      setStatus("Wholesale cart reserved in Medusa. Starting secure payment...");
+      return data.orderId;
+    }
+
+    if (res.status === 409 || res.status === 501 || res.status === 424) {
+      setStatus(
+        data.reason ||
+          "Medusa cart is not available for this order yet. Continuing with Razorpay/WhatsApp fallback.",
+      );
+      return null;
+    }
+
+    if (!res.ok) {
+      throw new Error(data.error || data.reason || "Could not prepare wholesale checkout.");
+    }
+
+    return null;
+  }
+
+  async function verifyRazorpayPayment(
+    response: RazorpayResponse,
+    medusaCartId: string | null,
+    intentToken: string,
+  ): Promise<RazorpayVerifyResponse> {
+    const res = await fetch("/api/razorpay/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...response,
+        medusaCartId,
+        intentToken,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as RazorpayVerifyResponse;
+
+    if (!res.ok || !data.ok || !data.verified) {
+      throw new Error(
+        data.error ||
+          "Payment was received by Razorpay, but server verification failed. Please contact us on WhatsApp before dispatch.",
+      );
+    }
+
+    return data;
+  }
+
+  async function beginRazorpayPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus("");
+    if (!moq.ok) {
+      setStatus(`You need ${moq.remainingSets} more sets to place a wholesale order.`);
+      trackMoqBlockedCheckout({
+        total_sets: moq.totalSets,
+        remaining_sets: moq.remainingSets,
+        source: "razorpay_checkout",
+      });
+      return;
+    }
+
+    setLoadingPayment(true);
+    try {
+      const medusaCartId = await createCommerceCheckoutDraft();
+      const res = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...buyer, items, medusaCartId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        configured?: boolean;
+        keyId?: string;
+        orderId?: string;
+        amount?: number;
+        currency?: string;
+        error?: string;
+        message?: string;
+        intentToken?: string;
+      };
+
+      if (!res.ok) throw new Error(data.error || "Could not start Razorpay payment.");
+      if (!data.configured) {
+        setStatus(data.message || "Razorpay is not configured. Confirm on WhatsApp for a payment link.");
+        return;
+      }
+      if (!data.keyId || !data.orderId || !data.amount || !data.intentToken) {
+        throw new Error("Razorpay order response is incomplete.");
+      }
+      const intentToken = data.intentToken;
+
+      const loaded = await loadRazorpayScript();
+      if (!loaded || !window.Razorpay) {
+        throw new Error("Razorpay checkout could not load. Please use WhatsApp payment help.");
+      }
+
+      trackEvent("begin_razorpay_checkout", {
+        total_sets: totals.totalSets,
+        total_pieces: totals.totalPieces,
+        value: totals.subtotal,
+      });
+
+      const checkout = new window.Razorpay({
+        key: data.keyId,
+        amount: data.amount,
+        currency: data.currency || "INR",
+        name: "Rangat Pehnawa",
+        description: `${totals.totalSets} set wholesale order`,
+        order_id: data.orderId,
+        prefill: {
+          name: buyer.buyerName || buyer.businessName,
+          contact: buyer.whatsappPhone,
+        },
+        notes: {
+          business_name: buyer.businessName,
+          city: buyer.city,
+          total_sets: String(totals.totalSets),
+          ...(medusaCartId ? { medusa_cart_id: medusaCartId } : {}),
+        },
+        theme: { color: "#C9A96E" },
+        handler: async (response) => {
+          setLoadingPayment(true);
+          setStatus("Payment received by Razorpay. Verifying signature...");
+          try {
+            const verified = await verifyRazorpayPayment(
+              response,
+              medusaCartId,
+              intentToken,
+            );
+            setStatus(
+              verified.message ||
+                `Payment verified. Payment ID: ${verified.paymentId || response.razorpay_payment_id || "received"}. We will confirm dispatch details on WhatsApp.`,
+            );
+          } catch (error) {
+            setStatus(
+              error instanceof Error
+                ? error.message
+                : "Payment verification failed. Please contact us on WhatsApp before dispatch.",
+            );
+          } finally {
+            setLoadingPayment(false);
+          }
+        },
+        modal: {
+          ondismiss: () => setStatus("Payment window closed. You can retry or ask for a Razorpay payment link on WhatsApp."),
         },
       });
+      checkout.open();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Payment could not start.");
+    } finally {
+      setLoadingPayment(false);
+    }
+  }
 
-      if (updatedCart?.checkoutUrl) {
-        setPreparedCheckoutUrl(updatedCart.checkoutUrl);
+  async function placeCodOrder() {
+    setStatus("");
+    if (!moq.ok) {
+      setStatus(`You need ${moq.remainingSets} more sets to place a wholesale order.`);
+      trackMoqBlockedCheckout({
+        total_sets: moq.totalSets,
+        remaining_sets: moq.remainingSets,
+        source: "cod_checkout",
+      });
+      return;
+    }
+
+    setLoadingPayment(true);
+    try {
+      const medusaCartId = await createCommerceCheckoutDraft();
+      if (!medusaCartId) {
+        throw new Error(
+          "Could not reserve a Medusa cart for this order. Please confirm on WhatsApp.",
+        );
       }
+
+      setStatus("Placing your wholesale order (Cash on Delivery)...");
+      const res = await fetch("/api/commerce/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cartId: medusaCartId }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        orderId?: string;
+        displayId?: number;
+        message?: string;
+        reason?: string;
+      };
+
+      if (!res.ok || !data.ok || !data.orderId) {
+        throw new Error(
+          data.reason ||
+            "Order could not be completed. Please confirm on WhatsApp before dispatch.",
+        );
+      }
+
+      trackEvent("place_cod_order", {
+        total_sets: totals.totalSets,
+        total_pieces: totals.totalPieces,
+        value: totals.subtotal,
+        order_id: data.orderId,
+      });
+      setStatus(
+        data.message ||
+          `Order #${data.displayId ?? data.orderId} placed. We will confirm dispatch on WhatsApp.`,
+      );
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Order could not be placed.",
+      );
+    } finally {
+      setLoadingPayment(false);
     }
-
-    setIsSubmitting(false);
-    setCurrentStep("payment");
-  };
-
-  /**
-   * Shopify checkout — redirect to Shopify's hosted checkout page.
-   * Shopify handles payment, shipping, taxes, confirmation email, order creation.
-   */
-  const handleShopifyCheckout = () => {
-    const url = preparedCheckoutUrl || checkoutUrl;
-    if (url) {
-      window.location.href = url;
-    }
-  };
-
-  if (items.length === 0 && !isRedirecting) {
-    return (
-      <>
-        <Navbar />
-        <main className="min-h-[70vh] flex flex-col items-center justify-center pt-32 pb-20 px-6 bg-warm-white text-center">
-          <div className="w-20 h-20 rounded-full border border-gold/40 flex items-center justify-center mb-8">
-            <ShoppingBag className="w-7 h-7 text-charcoal/40" strokeWidth={1} />
-          </div>
-          <h3 className="font-serif text-3xl md:text-4xl font-light text-charcoal mb-4">
-            Your cart is <span className="italic">empty</span>
-          </h3>
-          <p className="text-sm text-charcoal/50 mb-10 max-w-md leading-relaxed">
-            Looks like you haven&apos;t added any beautiful pieces to your
-            wardrobe yet.
-          </p>
-          <Link href="/shop" className="btn-luxe group">
-            <span>Explore Collection</span>
-            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-300" />
-          </Link>
-        </main>
-        <Footer />
-      </>
-    );
   }
 
-  if (isRedirecting) {
-    return (
-      <>
-        <Navbar />
-        <main className="min-h-[70vh] flex flex-col items-center justify-center pt-32 pb-20 px-6">
-          <div className="w-12 h-12 border border-gold/30 border-t-gold rounded-full animate-spin mb-8"></div>
-          <h1 className="font-serif text-3xl font-light text-charcoal mb-3">
-            Taking you to <span className="italic">Secure Checkout</span>
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Please wait while we redirect you to Shopify.
-          </p>
-        </main>
-        <Footer />
-      </>
-    );
-  }
+  const medusaBackend = process.env.NEXT_PUBLIC_COMMERCE_BACKEND === "medusa";
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-warm-white text-charcoal font-sans">
       <Navbar />
-      <main className="flex-1 relative z-10 bg-warm-white pt-28 lg:pt-32 pb-24">
-        <div className="px-6 lg:px-20 max-w-6xl mx-auto">
-          {/* Progress Steps */}
-          <div className="flex items-center justify-center gap-4 mb-16">
-            {steps.map((step, idx) => (
-              <div key={step.key} className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-9 h-9 border flex items-center justify-center text-[11px] font-semibold transition-colors duration-300 ${
-                      currentStep === step.key
-                        ? "bg-charcoal border-charcoal text-white"
-                        : steps.findIndex((s) => s.key === currentStep) > idx
-                          ? "border-gold text-gold-dark"
-                          : "border-charcoal/15 text-charcoal/35"
-                    }`}
-                  >
-                    {steps.findIndex((s) => s.key === currentStep) > idx ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      step.number
-                    )}
-                  </div>
-                  <span
-                    className={`text-[10px] uppercase tracking-[0.22em] font-bold hidden sm:inline ${
-                      currentStep === step.key
-                        ? "text-charcoal"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                </div>
-                {idx < steps.length - 1 && (
-                  <div className="w-14 h-px bg-charcoal/15" />
-                )}
+      <main className="flex-1 pt-28 lg:pt-36 pb-24">
+        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-12">
+          <header className="mb-10 border-b border-charcoal/10 pb-8">
+            <p className="eyebrow mb-3">Wholesale Checkout</p>
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h1 className="font-serif text-4xl font-light tracking-tight sm:text-5xl lg:text-6xl">
+                  Confirm order, then pay securely.
+                </h1>
+                <p className="mt-4 max-w-2xl text-sm leading-relaxed text-charcoal/55">
+                  WhatsApp confirmation is always available. Razorpay checkout
+                  works when payment keys are configured, while mock/keyless
+                  mode falls back cleanly to a payment-link request.
+                </p>
               </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Main Content */}
-            <div className="lg:col-span-2">
-              <AnimatePresence mode="wait">
-                {currentStep === "shipping" && (
-                  <motion.form
-                    key="shipping"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    onSubmit={handleShippingSubmit}
-                    className="space-y-8"
-                  >
-                    <div className="mb-10">
-                      <p className="eyebrow mb-3">Step One</p>
-                      <h2 className="font-serif text-3xl md:text-4xl font-light text-charcoal">
-                        Shipping <span className="italic">Details</span>
-                      </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      <div>
-                        <label className="field-label">
-                          First Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={shippingInfo.firstName}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              firstName: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                        />
-                      </div>
-                      <div>
-                        <label className="field-label">
-                          Last Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={shippingInfo.lastName}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              lastName: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                      <div>
-                        <label className="field-label">
-                          Email *
-                        </label>
-                        <input
-                          type="email"
-                          required
-                          value={shippingInfo.email}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              email: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                        />
-                      </div>
-                      <div>
-                        <label className="field-label">
-                          Phone *
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          value={shippingInfo.phone}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              phone: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                          placeholder="+91"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="field-label">
-                        Address *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={shippingInfo.address}
-                        onChange={(e) =>
-                          setShippingInfo({
-                            ...shippingInfo,
-                            address: e.target.value,
-                          })
-                        }
-                        className="field-luxe"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-8">
-                      <div>
-                        <label className="field-label">
-                          City *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={shippingInfo.city}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              city: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                        />
-                      </div>
-                      <div>
-                        <label className="field-label">
-                          State *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={shippingInfo.state}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              state: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                        />
-                      </div>
-                      <div>
-                        <label className="field-label">
-                          Pincode *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={shippingInfo.pincode}
-                          onChange={(e) =>
-                            setShippingInfo({
-                              ...shippingInfo,
-                              pincode: e.target.value,
-                            })
-                          }
-                          className="field-luxe"
-                          pattern="[0-9]{6}"
-                          maxLength={6}
-                        />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="btn-luxe w-full mt-10"
-                    >
-                      {isSubmitting ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <span>Continue to Payment</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </>
-                      )}
-                    </button>
-                  </motion.form>
-                )}
-
-                {currentStep === "payment" && (
-                  <motion.div
-                    key="payment"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    <div className="mb-10">
-                      <p className="eyebrow mb-3">Step Two</p>
-                      <h2 className="font-serif text-3xl md:text-4xl font-light text-charcoal">
-                        Payment
-                      </h2>
-                    </div>
-
-                    <div className="panel-luxe p-8">
-                      <div className="flex items-center gap-3 mb-4">
-                        <CreditCard className="h-5 w-5 text-gold" />
-                        <p className="text-sm font-semibold text-charcoal">
-                          Pay with Razorpay
-                        </p>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                        You will be redirected to Razorpay&apos;s secure payment
-                        gateway to complete your purchase. We accept UPI,
-                        Credit/Debit Cards, Net Banking, and Wallets.
-                      </p>
-
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {[
-                          "UPI",
-                          "Visa",
-                          "Mastercard",
-                          "RuPay",
-                          "Net Banking",
-                          "Wallets",
-                        ].map((method) => (
-                          <span
-                            key={method}
-                            className="inline-flex items-center border border-charcoal/15 px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-charcoal"
-                          >
-                            {method}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <Lock className="h-3 w-3" />
-                        <span>
-                          Your payment information is encrypted and secure
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Shopify checkout notice */}
-                    <div className="bg-white p-4 border border-gold/25 border-l-2 border-l-gold">
-                      <div className="flex items-start gap-3">
-                        <Lock className="h-4 w-4 text-gold shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          Shipping, taxes, and final payment are handled
-                          securely by Shopify. Clicking &quot;Pay with
-                          Shopify&quot; will take you to the secure Shopify
-                          checkout page.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Shipping summary */}
-                    <div className="panel-luxe p-8">
-                      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">
-                        Shipping To
-                      </p>
-                      <p className="text-sm text-charcoal">
-                        {shippingInfo.firstName} {shippingInfo.lastName}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {shippingInfo.address}, {shippingInfo.city},{" "}
-                        {shippingInfo.state} - {shippingInfo.pincode}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {shippingInfo.email} • {shippingInfo.phone}
-                      </p>
-                      <button
-                        onClick={() => setCurrentStep("shipping")}
-                        className="link-luxe text-[10px] text-gold-dark font-bold uppercase tracking-[0.18em] mt-4"
-                      >
-                        Edit Address
-                      </button>
-                    </div>
-
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => setCurrentStep("shipping")}
-                        disabled={isSubmitting}
-                        className="btn-luxe-outline"
-                      >
-                        <ArrowLeft className="h-4 w-4" /> Back
-                      </button>
-                      <button
-                        onClick={handleShopifyCheckout}
-                        disabled={!(preparedCheckoutUrl || checkoutUrl)}
-                        className="btn-luxe flex-1"
-                      >
-                        <Lock className="h-4 w-4" />
-                        <span>Pay with Shopify</span>
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-
-                {currentStep === "confirmation" && (
-                  <motion.div
-                    key="confirmation"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-12"
-                  >
-                    <div className="w-16 h-16 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-8">
-                      <Check className="h-7 w-7 text-gold-dark" strokeWidth={1} />
-                    </div>
-                    <h2 className="font-serif text-4xl font-light text-charcoal mb-4">
-                      Order <span className="italic">Confirmed</span>
-                    </h2>
-                    <p className="text-sm text-muted-foreground mb-2 max-w-md mx-auto">
-                      Thank you for shopping with Rangat Pehnawa. Your order has
-                      been placed successfully.
-                    </p>
-                    <p className="text-xs text-muted-foreground mb-8">
-                      A confirmation email has been sent to {shippingInfo.email}
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                      <Link
-                        href="/shop"
-                        className="btn-luxe"
-                      >
-                        Continue Shopping
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <a href={buildPaymentHelpUrl()} className="btn-luxe-outline w-fit">
+                Payment Help <MessageCircle className="h-3.5 w-3.5" />
+              </a>
             </div>
+          </header>
 
-            {/* Order Summary Sidebar */}
-            {currentStep !== "confirmation" && (
-              <div className="lg:col-span-1">
-                <div className="panel-luxe frame-luxe p-8 sticky top-32">
-                  <div className="mb-6 pb-5 border-b border-charcoal/10">
-                    <p className="eyebrow eyebrow--bare mb-1.5">Summary</p>
-                    <h3 className="font-serif text-2xl font-light text-charcoal">
-                      {itemCount} {itemCount === 1 ? "Piece" : "Pieces"}
-                    </h3>
+          <WholesaleTrustBar className="mb-10" />
+
+          {items.length === 0 ? (
+            <section className="mx-auto max-w-2xl border border-charcoal/10 bg-white px-6 py-20 text-center frame-luxe">
+              <ShoppingBag className="mx-auto mb-6 h-10 w-10 text-charcoal/25" strokeWidth={1} />
+              <p className="eyebrow eyebrow--bare mb-3">No Sets Yet</p>
+              <h2 className="font-serif text-4xl font-light">
+                Build a wholesale cart before checkout.
+              </h2>
+              <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-charcoal/55">
+                MOQ starts at {B2B_CONFIG.minimumOrderSets} sets. Add styles
+                from the catalog or use the bulk linesheet for faster entry.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link href="/shop" className="btn-luxe">Open Catalog</Link>
+                <Link href="/bulk-order" className="btn-luxe-outline">Bulk Order</Link>
+              </div>
+            </section>
+          ) : (
+            <div className="grid gap-10 lg:grid-cols-12">
+              <section className="lg:col-span-7">
+                <div className="border border-charcoal/10 bg-white">
+                  <div className="border-b border-charcoal/10 p-6">
+                    <p className="eyebrow eyebrow--bare mb-2">Order Summary</p>
+                    <h2 className="font-serif text-3xl font-light">
+                      {totals.totalSets} sets / {totals.totalPieces} pieces
+                    </h2>
                   </div>
-
-                  <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto">
+                  <div className="divide-y divide-charcoal/10">
                     {items.map((item) => (
-                      <div key={item.id} className="flex gap-3">
-                        <div className="relative w-14 h-18 shrink-0 overflow-hidden bg-warm-gray">
-                          <Image
-                            src={item.image}
-                            alt={item.title}
-                            fill
-                            className="object-cover"
-                            sizes="56px"
-                          />
-                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-charcoal text-white text-[9px] rounded-full flex items-center justify-center font-semibold">
-                            {item.quantity}
-                          </span>
+                      <div key={item.id} className="flex gap-4 p-4 sm:p-6">
+                        <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-warm-gray">
+                          <Image src={item.image} alt={item.title} fill className="object-cover" sizes="80px" />
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-charcoal line-clamp-1">
-                            {item.title}
+                        <div className="flex flex-1 flex-col gap-2">
+                          <div className="flex justify-between gap-4">
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold-dark">
+                                {getStyleCode(item)}
+                              </p>
+                              <h3 className="font-serif text-xl text-charcoal">
+                                {item.title}
+                              </h3>
+                            </div>
+                            <p className="font-serif text-lg text-charcoal">
+                              {formatPrice(calculateLineTotal(item, totals.totalSets))}
+                            </p>
+                          </div>
+                          <p className="text-[10px] uppercase tracking-[0.16em] text-charcoal/45">
+                            {item.quantity} sets - {item.quantity * B2B_CONFIG.setSize} pcs - {SIZE_RATIO_LABEL}
                           </p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {item.size} / {item.color}
-                          </p>
-                          <p className="text-xs font-semibold text-charcoal mt-1">
-                            {formatPrice(
-                              (item.salePrice ?? item.price) * item.quantity,
-                            )}
+                          <p className="text-xs text-charcoal/50">
+                            {formatPrice(item.salePrice ?? item.price)}/set
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  <div className="space-y-2 text-sm border-t border-charcoal/10 pt-4">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium">
-                        {formatPrice(subtotal)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span className="font-serif italic text-sm text-gold-dark">
-                        Complimentary
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-end mt-4 pt-5 border-t border-gold/40">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-charcoal/60 pb-1">Total</span>
-                    <span className="font-serif text-3xl font-light">
-                      {formatPrice(total)}
-                    </span>
-                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              </section>
+
+              <aside className="lg:col-span-5">
+                <form onSubmit={beginRazorpayPayment} className="sticky top-32 space-y-6">
+                  <div className="border border-charcoal/10 bg-charcoal p-6 text-warm-white sm:p-8 frame-luxe">
+                    <p className="eyebrow eyebrow--bare mb-2">MOQ & Tier</p>
+                    <h2 className="font-serif text-3xl font-light">
+                      {totals.appliedTier?.label || "MOQ pending"}
+                    </h2>
+                    <div className="mt-6">
+                      <MoqProgress totals={totals} tone="dark" />
+                    </div>
+                    <div className="mt-8 space-y-3 border-t border-white/10 pt-6">
+                      <Summary label="Base subtotal" value={formatPrice(totals.baseSubtotal)} />
+                      <Summary label="Savings" value={`${totals.discountPercent}% / ${formatPrice(totals.discountAmount)}`} />
+                      <Summary label="Final total" value={formatPrice(totals.subtotal)} strong />
+                    </div>
+                  </div>
+
+                  <div className="border border-charcoal/10 bg-white p-6 sm:p-8">
+                    <p className="eyebrow mb-4">Buyer Details</p>
+                    <div className="grid gap-5">
+                      <Field label="Buyer name" value={buyer.buyerName} onChange={(value) => updateBuyer("buyerName", value)} />
+                      <Field label="Business name" value={buyer.businessName} onChange={(value) => updateBuyer("businessName", value)} />
+                      <Field label="City" value={buyer.city} onChange={(value) => updateBuyer("city", value)} />
+                      <Field label="WhatsApp phone" value={buyer.whatsappPhone} onChange={(value) => updateBuyer("whatsappPhone", value)} />
+                      <Field label="Email" type="email" value={buyer.email} onChange={(value) => updateBuyer("email", value)} />
+                      <Field label="GSTIN optional" value={buyer.gstin} onChange={(value) => updateBuyer("gstin", value)} />
+                      <label className="flex items-center gap-3 text-xs text-charcoal/60">
+                        <input
+                          type="checkbox"
+                          checked={buyer.wantsGstInvoice}
+                          onChange={(event) => updateBuyer("wantsGstInvoice", event.target.checked)}
+                          className="h-4 w-4 accent-charcoal"
+                        />
+                        GST invoice required
+                      </label>
+                    </div>
+
+                    {status && (
+                      <p className="mt-6 border border-gold/30 border-l-2 border-l-gold bg-warm-white px-4 py-3 text-xs leading-relaxed text-charcoal/65">
+                        {status}
+                      </p>
+                    )}
+
+                    <div className="mt-8 grid gap-3">
+                      <button
+                        type="submit"
+                        disabled={loadingPayment || !moq.ok}
+                        className="btn-luxe disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        {loadingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                        Pay with Razorpay
+                      </button>
+                      {medusaBackend && (
+                        <button
+                          type="button"
+                          onClick={placeCodOrder}
+                          disabled={loadingPayment || !moq.ok}
+                          className="btn-luxe-outline disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          {loadingPayment ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingBag className="h-3.5 w-3.5" />
+                          )}
+                          Place order (Cash on Delivery)
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={beginWhatsappOrder}
+                        className="btn-luxe-outline"
+                      >
+                        Confirm on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </aside>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
-    </>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  type = "text",
+  value,
+  onChange,
+}: {
+  label: string;
+  type?: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <label className="field-label">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="field-luxe"
+      />
+    </div>
+  );
+}
+
+function Summary({
+  label,
+  value,
+  strong,
+}: {
+  label: string;
+  type?: string;
+  value: string;
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+        {label}
+      </span>
+      <span className={strong ? "font-serif text-3xl text-white" : "font-serif text-lg text-white/80"}>
+        {value}
+      </span>
+    </div>
   );
 }

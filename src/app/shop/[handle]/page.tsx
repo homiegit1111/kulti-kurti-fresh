@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { getProductByHandle } from "@/lib/shopify";
+import { getProductByHandle } from "@/lib/commerce/catalog";
 import { getPublishedReviews, summarize } from "@/lib/server/reviews";
 import ClientProductDetail from "./client-page";
+import { B2B_CONFIG } from "@/lib/b2b/config";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ handle: string }> }
@@ -108,6 +109,12 @@ export default async function ProductPage({
       url: `https://www.rangatpehnawa.com/shop/${product.handle}`,
       priceCurrency: "INR",
       price: product.salePrice ?? product.price,
+      unitText: "SET",
+      eligibleQuantity: {
+        "@type": "QuantitativeValue",
+        minValue: B2B_CONFIG.minimumStyleSets,
+        unitText: "set",
+      },
       priceValidUntil,
       itemCondition: "https://schema.org/NewCondition",
       availability: inStock

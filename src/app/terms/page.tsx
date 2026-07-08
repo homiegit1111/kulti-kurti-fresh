@@ -6,7 +6,7 @@ import { LegalLayout, LegalSection } from "@/components/legal/legal-layout";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "The terms that govern your use of Rangat Pehnawa and any purchase you make.",
+    "The terms that govern Rangat Pehnawa wholesale catalog access, orders, payments, and dispatch.",
   alternates: { canonical: "/terms" },
   robots: { index: true, follow: true },
 };
@@ -22,24 +22,27 @@ export default function TermsPage() {
       >
         <p>
           These terms govern your use of the Rangat Pehnawa website and your
-          purchase of our products. By using the site or placing an order, you
-          agree to them.
+          wholesale orders. By using the site, saving styles, or placing an
+          order request, you agree to them.
         </p>
 
         <LegalSection title="1. Orders &amp; acceptance">
           <p>
-            An order is an offer to buy. We confirm acceptance when we dispatch
-            your order. We may decline or cancel an order — for example, if an
-            item is out of stock, a pricing error occurred, or payment could not
-            be verified — and will refund any amount charged.
+            A submitted cart or WhatsApp inquiry is an order request. We confirm
+            acceptance after stock, set quantities, buyer details, payment, GST
+            information, and dispatch requirements are verified. We may decline
+            or revise an order if stock changes, a pricing error occurred, MOQ
+            is not met, or payment cannot be verified.
           </p>
         </LegalSection>
 
         <LegalSection title="2. Pricing &amp; payment">
           <p>
-            Prices are listed in Indian Rupees (INR) and, where applicable,
-            include taxes such as GST. Payment is processed securely through
-            Shopify and its payment partners. In the event of an obvious pricing
+            Wholesale prices are listed in Indian Rupees (INR) per size-ratio
+            set unless stated otherwise. Tier discounts, GST invoice details,
+            and payment instructions are confirmed before dispatch. Online
+            payment may be offered through Razorpay checkout or a verified
+            payment link when configured. In the event of an obvious pricing
             error, we are not obliged to fulfil the order at the incorrect
             price.
           </p>
@@ -47,25 +50,27 @@ export default function TermsPage() {
 
         <LegalSection title="3. Shipping &amp; delivery">
           <p>
-            Delivery timelines are estimates. Risk passes to you on delivery.
-            Any customs duties or charges for international orders are your
-            responsibility.
+            Dispatch timelines and freight handling are confirmed order by
+            order based on stock, order volume, packing requirements, and buyer
+            city. Delivery timelines are estimates. Any duties, octroi, local
+            charges, or onward reseller logistics are the buyer&apos;s responsibility.
           </p>
         </LegalSection>
 
-        <LegalSection title="4. Returns &amp; refunds">
+        <LegalSection title="4. Cancellations, shortages &amp; claims">
           <p>
-            Eligible items may be returned in unused, original condition within
-            the window stated at checkout. Made-to-order, altered, or final-sale
-            items may be non-returnable. Approved refunds are issued to the
-            original payment method.
+            Wholesale orders are packed as agreed size-ratio sets. Shortage,
+            damage, or mismatch claims must be shared promptly with parcel
+            opening proof and invoice details so the team can investigate.
+            Approved adjustments may be handled through replacement, credit, or
+            refund to the original payment method.
           </p>
         </LegalSection>
 
         <LegalSection title="5. Product representation">
           <p>
             As our pieces are handcrafted, slight variations in colour, weave,
-            and finish are natural and celebrated — they are not defects. Screen
+            and finish are natural and celebrated. They are not defects. Screen
             colours may differ from the actual fabric.
           </p>
         </LegalSection>
@@ -73,24 +78,25 @@ export default function TermsPage() {
         <LegalSection title="6. Accounts">
           <p>
             You are responsible for keeping your account credentials secure and
-            for activity under your account. Authentication is provided by
-            Clerk; your use of it is also subject to its terms.
+            for activity under your account. Buyer profile information is used
+            to speed up wholesale inquiries, payment assistance, GST invoicing,
+            and dispatch coordination.
           </p>
         </LegalSection>
 
         <LegalSection title="7. Intellectual property">
           <p>
-            All content on this site — imagery, designs, text, and the Rangat
-            Pehnawa name and marks — is our property or licensed to us and may
-            not be used without written permission.
+            All content on this site, including imagery, designs, text, and the
+            Rangat Pehnawa name and marks, is our property or licensed to us and
+            may not be used without written permission.
           </p>
         </LegalSection>
 
         <LegalSection title="8. Limitation of liability">
           <p>
             To the extent permitted by law, our liability for any claim relating
-            to a product or the site is limited to the amount you paid for the
-            relevant order.
+            to a product, order, or the site is limited to the amount paid for
+            the relevant wholesale order.
           </p>
         </LegalSection>
 

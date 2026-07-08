@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { playfair, inter } from "./fonts";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
 import { Providers } from "@/components/providers/providers";
 import { WebVitals } from "./web-vitals";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
@@ -23,29 +36,28 @@ export const metadata: Metadata = {
   // Resolves all relative OpenGraph/Twitter/canonical URLs to absolute ones.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Rangat Pehnawa | Redefining Indian Fashion",
+    default: "Rangat Pehnawa | Modern Kurti Catalog India",
     template: "%s | Rangat Pehnawa",
   },
   description:
-    "Discover handcrafted Indian fashion that blends tradition with contemporary elegance. Shop premium kurtis, lehengas, sarees, and co-ord sets at Rangat Pehnawa.",
+    "Modern kurti catalog for shoppers, boutiques, and online sellers in India. Fresh drops, practical prices, MOQ 4 sets, and WhatsApp ordering.",
   applicationName: "Rangat Pehnawa",
   keywords: [
-    "Indian fashion",
-    "kurtis",
-    "lehengas",
-    "sarees",
-    "ethnic wear",
-    "designer clothing",
-    "handcrafted fashion",
-    "premium Indian wear",
+    "kurti wholesale online",
+    "wholesale kurtis India",
+    "kurti manufacturer",
+    "kurti wholesale price",
+    "kurtis for boutique owners",
+    "kurti reseller catalog with price",
+    "wholesale kurtis online India",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Rangat Pehnawa | Redefining Indian Fashion",
+    title: "Rangat Pehnawa | Modern Kurti Catalog India",
     description:
-      "Where tradition meets contemporary elegance. Handcrafted pieces that tell your story.",
+      "Modern kurtis for shoppers, boutique owners, and resellers. Fresh drops, practical prices, MOQ 4 sets, and WhatsApp ordering.",
     url: "/",
     type: "website",
     locale: "en_IN",
@@ -55,15 +67,15 @@ export const metadata: Metadata = {
         url: "/images/hero.png",
         width: 1200,
         height: 630,
-        alt: "Rangat Pehnawa — handcrafted Indian fashion",
+        alt: "Rangat Pehnawa modern kurti catalog",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rangat Pehnawa | Redefining Indian Fashion",
+    title: "Rangat Pehnawa | Modern Kurti Catalog India",
     description:
-      "Where tradition meets contemporary elegance. Handcrafted pieces that tell your story.",
+      "Modern kurtis for shoppers, boutiques, and resellers with MOQ 4 sets and WhatsApp ordering.",
     images: ["/images/hero.png"],
   },
   robots: {
@@ -112,7 +124,7 @@ export default function RootLayout({
   const app = (
     <html
       lang="en"
-      className={`${playfair.variable} ${inter.variable} h-full antialiased`}
+      className={`h-full antialiased ${inter.variable} ${playfair.variable}`}
     >
       <body className="min-h-full flex flex-col font-sans bg-warm-white text-charcoal relative">
         <script
@@ -128,7 +140,7 @@ export default function RootLayout({
   );
 
   // Storefront resilience: when Clerk isn't configured (local dev, preview
-  // deploys) the app renders fully without it — auth surfaces degrade
+  // deploys) the app renders fully without it; auth surfaces degrade
   // gracefully via @/lib/auth instead of blanking the whole tree.
   if (!isAuthEnabled) return app;
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
@@ -11,11 +11,19 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/shopify";
-import { trackCheckoutStart } from "@/lib/checkout";
-import { ShopPayButton } from "@/components/checkout/shop-pay-button";
-import { Minus, Plus, X, ArrowRight, Loader2, ShoppingBag, Sparkles } from "lucide-react";
+import { formatPrice } from "@/lib/commerce/catalog";
+import { Minus, Plus, X, ArrowRight, Loader2, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { B2B_CONFIG } from "@/lib/b2b/config";
+import { calculateWholesaleTotals } from "@/lib/b2b/pricing";
+import { validateCartMOQ } from "@/lib/b2b/validation";
+import { buildWholesaleWhatsAppUrl } from "@/lib/b2b/whatsapp";
+import { getStyleCode } from "@/lib/b2b/style-code";
+import { MoqProgress } from "@/components/b2b/moq-progress";
+import {
+  trackBeginWhatsappOrder,
+  trackMoqBlockedCheckout,
+} from "@/lib/analytics";
 
 export function CartDrawer() {
   const [open, setOpen] = useState(false);
@@ -25,14 +33,30 @@ export function CartDrawer() {
   const {
     items,
     itemCount,
-    subtotal,
     removeItem,
     updateQuantity,
-    checkoutUrl,
     isSyncing,
-    shopifyCartEnabled,
     syncError,
   } = useCart();
+  const totals = calculateWholesaleTotals(items);
+  const moq = validateCartMOQ(items);
+
+  const beginWhatsappOrder = () => {
+    if (!moq.ok) {
+      trackMoqBlockedCheckout({
+        total_sets: moq.totalSets,
+        remaining_sets: moq.remainingSets,
+      });
+      return;
+    }
+    trackBeginWhatsappOrder({
+      total_sets: totals.totalSets,
+      total_pieces: totals.totalPieces,
+      value: totals.subtotal,
+      discount_percent: totals.discountPercent,
+    });
+    window.location.href = buildWholesaleWhatsAppUrl(items);
+  };
 
   const handleMouseEnter = () => {
     if (hideTimeout.current) clearTimeout(hideTimeout.current);
@@ -73,7 +97,7 @@ export function CartDrawer() {
           Cart <span className="text-gold font-bold">[{itemCount}]</span>
         </SheetTrigger>
 
-        {/* ── Hover Mini-Cart (Desktop Only) ── */}
+        {/* Hover mini-cart for desktop */}
         <AnimatePresence>
           {hoverOpen && !open && (
             <motion.div
@@ -88,15 +112,22 @@ export function CartDrawer() {
                   <ShoppingBag className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} /> Your Selection
                 </span>
                 <span className="text-[9px] font-bold tracking-[0.2em] text-charcoal/40 uppercase">
-                  {itemCount} Items
+                  {itemCount} Sets
                 </span>
               </div>
 
               <div className="flex-1 max-h-[300px] overflow-y-auto px-4 py-2 custom-scrollbar">
                 {items.length === 0 ? (
                   <div className="py-8 text-center flex flex-col items-center">
-                    <Sparkles className="w-6 h-6 text-charcoal/20 mb-2" />
+                    <ShoppingBag className="w-6 h-6 text-charcoal/25 mb-2" />
                     <p className="text-sm font-serif text-charcoal/60">Your bag is empty.</p>
+                    <Link
+                      href="/bulk-order"
+                      onClick={() => setHoverOpen(false)}
+                      className="mt-3 text-[9px] font-bold uppercase tracking-[0.18em] text-gold-dark"
+                    >
+                      Start bulk deals
+                    </Link>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-3 py-2">
@@ -108,10 +139,10 @@ export function CartDrawer() {
                         <div className="flex flex-col flex-1 overflow-hidden">
                           <p className="text-[11px] font-semibold text-charcoal truncate">{item.title}</p>
                           <p className="text-[9px] text-charcoal/50 uppercase tracking-widest mt-0.5">
-                            {item.size} | {item.color}
+                            {getStyleCode(item)} | {item.quantity} sets
                           </p>
                           <div className="flex justify-between items-center mt-1">
-                            <span className="text-[10px] text-charcoal font-medium">{item.quantity} × {formatPrice(item.salePrice ?? item.price)}</span>
+                            <span className="text-[10px] text-charcoal font-medium">{item.quantity} sets x {formatPrice(item.salePrice ?? item.price)}</span>
                           </div>
                         </div>
                       </div>
@@ -128,8 +159,8 @@ export function CartDrawer() {
               {items.length > 0 && (
                 <div className="p-4 bg-white border-t border-charcoal/10 flex flex-col gap-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[9px] font-bold tracking-[0.2em] text-charcoal/50 uppercase">Subtotal</span>
-                    <span className="font-serif text-lg text-charcoal">{formatPrice(subtotal)}</span>
+                    <span className="text-[9px] font-bold tracking-[0.2em] text-charcoal/50 uppercase">Selection total</span>
+                    <span className="font-serif text-lg text-charcoal">{formatPrice(totals.subtotal)}</span>
                   </div>
                   <button
                     onClick={(e) => {
@@ -148,17 +179,12 @@ export function CartDrawer() {
         </AnimatePresence>
       </div>
       
-      {/* ── Ultra-Modern Floating Panel Design ── */}
+      {/* Floating cart panel */}
       <SheetContent className="w-full sm:max-w-md bg-transparent border-none p-0 flex flex-col z-[100] shadow-none">
         
         {/* Floating Inner Container */}
         <div className="h-full w-full overflow-hidden flex flex-col relative bg-warm-white border-l border-charcoal/10 shadow-[0_30px_100px_rgba(0,0,0,0.18)]">
           
-          {/* Quiet warm wash */}
-          <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 right-[-30%] w-[120%] h-[40%] bg-gold/[0.06] rounded-full blur-[90px]" />
-          </div>
-
           <SheetHeader className="px-6 py-6 sm:px-8 sm:py-8 bg-transparent z-10 relative">
             <SheetTitle className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -179,7 +205,8 @@ export function CartDrawer() {
                     Your <span className="italic">Selection</span>
                   </span>
                   <span className="text-[9px] font-bold font-sans tracking-[0.25em] text-charcoal/40 uppercase mt-1.5">
-                    {itemCount} {itemCount === 1 ? 'Piece' : 'Pieces'}
+                    {itemCount} {itemCount === 1 ? "Set" : "Sets"} /{" "}
+                    {totals.totalPieces} pcs
                   </span>
                 </div>
               </div>
@@ -193,30 +220,23 @@ export function CartDrawer() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center h-full text-center"
               >
-                <div className="relative w-28 h-28 mb-8">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 border border-dashed border-gold/40 rounded-full"
-                  />
-                  <div className="absolute inset-3 rounded-full bg-white border border-charcoal/5 flex items-center justify-center">
-                    <ShoppingBag className="w-7 h-7 text-charcoal/35" strokeWidth={1} />
-                  </div>
+                <div className="mb-8 flex h-24 w-24 items-center justify-center border border-charcoal/10 bg-white">
+                  <ShoppingBag className="h-7 w-7 text-charcoal/35" strokeWidth={1.4} />
                 </div>
                 <h3 className="font-serif text-3xl font-light text-charcoal mb-3">
                   Your bag is <span className="italic">empty</span>
                 </h3>
                 <p className="font-serif italic text-lg text-charcoal/45 mb-10">
-                  Fill it with something beautiful.
+                  Add {B2B_CONFIG.minimumOrderSets} kurti sets to unlock ordering.
                 </p>
-                <button
+                <Link
+                  href="/bulk-order"
                   onClick={() => setOpen(false)}
                   className="btn-luxe group"
                 >
-                  <span className="relative z-10">Start Curating</span>
+                  <span className="relative z-10">Open Bulk Deals</span>
                   <ArrowRight className="h-3 w-3 relative z-10 group-hover:translate-x-1 transition-transform" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                </button>
+                </Link>
               </motion.div>
             ) : (
               <div className="flex flex-col gap-4">
@@ -228,7 +248,7 @@ export function CartDrawer() {
                       initial={{ opacity: 0, y: 20, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: index * 0.05 } }}
                       exit={{ opacity: 0, scale: 0.9, filter: "blur(4px)" }}
-                      className="group flex gap-4 p-3 bg-white border border-charcoal/8 hover:border-charcoal/20 items-center relative overflow-hidden transition-colors duration-500"
+                      className="group flex gap-4 p-3 bg-white border border-charcoal/10 hover:border-charcoal/20 items-center relative overflow-hidden transition-colors duration-300"
                     >
                       <Link
                         href={`/shop/${item.handle}`}
@@ -264,7 +284,7 @@ export function CartDrawer() {
                         </div>
 
                         <p className="text-[9px] font-bold text-charcoal/40 uppercase tracking-[0.15em] mb-auto">
-                          {item.size && `Size: ${item.size}`} {item.color && `• Color: ${item.color}`}
+                          {getStyleCode(item)} - Ratio set - {item.quantity * B2B_CONFIG.setSize} pcs
                         </p>
 
                         <div className="flex items-end justify-between mt-4">
@@ -305,11 +325,11 @@ export function CartDrawer() {
                     Subtotal
                   </span>
                   <p className="text-[10px] text-charcoal/50 font-medium">
-                    Shipping & taxes calculated at checkout
+                    MOQ {B2B_CONFIG.minimumOrderSets} sets before WhatsApp order
                   </p>
                 </div>
                 <span className="font-serif text-3xl font-light tracking-tight text-charcoal">
-                  {formatPrice(subtotal)}
+                  {formatPrice(totals.subtotal)}
                 </span>
               </div>
 
@@ -322,39 +342,41 @@ export function CartDrawer() {
                 </p>
               )}
 
-              <ShopPayButton className="mb-3" />
+              <div className="mb-4">
+                <MoqProgress totals={totals} />
+              </div>
 
               <button
                 disabled={isSyncing}
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  trackCheckoutStart(items, subtotal);
-                  if (checkoutUrl) {
-                    window.location.href = checkoutUrl;
-                  } else if (shopifyCartEnabled) {
-                    const { getOrCreateCart } = await import("@/lib/shopify-cart");
-                    const cart = await getOrCreateCart();
-                    if (cart?.checkoutUrl) {
-                      window.location.href = cart.checkoutUrl;
-                    }
-                  } else {
-                    window.location.href = "/checkout";
-                  }
+                  beginWhatsappOrder();
                 }}
-                className="group relative w-full h-14 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.25em] hover:bg-gold-dark transition-colors duration-400 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-4"
+                className="group relative w-full h-14 bg-charcoal text-white text-[10px] font-bold uppercase tracking-[0.25em] hover:bg-gold-dark transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed overflow-hidden flex items-center justify-center gap-4"
               >
                 {isSyncing ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin relative z-10 text-gold" />
-                    <span className="relative z-10 tracking-widest">Syncing…</span>
+                    <span className="relative z-10 tracking-widest">Syncing...</span>
                   </>
                 ) : (
                   <>
-                    <span className="relative z-10 pt-0.5">Secure Checkout</span>
+                    <span className="relative z-10 pt-0.5">
+                      {moq.ok ? "Send WhatsApp Order" : "MOQ Pending"}
+                    </span>
                     <ArrowRight className="relative z-10 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform duration-300" strokeWidth={1.5} />
                   </>
                 )}
               </button>
+              {moq.ok && (
+                <Link
+                  href="/checkout"
+                  onClick={() => setOpen(false)}
+                  className="mt-3 flex h-12 items-center justify-center border border-charcoal/15 text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal hover:bg-charcoal hover:text-white"
+                >
+                  Razorpay Checkout
+                </Link>
+              )}
             </div>
           )}
         </div>

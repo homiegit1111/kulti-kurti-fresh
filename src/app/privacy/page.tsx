@@ -32,7 +32,9 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Order data</strong> — items, shipping address, contact
-              number, and order history, processed through Shopify.
+              number, business details, GST invoice preferences, and order
+              history, processed through our wholesale commerce and support
+              systems.
             </li>
             <li>
               <strong>Wishlist &amp; preferences</strong> — saved items and
@@ -68,15 +70,18 @@ export default function PrivacyPage() {
         <LegalSection title="4. Sharing &amp; processors">
           <p>
             We share data only with the processors that run our store — Clerk
-            (authentication), Shopify (commerce &amp; payments), Supabase (data
-            storage), and Cloudflare Turnstile (bot protection) — each bound to
-            protect your data. We do not sell your personal data.
+            (authentication), Medusa or our legacy commerce adapters
+            (catalog/order operations), Razorpay (payments when enabled),
+            Supabase (data storage), WhatsApp support tools, and Cloudflare
+            Turnstile (bot protection) — each bound to protect your data. We
+            do not sell your personal data.
           </p>
         </LegalSection>
 
         <LegalSection title="5. Payments">
           <p>
-            Payments are processed securely by Shopify and its payment partners.
+            Payments may be completed through Razorpay checkout, Razorpay
+            payment links, bank transfer, or another confirmed wholesale method.
             We do not store your full card details on our servers.
           </p>
         </LegalSection>

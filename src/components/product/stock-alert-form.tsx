@@ -1,11 +1,10 @@
 "use client";
 
 /**
- * Back-in-stock / size alert — shown on the PDP when a piece is sold out.
+ * Back-in-stock / size alert shown on the PDP when a wholesale style is sold out.
  *
- * Captures lost demand: a single editorial email field (pre-filled for
- * signed-in clients) registering against /api/stock-alerts. The optional
- * size comes from the size selector so "notify me for an M" just works.
+ * Captures lost B2B demand with a single email field. The optional size comes
+ * from the selected ratio context when present.
  */
 
 import { useState } from "react";
@@ -55,7 +54,7 @@ export default function StockAlertForm({
       <div className="panel-luxe p-6 mt-6">
         <p className="eyebrow eyebrow--bare mb-2">Noted</p>
         <p className="font-serif text-lg font-light">
-          We&apos;ll write to you the moment it returns
+          We&apos;ll write to you when this wholesale style is available again
           {size ? ` in size ${size}` : ""}.
         </p>
       </div>
@@ -64,10 +63,10 @@ export default function StockAlertForm({
 
   return (
     <form onSubmit={submit} className="frame-luxe p-6 lg:p-8 mt-6">
-      <p className="eyebrow eyebrow--bare mb-2">Sold Out — For Now</p>
+      <p className="eyebrow eyebrow--bare mb-2">Wholesale Stock Pending</p>
       <p className="font-serif text-lg font-light leading-snug">
-        Be first to know when this piece{" "}
-        <em className="italic">returns{size ? ` in ${size}` : ""}</em>
+        Be first to know when this style is ready for wholesale sets
+        {size ? ` in ${size}` : ""}.
       </p>
       <div className="flex flex-col sm:flex-row gap-4 mt-5">
         <input
@@ -84,7 +83,7 @@ export default function StockAlertForm({
           disabled={state === "sending"}
           className="btn-luxe whitespace-nowrap"
         >
-          {state === "sending" ? "Saving…" : "Notify me"}
+          {state === "sending" ? "Saving..." : "Notify me"}
         </button>
       </div>
       {error && (

@@ -19,7 +19,7 @@ import {
   createClerkSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
-import { getProductByHandle, type MockProduct } from "@/lib/shopify";
+import { getProductByHandle, type MockProduct } from "@/lib/commerce/catalog";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
 
 export const runtime = "nodejs";

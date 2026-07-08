@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ── shadcn/ui theme layer ── */
+/* â”€â”€ shadcn/ui theme layer â”€â”€ */
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
@@ -11,8 +11,7 @@
      * NOTE: --font-inter / --font-playfair are intentionally NOT defined here.
      * next/font injects them on <html> (see src/app/fonts.ts + layout.tsx) with
      * size-adjusted fallback metrics. `:root` IS `<html>`, so re-declaring them
-     * here would collide with / override the next/font values and re-break the
-     * webfont loading. The @theme mapping below consumes the next/font vars.
+     * here would collide with / override the next/font values.
      */
 
     /* Luxury warm palette */
@@ -34,7 +33,7 @@
     --muted: 40 10% 95%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 37 45% 60%;
+    --accent: 40 38% 54%;
     --accent-foreground: 40 20% 98%;
 
     --destructive: 6 72% 57%;
@@ -42,9 +41,9 @@
 
     --border: 40 10% 90%;
     --input: 40 10% 90%;
-    --ring: 37 45% 60%;
+    --ring: 40 38% 54%;
 
-    --chart-1: 37 45% 60%;
+    --chart-1: 40 38% 54%;
     --chart-2: 25 30% 50%;
     --chart-3: 40 20% 40%;
     --chart-4: 15 35% 55%;
@@ -60,7 +59,7 @@
     --sidebar-ring: 37 45% 60%;
 }
 
-/* ── Tailwind v4 theme extensions ── */
+/* â”€â”€ Tailwind v4 theme extensions â”€â”€ */
 @theme inline {
     --color-background: hsl(var(--background));
     --color-foreground: hsl(var(--foreground));
@@ -92,12 +91,16 @@
     --color-sidebar-ring: hsl(var(--sidebar-ring));
 
     /* Custom brand colors */
-    --color-gold: hsl(37 45% 60%);
-    --color-gold-light: hsl(37 45% 75%);
-    --color-gold-dark: hsl(37 45% 45%);
+    --color-gold: hsl(40 38% 54%);
+    --color-gold-light: hsl(40 38% 78%);
+    --color-gold-dark: hsl(40 38% 38%);
     --color-warm-white: hsl(40 20% 98%);
     --color-warm-gray: hsl(40 10% 95%);
     --color-charcoal: hsl(0 0% 10%);
+    --color-rangat-pink: hsl(348 35% 36%);
+    --color-rangat-teal: hsl(28 30% 36%);
+    --color-rangat-sun: hsl(39 54% 58%);
+    --color-rangat-lime: hsl(88 18% 44%);
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -124,7 +127,7 @@
     --animate-spin-slow: spin 8s linear infinite;
 }
 
-/* ── Keyframe animations ── */
+/* â”€â”€ Keyframe animations â”€â”€ */
 @keyframes fade-in {
     from {
         opacity: 0;
@@ -258,11 +261,11 @@
     }
 }
 
-/* ── Base styles ── */
+/* â”€â”€ Base styles â”€â”€ */
 html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Native instant scroll — faster & more precise response than CSS smooth */
+    /* Native instant scroll â€” faster & more precise response than CSS smooth */
     text-rendering: optimizeLegibility;
 }
 
@@ -271,7 +274,7 @@ body {
     color: hsl(var(--foreground));
     font-family: var(--font-sans), system-ui, sans-serif;
     overflow-x: hidden;
-    /* No overscroll-behavior-y override — lets browsers render native rubber-band / momentum */
+    /* No overscroll-behavior-y override â€” lets browsers render native rubber-band / momentum */
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -296,13 +299,13 @@ svg {
     }
 }
 
-/* ── Selection styling ── */
+/* â”€â”€ Selection styling â”€â”€ */
 ::selection {
     background-color: hsl(37 45% 60% / 0.3);
     color: hsl(0 0% 10%);
 }
 
-/* ── Custom scrollbar ── */
+/* â”€â”€ Custom scrollbar â”€â”€ */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -320,7 +323,7 @@ svg {
     background-color: hsl(37 45% 60%);
 }
 
-/* ── Utility classes ── */
+/* â”€â”€ Utility classes â”€â”€ */
 .text-gradient-gold {
     background: linear-gradient(
         135deg,
@@ -333,7 +336,7 @@ svg {
     background-clip: text;
 }
 
-/* ── 3D Utilities for Mobile Flip Card ── */
+/* â”€â”€ 3D Utilities for Mobile Flip Card â”€â”€ */
 .perspective-1000 {
     perspective: 1000px;
 }
@@ -370,7 +373,7 @@ svg {
     transform: translateZ(0);
 }
 
-/* ── GPU compositor layer utilities ── */
+/* â”€â”€ GPU compositor layer utilities â”€â”€ */
 /* Apply to any element that will animate transform/opacity  */
 .will-change-transform {
     will-change: transform;
@@ -383,7 +386,7 @@ svg {
     will-change: opacity;
 }
 
-/* ── Marquee: always GPU-promoted so it never touches main thread ── */
+/* â”€â”€ Marquee: always GPU-promoted so it never touches main thread â”€â”€ */
 .animate-marquee {
     will-change: transform;
     transform: translateZ(0);
@@ -391,7 +394,7 @@ svg {
     -webkit-backface-visibility: hidden;
 }
 
-/* ── Parallax layers: promote before first scroll to avoid layer-creation jank ── */
+/* â”€â”€ Parallax layers: promote before first scroll to avoid layer-creation jank â”€â”€ */
 .parallax-layer {
     will-change: transform;
     transform: translateZ(0);
@@ -399,13 +402,13 @@ svg {
     -webkit-backface-visibility: hidden;
 }
 
-/* ── Sticky / fixed elements: decoupled from scroll by GPU layer ── */
+/* â”€â”€ Sticky / fixed elements: decoupled from scroll by GPU layer â”€â”€ */
 .fixed-gpu {
     will-change: transform;
     transform: translateZ(0);
 }
 
-/* ── Decorative blur orbs: hide on mobile to prevent expensive filter compositing ── */
+/* â”€â”€ Decorative blur orbs: hide on mobile to prevent expensive filter compositing â”€â”€ */
 .decor-blur-orb {
     display: none;
 }
@@ -416,7 +419,7 @@ svg {
     }
 }
 
-/* ── Prevent touch delay on interactive elements ── */
+/* â”€â”€ Prevent touch delay on interactive elements â”€â”€ */
 button,
 a,
 [role="button"],
@@ -425,7 +428,7 @@ a,
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Product card image zoom on hover — GPU-promoted compositor layer */
+/* Product card image zoom on hover â€” GPU-promoted compositor layer */
 .product-card-image {
     will-change: transform;
     transform: translateZ(0);
@@ -438,7 +441,7 @@ a,
     transform: translateZ(0) scale(1.06);
 }
 
-/* Scroll reveal utility — GPU-friendly: only transitions compositor properties */
+/* Scroll reveal utility â€” GPU-friendly: only transitions compositor properties */
 .reveal {
     opacity: 0;
     transform: translateY(24px) translateZ(0);
@@ -495,12 +498,77 @@ a,
     display: none;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   LUXE DESIGN SYSTEM — site-wide primitives (2026-06 visual pass)
-   Editorial, square-cornered, hairline-bordered quiet luxury.
-   ════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM HOMEPAGE BACKGROUND — Smooth Matte Clay (Atelier Paper)
+   Very light, non-disturbing, warm clay/matte finish specific to
+   Rangat Pehnawa: handcrafted heritage meets quiet modern luxury.
+   The texture is barely visible in direct view but creates a rich,
+   frosted, material-like blur under the navbar — like fine paper or
+   subtle handloom fabric under glass.
+   ═══════════════════════════════════════════════════════════════ */
+.homepage-clay {
+  background-color: #f7f4ed;
+  background-image:
+    /* Base warm clay with gentle depth */
+    linear-gradient(180deg, #faf7f1 0%, #f6f1e8 42%, #f7f4ed 100%),
+    /* Very soft directional light (atelier window feel) */
+    radial-gradient(ellipse at 48% 12%, rgba(145, 115, 85, 0.022) 0%, transparent 62%),
+    /* Subtle bottom grounding */
+    linear-gradient(to bottom, transparent 68%, rgba(120, 95, 70, 0.015) 100%);
+  background-size: 100% 100%, 100% 100%, 100% 100%;
+  background-attachment: fixed;
+}
 
-/* ── Eyebrow / overline microlabel ── */
+/* Refined organic texture — premium handloom linen + atelier paper. 
+   Barely visible straight on. Transforms into rich, frosted material when blurred by navbar.
+   Specific to Rangat: subtle weave evoking fine Chanderi and handloom. */
+.homepage-clay::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  /* Primary fine linen weave (horizontal + vertical threads) */
+  background-image:
+    linear-gradient(rgba(0,0,0,0.009) 0.8px, transparent 0.8px),
+    linear-gradient(90deg, rgba(0,0,0,0.009) 0.8px, transparent 0.8px),
+    /* Secondary larger, softer paper fiber texture */
+    radial-gradient(circle at 30% 20%, rgba(0,0,0,0.004) 0.5px, transparent 1.5px),
+    radial-gradient(circle at 70% 80%, rgba(0,0,0,0.004) 0.5px, transparent 1.5px);
+  background-size: 2.4px 2.4px, 2.4px 2.4px, 7px 7px, 9px 9px;
+  opacity: 0.82;
+  mix-blend-mode: multiply;
+}
+
+/* Make the fixed navbar glass look richer over the clay background.
+   The blur now reveals the handloom texture beautifully — premium frosted effect. */
+.homepage-clay .glass,
+.homepage-clay nav {
+  background: hsl(35 32% 96% / 0.74) !important;
+  backdrop-filter: blur(42px) saturate(1.42) contrast(0.97);
+  -webkit-backdrop-filter: blur(42px) saturate(1.42) contrast(0.97);
+  border-color: hsl(32 26% 80% / 0.45);
+  box-shadow: 0 10px 36px -14px rgba(0,0,0,0.05);
+}
+
+/* When scrolled, even more refined glass */
+.homepage-clay nav.scrolled {
+  background: hsl(35 30% 95% / 0.84) !important;
+  border-color: hsl(32 24% 76% / 0.5);
+  box-shadow: 0 14px 44px -16px rgba(0,0,0,0.07);
+}
+
+/* Make sure the top promotional banner feels part of the premium experience */
+.homepage-clay .bg-charcoal {
+  background-color: #1f1c17 !important;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   COMMERCE DESIGN SYSTEM - site-wide primitives
+   Editorial, square-cornered, hairline-bordered quiet luxury.
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* â”€â”€ Eyebrow / overline microlabel â”€â”€ */
 .eyebrow {
     display: inline-flex;
     align-items: center;
@@ -524,7 +592,7 @@ a,
     display: none;
 }
 
-/* ── Primary CTA: charcoal block w/ gold sweep ── */
+/* â”€â”€ Primary CTA: charcoal block w/ gold sweep â”€â”€ */
 .btn-luxe {
     position: relative;
     display: inline-flex;
@@ -568,7 +636,7 @@ a,
     display: none;
 }
 
-/* ── Secondary CTA: hairline outline that inks in ── */
+/* â”€â”€ Secondary CTA: hairline outline that inks in â”€â”€ */
 .btn-luxe-outline {
     position: relative;
     display: inline-flex;
@@ -612,7 +680,7 @@ a,
     transform: translateY(0);
 }
 
-/* ── Editorial form field: hairline underline ── */
+/* â”€â”€ Editorial form field: hairline underline â”€â”€ */
 .field-luxe {
     width: 100%;
     background: transparent;
@@ -651,7 +719,7 @@ a,
     margin-bottom: 0.25rem;
 }
 
-/* ── Animated link underline (gold, left→right) ── */
+/* â”€â”€ Animated link underline (gold, leftâ†’right) â”€â”€ */
 .link-luxe {
     position: relative;
     display: inline-block;
@@ -676,14 +744,14 @@ a,
     transform-origin: left;
 }
 
-/* ── Hairline-framed panel ── */
+/* â”€â”€ Hairline-framed panel â”€â”€ */
 .panel-luxe {
     background: #fff;
     border: 1px solid hsl(0 0% 10% / 0.08);
     box-shadow: 0 24px 48px -24px hsl(0 0% 10% / 0.08);
 }
 
-/* ── Double hairline frame (gold inner rule) ── */
+/* â”€â”€ Double hairline frame (gold inner rule) â”€â”€ */
 .frame-luxe {
     position: relative;
 }
@@ -696,8 +764,726 @@ a,
     pointer-events: none;
 }
 
+.line-sheet-scan {
+    animation: line-sheet-scan 6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.atelier-desk {
+    isolation: isolate;
+}
+
+.atelier-desk::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(115deg, hsl(24 16% 12% / 0.08), transparent 42%),
+        linear-gradient(180deg, transparent 0%, hsl(24 16% 12% / 0.08) 100%);
+}
+
+.atelier-float-slow {
+    animation: atelier-float-slow 7s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.atelier-float-delay {
+    animation: atelier-float-delay 8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.atelier-tape {
+    animation: atelier-tape 22s linear infinite;
+}
+
+.rangat-liquid-hero {
+    isolation: isolate;
+    background:
+        linear-gradient(90deg, hsl(40 30% 99%) 0%, hsl(40 28% 98%) 39%, hsl(88 14% 92%) 68%, hsl(36 28% 95%) 100%),
+        linear-gradient(135deg, hsl(0 0% 100% / 0.98) 0%, hsl(0 0% 100% / 0.48) 34%, transparent 56%),
+        linear-gradient(180deg, hsl(40 20% 98%) 0%, hsl(41 24% 97%) 52%, hsl(39 22% 94%) 100%);
+}
+
+.rangat-liquid-hero::before {
+    content: "";
+    position: absolute;
+    inset: -12% -10% -8%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(108deg, hsl(0 0% 100% / 0.98) 0%, hsl(0 0% 100% / 0.62) 30%, transparent 48%),
+        linear-gradient(77deg, transparent 0%, hsl(88 18% 44% / 0.1) 48%, hsl(37 45% 60% / 0.16) 100%),
+        linear-gradient(180deg, hsl(0 0% 100% / 0.72), transparent 36%, hsl(38 30% 86% / 0.16));
+    filter: blur(42px);
+    opacity: 0.98;
+}
+
+.rangat-liquid-hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(116deg, transparent 0%, transparent 58%, hsl(0 0% 100% / 0.3) 58.2%, transparent 72%),
+        linear-gradient(90deg, hsl(0 0% 100% / 0.72), hsl(0 0% 100% / 0.2) 35%, transparent 58%),
+        linear-gradient(180deg, hsl(0 0% 100% / 0.32), transparent 30%, hsl(40 20% 98% / 0.26));
+    opacity: 0.68;
+    mix-blend-mode: normal;
+}
+
+.rangat-liquid-panel {
+    overflow: hidden;
+    border: 1px solid hsl(0 0% 100% / 0.76);
+    background:
+        linear-gradient(132deg, hsl(0 0% 100% / 0.64), hsl(92 18% 88% / 0.28) 45%, hsl(39 34% 91% / 0.35)),
+        linear-gradient(180deg, hsl(0 0% 100% / 0.26), hsl(24 18% 14% / 0.025));
+    backdrop-filter: blur(32px) saturate(1.12);
+    clip-path: polygon(6% 0, 100% 0, 96% 100%, 0 100%);
+    box-shadow:
+        0 58px 150px -92px hsl(24 18% 14% / 0.52),
+        inset 0 1px 0 hsl(0 0% 100% / 0.84),
+        inset 0 -1px 0 hsl(24 18% 14% / 0.05);
+}
+
+.rangat-liquid-panel::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    background:
+        linear-gradient(118deg, hsl(0 0% 100% / 0.66) 0%, transparent 35%, hsl(88 18% 44% / 0.08) 72%, hsl(37 45% 60% / 0.12) 100%),
+        linear-gradient(90deg, transparent 0%, hsl(0 0% 100% / 0.42) 44%, transparent 70%);
+    pointer-events: none;
+}
+
+.rangat-liquid-panel::after {
+    display: none;
+}
+
+.rangat-copy-in {
+    animation: rangat-copy-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.rangat-hero-heading {
+    position: relative;
+    text-wrap: balance;
+}
+
+.rangat-source-mark {
+    position: relative;
+    z-index: 0;
+    display: inline-block;
+    padding: 0 0.02em 0.01em 0;
+    color: hsl(24 18% 14%);
+    font-style: italic;
+    text-shadow: 0 0.12em 0 hsl(37 45% 60% / 0.1);
+}
+
+.rangat-source-mark::before {
+    content: "";
+    position: absolute;
+    left: -0.015em;
+    right: -0.025em;
+    bottom: 0.04em;
+    z-index: -1;
+    height: 0.22em;
+    background:
+        linear-gradient(90deg, hsl(37 45% 60% / 0.2), hsl(37 45% 60% / 0.32) 64%, hsl(88 18% 44% / 0.14)),
+        linear-gradient(180deg, hsl(0 0% 100% / 0.56), hsl(36 35% 82% / 0.16));
+    border-radius: 2px;
+    filter: blur(0.6px);
+    transform: rotate(-0.8deg) skewX(-10deg);
+    transform-origin: left center;
+    pointer-events: none;
+}
+
+.rangat-source-mark::after {
+    display: none;
+}
+
+.rangat-hero-caption {
+    position: relative;
+    padding: 0.98rem 1.1rem;
+    border: 1px solid hsl(37 24% 84% / 0.3);
+    background:
+        linear-gradient(135deg, hsl(0 0% 100% / 0.78), hsl(40 20% 98% / 0.34)),
+        linear-gradient(90deg, hsl(88 15% 89% / 0.1), transparent);
+    color: hsl(24 8% 31% / 0.86);
+    letter-spacing: 0.005em;
+    box-shadow:
+        0 24px 76px -62px hsl(24 18% 14% / 0.46),
+        inset 0 1px 0 hsl(0 0% 100% / 0.76);
+    text-wrap: pretty;
+    backdrop-filter: blur(18px);
+}
+
+.rangat-hero-caption::before {
+    display: none;
+}
+
+.rangat-buy-spec {
+    gap: 0.35rem;
+    padding: 0.34rem 0.42rem;
+    border: 1px solid hsl(37 24% 84% / 0.34);
+    border-radius: 999px;
+    background:
+        linear-gradient(135deg, hsl(0 0% 100% / 0.78), hsl(40 20% 98% / 0.45)),
+        linear-gradient(90deg, hsl(37 45% 60% / 0.07), hsl(88 18% 44% / 0.06));
+    box-shadow:
+        0 22px 64px -58px hsl(24 18% 14% / 0.48),
+        inset 0 1px 0 hsl(0 0% 100% / 0.86);
+    backdrop-filter: blur(20px) saturate(1.08);
+}
+
+.rangat-buy-spec-item {
+    display: inline-flex;
+    min-height: 2.32rem;
+    align-items: center;
+    gap: 0.38rem;
+    padding: 0 0.66rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.rangat-buy-spec-label {
+    font-size: 0.48rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(37 34% 43% / 0.74);
+}
+
+.rangat-buy-spec-value {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1;
+    color: hsl(24 18% 14%);
+}
+
+.rangat-buy-spec-unit {
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: hsl(24 8% 31% / 0.48);
+}
+
+.rangat-buy-spec-dot {
+    width: 1px;
+    height: 1.35rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, transparent, hsl(24 18% 14% / 0.16), transparent);
+    box-shadow: none;
+}
+
+.rangat-size-run {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.26rem;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 1.04rem;
+    font-weight: 600;
+    line-height: 1;
+    color: hsl(24 18% 14%);
+}
+
+.rangat-size-run-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.26rem;
+}
+
+.rangat-size-run-sep {
+    width: 0.16rem;
+    height: 0.16rem;
+    border-radius: 999px;
+    background: hsl(37 45% 60% / 0.5);
+}
+
+.rangat-action-row .btn-luxe,
+.rangat-action-row .btn-luxe-outline {
+    box-shadow: 0 18px 58px -48px hsl(24 18% 14% / 0.58);
+}
+
+.rangat-action-row .btn-luxe-outline {
+    background: linear-gradient(135deg, hsl(0 0% 100% / 0.72), hsl(0 0% 100% / 0.26));
+    backdrop-filter: blur(16px);
+}
+
+/* Hero CTAs — pill silhouette echoing sample-card buttons & buy-spec tray */
+.btn-luxe-hero {
+    border-radius: 999px;
+    letter-spacing: 0.22em;
+}
+
+.rangat-action-row .btn-luxe-hero {
+    border: 1px solid hsl(0 0% 10% / 0.08);
+    box-shadow:
+        0 22px 64px -48px hsl(24 18% 14% / 0.62),
+        inset 0 1px 0 hsl(0 0% 100% / 0.06);
+}
+
+.rangat-action-row .btn-luxe-outline.btn-luxe-hero {
+    border-color: hsl(37 24% 72% / 0.55);
+    color: hsl(24 18% 14% / 0.82);
+    background:
+        linear-gradient(135deg, hsl(0 0% 100% / 0.82), hsl(40 20% 98% / 0.38)),
+        linear-gradient(90deg, hsl(37 45% 60% / 0.06), hsl(88 18% 44% / 0.04));
+    box-shadow:
+        0 20px 58px -46px hsl(24 18% 14% / 0.5),
+        inset 0 1px 0 hsl(0 0% 100% / 0.88);
+}
+
+.rangat-action-row .btn-luxe-outline.btn-luxe-hero:hover,
+.rangat-action-row .btn-luxe-outline.btn-luxe-hero:focus-visible {
+    border-color: hsl(0 0% 10%);
+}
+
+.rangat-hero-caption {
+    font-size: 0.875rem;
+    line-height: 1.62;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO SHEET — modern editorial buyer typography (homepage hero)
+   Sharp grid, sans-led display, gold thread accent. No pills/glass.
+   ═══════════════════════════════════════════════════════════════ */
+
+.hero-sheet {
+    position: relative;
+}
+
+.hero-sheet-kicker {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.hero-sheet-thread {
+    display: block;
+    width: 2px;
+    height: 2.75rem;
+    flex-shrink: 0;
+    background: linear-gradient(
+        180deg,
+        hsl(37 45% 58%) 0%,
+        hsl(37 45% 58% / 0.12) 100%
+    );
+}
+
+.hero-sheet-season {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: hsl(0 0% 10% / 0.38);
+}
+
+.hero-sheet-season em {
+    font-style: normal;
+    font-weight: 600;
+    color: hsl(0 0% 10% / 0.82);
+}
+
+.hero-sheet-headline {
+    text-wrap: balance;
+}
+
+.hero-sheet-line {
+    display: block;
+}
+
+.hero-sheet-line--display {
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: clamp(2.65rem, 5.8vw, 4.35rem);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    color: hsl(0 0% 10%);
+}
+
+.hero-sheet-accent {
+    font-family: var(--font-serif), Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.hero-sheet-line--sub {
+    margin-top: 0.55rem;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: clamp(1.45rem, 3vw, 2.15rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: hsl(0 0% 10% / 0.46);
+}
+
+.hero-sheet-emphasis {
+    color: hsl(0 0% 10%);
+}
+
+.hero-sheet-dot {
+    display: inline-block;
+    margin-left: 0.02em;
+    color: hsl(37 45% 52%);
+}
+
+.hero-sheet-lede {
+    margin-top: 1.75rem;
+    max-width: 36ch;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: hsl(0 0% 10% / 0.52);
+    text-wrap: pretty;
+}
+
+.hero-sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin-top: 2.5rem;
+    padding-top: 1.35rem;
+    border-top: 1px solid hsl(0 0% 10% / 0.1);
+}
+
+.hero-sheet-cell-value {
+    display: block;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: clamp(2rem, 3.8vw, 2.85rem);
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: hsl(0 0% 10%);
+    font-variant-numeric: tabular-nums;
+}
+
+.hero-sheet-cell-value--sizes {
+    font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+.hero-sheet-size-gap {
+    margin: 0 0.18em;
+    color: hsl(0 0% 10% / 0.22);
+    font-weight: 300;
+}
+
+.hero-sheet-cell-value--word {
+    font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+}
+
+.hero-sheet-cell-label {
+    display: block;
+    margin-top: 0.45rem;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: hsl(0 0% 10% / 0.36);
+}
+
+.hero-sheet-cell--dispatch {
+    display: none;
+}
+
+.hero-sheet-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    margin-top: 2.25rem;
+}
+
+.hero-sheet-cta-primary {
+    height: 3.5rem !important;
+    gap: 0.75rem !important;
+    padding: 0 1.75rem !important;
+    border: 0 !important;
+    border-radius: 2px !important;
+    background: hsl(0 0% 10%) !important;
+    color: hsl(40 20% 98%) !important;
+    font-family: var(--font-sans), system-ui, sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    box-shadow: 0 20px 50px -28px hsl(0 0% 10% / 0.55) !important;
+    transition:
+        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hero-sheet-cta-primary:hover {
+    background: hsl(37 45% 40%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 28px 60px -24px hsl(37 45% 30% / 0.45) !important;
+}
+
+.hero-sheet-cta-primary:focus-visible {
+    outline: 2px solid hsl(37 45% 52%);
+    outline-offset: 3px;
+}
+
+.hero-sheet-cta-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.hero-sheet-cta-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: hsl(0 0% 10% / 0.58);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.hero-sheet-cta-link span {
+    position: relative;
+}
+
+.hero-sheet-cta-link span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 1px;
+    background: hsl(37 45% 52%);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-sheet-cta-link:hover {
+    color: hsl(0 0% 10%);
+}
+
+.hero-sheet-cta-link:hover span::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+.hero-sheet-footnote {
+    margin-top: 1.75rem;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: hsl(0 0% 10% / 0.32);
+}
+
+@media (min-width: 640px) {
+    .hero-sheet-actions {
+        flex-direction: row;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .hero-sheet-cta-primary {
+        width: auto;
+    }
+
+    .hero-sheet-cell--dispatch {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-sheet-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero-sheet-cell--dispatch {
+        display: block;
+        grid-column: 1 / -1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-sheet-cta-primary:hover {
+        transform: none;
+    }
+}
+
+.rangat-stage-in {
+    animation: rangat-stage-in 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+.rangat-hero-card {
+    animation: rangat-hero-card 1s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+    will-change: transform;
+}
+
+.rangat-orbit-a {
+    animation: rangat-orbit-a 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+    will-change: transform;
+}
+
+.rangat-orbit-b {
+    animation: rangat-orbit-b 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
+    will-change: transform;
+}
+
+.rangat-title-card {
+    animation: rangat-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both;
+    border: 1px solid hsl(0 0% 100% / 0.68);
+    background:
+        linear-gradient(135deg, hsl(0 0% 100% / 0.74), hsl(40 20% 98% / 0.56) 54%, hsl(88 15% 89% / 0.3)),
+        linear-gradient(90deg, hsl(0 0% 100% / 0.4), transparent);
+    backdrop-filter: blur(24px) saturate(1.08);
+    box-shadow:
+        0 28px 80px -62px hsl(24 18% 14% / 0.56),
+        inset 0 1px 0 hsl(0 0% 100% / 0.86);
+}
+
+.rangat-title-card::before {
+    display: none;
+}
+
+.rangat-title-card::after {
+    display: none;
+}
+
+.rangat-stat-card {
+    animation: rangat-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
+}
+
+/* .rangat-lane-reel styles retired — fully redesigned as premium vibrant BuyerLanes with Framer + modern bento */
+
+@keyframes line-sheet-scan {
+    0%,
+    18% {
+        transform: translateY(0);
+        opacity: 0;
+    }
+    28% {
+        opacity: 1;
+    }
+    78% {
+        transform: translateY(620px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(620px);
+        opacity: 0;
+    }
+}
+
+@keyframes atelier-float-slow {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) rotate(-1.2deg);
+    }
+    50% {
+        transform: translate3d(0, -8px, 0) rotate(-0.35deg);
+    }
+}
+
+@keyframes atelier-float-delay {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) rotate(1.15deg);
+    }
+    50% {
+        transform: translate3d(0, 9px, 0) rotate(0.25deg);
+    }
+}
+
+@keyframes atelier-tape {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    100% {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
+@keyframes rangat-copy-in {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 22px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes rangat-stage-in {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 22px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes rangat-hero-card {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 30px, 0) scale(0.975) rotate(-1.4deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1) rotate(-0.45deg);
+    }
+}
+
+@keyframes rangat-orbit-a {
+    0% {
+        opacity: 0;
+        transform: translate3d(-18px, 18px, 0) rotate(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(1.2deg);
+    }
+}
+
+@keyframes rangat-orbit-b {
+    0% {
+        opacity: 0;
+        transform: translate3d(18px, 20px, 0) rotate(0deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) rotate(-2deg);
+    }
+}
+
+@keyframes rangat-card-in {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 16px, 0);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
 /* Magnetic style cursor */
 .custom-cursor {
+    display: none;
     width: 20px;
     height: 20px;
     border: 1px solid hsl(37 45% 60%);
@@ -713,6 +1499,7 @@ a,
 }
 
 .custom-cursor-dot {
+    display: none;
     width: 4px;
     height: 4px;
     background-color: hsl(37 45% 60%);
@@ -723,7 +1510,12 @@ a,
     z-index: 10000;
 }
 
-/* ── Mobile micro-interactions ──────────────────────────────────────────────
+:where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid hsl(37 45% 60% / 0.75);
+    outline-offset: 3px;
+}
+
+/* â”€â”€ Mobile micro-interactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Tactile press feedback for touch devices. Hover sweeps never fire on touch,
    so :active becomes the primary signal: CTAs ink instantly to deep gold and
    compress a hair; cards and tap targets settle under the finger. Scoped to
@@ -777,4 +1569,84 @@ a,
     html {
         scroll-behavior: auto;
     }
+}
+
+/* ── B2B Luxe Hero Textures & Animations ── */
+.rangat-linen-texture {
+    background-color: hsl(40 20% 98%);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.rangat-tailor-grid {
+    background-size: 50px 50px;
+    background-image: 
+        linear-gradient(to right, hsl(37 45% 60% / 0.045) 1px, transparent 1px),
+        linear-gradient(to bottom, hsl(37 45% 60% / 0.045) 1px, transparent 1px);
+}
+
+.rangat-glow-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+
+.rangat-glow-blob.color-gold {
+    background: hsl(37 45% 60%);
+    width: 650px;
+    height: 650px;
+    animation: rangat-glow-float-1 28s ease-in-out infinite alternate;
+}
+
+.rangat-glow-blob.color-sage {
+    background: hsl(88 18% 44%);
+    width: 550px;
+    height: 550px;
+    animation: rangat-glow-float-2 22s ease-in-out infinite alternate;
+}
+
+@keyframes rangat-glow-float-1 {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(12%, -18%, 0) scale(1.15);
+    }
+    100% {
+        transform: translate3d(-8%, 8%, 0) scale(0.92);
+    }
+}
+
+@keyframes rangat-glow-float-2 {
+    0% {
+        transform: translate3d(0, 0, 0) scale(0.92);
+    }
+    50% {
+        transform: translate3d(-14%, 12%, 0) scale(1.08);
+    }
+    100% {
+        transform: translate3d(10%, -10%, 0) scale(1);
+    }
+}
+
+/* Custom premium hover and active effects for spec tags and sliders */
+.spec-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: hsl(37 45% 60%);
+    border: 2px solid hsl(40 20% 98%);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.spec-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: hsl(37 45% 45%);
 }

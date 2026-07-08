@@ -10,8 +10,11 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { type MockProduct, isShopifyConfigured } from "@/lib/shopify";
-import { trackAddToCart } from "@/lib/analytics";
+import { isShopifyConfigured } from "@/lib/shopify";
+import type { MockProduct } from "@/lib/commerce/catalog";
+import { trackAddSetsToCart } from "@/lib/analytics";
+import { calculateWholesaleTotals, normalizeSetQuantity } from "@/lib/b2b/pricing";
+import { isShopifyCheckoutEnabled } from "@/lib/checkout";
 import {
   SHOPIFY_CART_ID_KEY,
   cartLinesAdd,
@@ -34,7 +37,7 @@ export interface CartItem {
   salePrice: number | null;
   size: string;
   color: string;
-  quantity: number;
+  quantity: number; // wholesale sets
   // Shopify-specific (present when synced to Shopify cart)
   variantId?: string; // Shopify variant GID  e.g. "gid://shopify/ProductVariant/xxx"
   lineId?: string; // Shopify cart line ID
@@ -50,7 +53,12 @@ interface CartContextType {
   isOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
-  addItem: (product: MockProduct, size: string, color?: string) => void;
+  addItem: (
+    product: MockProduct,
+    size: string,
+    color?: string,
+    sets?: number,
+  ) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -81,7 +89,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
-  const shopifyCartEnabled = isShopifyConfigured();
+  const shopifyCartEnabled = isShopifyCheckoutEnabled() && isShopifyConfigured();
 
   // ── Serialized Shopify mutation queue ────────────────────────────────────────
   //   Shopify cart mutations must not run concurrently (line adds/removes can
@@ -148,10 +156,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => items.reduce((s, i) => s + i.quantity, 0),
     [items],
   );
-  const subtotal = useMemo(
-    () => items.reduce((s, i) => s + (i.salePrice ?? i.price) * i.quantity, 0),
-    [items],
-  );
+  const subtotal = useMemo(() => calculateWholesaleTotals(items).subtotal, [items]);
   const total = subtotal;
 
   // ── Shopify sync helper ──────────────────────────────────────────────────────
@@ -219,21 +224,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const closeCart = useCallback(() => setIsOpen(false), []);
 
   const addItem = useCallback(
-    (product: MockProduct, size: string, color?: string) => {
+    (product: MockProduct, size: string, color?: string, sets = 1) => {
+      const setQuantity = normalizeSetQuantity(sets);
       // Inventory guard (safety net): never add a product Shopify reports as
       // unavailable, even if a UI surface forgets to disable its button.
       // `undefined` means unknown/mock → allowed.
       if (product.availableForSale === false) {
-        setSyncError("Sorry — this piece is currently sold out.");
+        setSyncError("Sorry, this style is currently sold out.");
         return;
       }
 
-      // GA4 ecommerce event (no-op unless analytics is configured + consented).
-      trackAddToCart({
+      // GA4 wholesale event (no-op unless analytics is configured + consented).
+      trackAddSetsToCart({
         item_id: product.id,
         item_name: product.title,
         price: product.salePrice ?? product.price,
-        quantity: 1,
+        quantity: setQuantity,
         item_category: product.category,
         item_variant: size,
       });
@@ -253,15 +259,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (existingIdx > -1) {
           const updated = [...prev];
           const existing = updated[existingIdx];
+          const nextQty = existing.quantity + setQuantity;
           updated[existingIdx] = {
             ...existing,
-            quantity: existing.quantity + 1,
+            quantity: nextQty,
           };
 
           // Sync quantity change to Shopify (serialized via queue)
           if (shopifyCartEnabled && cartId && existing.lineId) {
             const lineId = existing.lineId;
-            const nextQty = existing.quantity + 1;
             void enqueueSync(async () => {
               const cart = await cartLinesUpdate(cartId, [
                 { id: lineId, quantity: nextQty },
@@ -284,14 +290,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
           salePrice: product.salePrice,
           size,
           color: resolvedColor,
-          quantity: 1,
+          quantity: setQuantity,
           variantId,
         };
 
         // Queue Shopify sync (serialized — never dropped)
         if (shopifyCartEnabled && variantId) {
           void enqueueSync(() =>
-            syncAddToShopify(newId, variantId, 1, size, resolvedColor),
+            syncAddToShopify(newId, variantId, setQuantity, size, resolvedColor),
           );
         }
 
@@ -326,6 +332,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         removeItem(itemId);
         return;
       }
+      const nextQuantity = normalizeSetQuantity(quantity);
       setItems((prev) =>
         prev.map((item) => {
           if (item.id !== itemId) return item;
@@ -333,12 +340,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
             const lineId = item.lineId;
             void enqueueSync(async () => {
               const cart = await cartLinesUpdate(cartId, [
-                { id: lineId, quantity },
+                { id: lineId, quantity: nextQuantity },
               ]);
               if (cart?.checkoutUrl) setCheckoutUrl(cart.checkoutUrl);
             });
           }
-          return { ...item, quantity };
+          return { ...item, quantity: nextQuantity };
         }),
       );
     },

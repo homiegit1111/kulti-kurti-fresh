@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { getCollectionByHandle } from "@/lib/shopify";
-import { absoluteUrl } from "@/lib/seo";
+import { getCollectionByHandle } from "@/lib/commerce/catalog";
+import { absoluteUrl, buildProductItemListLd } from "@/lib/seo";
 import CollectionDetailClient from "./client-page";
 
 export async function generateMetadata({
@@ -19,7 +19,7 @@ export async function generateMetadata({
   const title = `${collection.title} — Kurtis & Ethnic Wear`;
   const description =
     collection.description?.trim() ||
-    `Shop the ${collection.title} collection at Rangat Pehnawa — handcrafted women's kurtis and Indian ethnic wear. Sizes XS–XXL, COD & free shipping over ₹1,999.`;
+    `Shop the ${collection.title} wholesale collection at Rangat Pehnawa - kurti sets for boutiques and resellers with MOQ 4 sets, GST invoice support, and WhatsApp ordering.`;
 
   return {
     title,
@@ -45,6 +45,14 @@ export default async function CollectionRoute({
   const { handle } = await params;
   const data = await getCollectionByHandle(handle);
   const collection = data?.collection;
+
+  const itemListLd =
+    collection && data?.products.length
+      ? buildProductItemListLd(data.products, {
+          name: collection.title,
+          path: `/collections/${collection.handle}`,
+        })
+      : null;
 
   const breadcrumbLd = {
     "@context": "https://schema.org",
@@ -88,6 +96,12 @@ export default async function CollectionRoute({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionLd) }}
+        />
+      )}
+      {itemListLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
         />
       )}
       <CollectionDetailClient params={params} />

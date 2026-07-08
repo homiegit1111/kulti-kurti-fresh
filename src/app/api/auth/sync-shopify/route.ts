@@ -8,6 +8,10 @@ export const runtime = "nodejs";
 const json = (body: Record<string, unknown>, status = 200) =>
   NextResponse.json(body, { status });
 
+function isLegacyShopifyAccountSyncEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_COMMERCE_BACKEND === "shopify";
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Rate limit: 20 syncs / minute / IP.
   const rl = checkRateLimit(req, "sync-shopify", {
@@ -15,6 +19,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     windowMs: 60_000,
   });
   if (!rl.ok) return tooManyRequests(rl);
+
+  if (!isLegacyShopifyAccountSyncEnabled()) {
+    return json({
+      configured: false,
+      skipped: true,
+      backend: process.env.NEXT_PUBLIC_COMMERCE_BACKEND || "default",
+      message:
+        "Legacy Shopify account sync is disabled unless NEXT_PUBLIC_COMMERCE_BACKEND=shopify.",
+    });
+  }
 
   const { userId } = await auth();
 
@@ -38,7 +52,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     const customer = await ensureShopifyCustomer({
       email: user.primaryEmailAddress.emailAddress,
-      supabaseUserId: userId, // Keep same key name for backwards compatibility, or change to clerkUserId
+      supabaseUserId: userId,
       firstName: user.firstName || "",
       lastName: user.lastName || "",
     });

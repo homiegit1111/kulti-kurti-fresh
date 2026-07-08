@@ -1,16 +1,16 @@
-import type { MetadataRoute } from "next";
+﻿import type { MetadataRoute } from "next";
 import { SITE_NAME } from "@/lib/seo";
 
 /**
- * Web app manifest — installability + correct mobile theming (India traffic is
+ * Web app manifest for installability and mobile theming (India traffic is
  * ~85% mobile). Icons reference existing public assets.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${SITE_NAME} — Kurtis & Indian Ethnic Wear`,
+    name: `${SITE_NAME} - Modern Kurti Catalog`,
     short_name: SITE_NAME,
     description:
-      "Shop premium handcrafted kurtis, co-ord sets, lehengas and sarees for women. Modern Indian ethnic wear.",
+      "Shop modern kurtis, co-ord sets, lehengas, and sarees with fresh drops and practical prices.",
     start_url: "/",
     display: "standalone",
     background_color: "#fcfbf9",

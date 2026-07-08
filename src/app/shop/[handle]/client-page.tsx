@@ -26,12 +26,16 @@ import {
   formatPrice,
   COLOR_MAP,
   type MockProduct,
-} from "@/lib/shopify";
+} from "@/lib/commerce/catalog";
 import ReviewsSection from "@/components/product/reviews-section";
 import StockAlertForm from "@/components/product/stock-alert-form";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
-import { isShopifyConfigured } from "@/lib/shopify";
+import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
+import { getPerPiecePrice } from "@/lib/b2b/pricing";
+import { getStyleCode } from "@/lib/b2b/style-code";
+import { buildProductInquiryUrl } from "@/lib/b2b/whatsapp";
+import { ResellerMarginEstimator } from "@/components/b2b/reseller-margin-estimator";
 
 export default function ProductDetailPage({
   params,
@@ -95,7 +99,7 @@ export default function ProductDetailPage({
 }
 
 function DashboardProductDetail({ product }: { product: MockProduct }) {
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [selectedSets, setSelectedSets] = useState(1);
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [expandedSection, setExpandedSection] = useState<string | null>("info");
@@ -112,28 +116,24 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
     (_state, value: boolean) => value,
   );
 
-  const { addItem, checkoutUrl } = useCart();
+  const { addItem } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const wishlisted = isWishlisted(product.id);
 
   const handleAddToCart = () => {
-    if (!selectedSize || soldOut) return;
+    if (soldOut) return;
     startAddTransition(async () => {
       setAddedOptimistic(true);
-      addItem(product, selectedSize, selectedColor);
+      addItem(product, "Set", selectedColor, selectedSets);
       // Hold the optimistic confirmation briefly for visible feedback.
       await new Promise((resolve) => setTimeout(resolve, 1400));
     });
   };
 
-  const handleBuyNow = () => {
-    if (!selectedSize || soldOut) return;
-    addItem(product, selectedSize, selectedColor);
-    if (checkoutUrl) {
-      window.location.href = checkoutUrl;
-    } else {
-      window.location.href = "/checkout";
-    }
+  const handleReviewOrder = () => {
+    if (soldOut) return;
+    addItem(product, "Set", selectedColor, selectedSets);
+    window.location.href = "/cart";
   };
 
   const handleShare = async () => {
@@ -196,12 +196,14 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
       <div className="max-w-[1800px] w-full mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
         {/* Mobile Header (Hidden on Desktop) */}
         <div className="flex flex-col lg:hidden mb-4 pt-4">
-          <p className="eyebrow mb-2">{product.category} Collection</p>
+          <p className="eyebrow mb-2">
+            {getStyleCode(product)} - {product.category} Collection
+          </p>
           <h1 className="text-4xl sm:text-5xl font-serif font-light tracking-tight leading-[1.05] mb-2">
             {product.title}
           </h1>
           <p className="text-lg font-serif text-charcoal font-medium">
-            {formatPrice(product.salePrice ?? product.price)}
+            {formatPrice(product.salePrice ?? product.price)}/set
           </p>
         </div>
 
@@ -306,40 +308,62 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   {selectedColor} <span className="italic text-charcoal/60">{product.category}</span>
                 </h2>
                 <span className="font-serif text-2xl font-light text-charcoal leading-none">
-                  {formatPrice(product.salePrice ?? product.price)}
+                  {formatPrice(product.salePrice ?? product.price)}/set
                 </span>
               </div>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-charcoal/45 -mt-4 mb-7">
+                {formatPrice(getPerPiecePrice(product.salePrice ?? product.price))}
+                /pc - 1 set = {B2B_CONFIG.setSize} pcs - {SIZE_RATIO_LABEL}
+              </p>
 
               {/* Typography Size Selector */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-8">
-                  <span className="eyebrow eyebrow--bare">Select Size</span>
+                  <span className="eyebrow eyebrow--bare">Size Ratio</span>
                   <span className="link-luxe text-[10px] uppercase tracking-[0.25em] font-bold text-charcoal/70 hover:text-charcoal transition-colors cursor-pointer">
-                    Size Guide
+                    MOQ applies across cart
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center px-4 relative">
                   <div className="absolute top-1/2 left-4 right-4 h-px bg-charcoal/5 -translate-y-1/2 z-0" />
-                  {product.sizes.map((size) => (
-                    <button
+                  {B2B_CONFIG.sizeRatio.map((size) => (
+                    <div
                       key={size}
-                      onClick={() => setSelectedSize(size)}
                       className="relative z-10 group py-2 px-4 bg-warm-white"
                     >
                       <span
-                        className={`font-serif text-2xl tracking-tight transition-all duration-500 ${selectedSize === size ? "text-charcoal scale-110 inline-block" : "text-charcoal/35 group-hover:text-charcoal/70 inline-block"}`}
+                        className="font-serif text-2xl tracking-tight text-charcoal inline-block"
                       >
                         {size}
                       </span>
-                      {selectedSize === size && (
-                        <motion.div
-                          layoutId="sizeIndicator"
-                          className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-gold rounded-full"
-                        />
-                      )}
-                    </button>
+                    </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="mt-8 flex items-center justify-between border-y border-charcoal/10 py-4">
+                <span className="eyebrow eyebrow--bare">Sets</span>
+                <div className="flex items-center border border-charcoal/15">
+                  <button
+                    onClick={() =>
+                      setSelectedSets((value) => Math.max(1, value - 1))
+                    }
+                    className="h-10 w-10 text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5"
+                    aria-label="Decrease sets"
+                  >
+                    -
+                  </button>
+                  <span className="h-10 w-12 border-x border-charcoal/15 text-center text-xs font-bold leading-10">
+                    {selectedSets}
+                  </span>
+                  <button
+                    onClick={() => setSelectedSets((value) => value + 1)}
+                    className="h-10 w-10 text-charcoal/50 hover:text-charcoal hover:bg-charcoal/5"
+                    aria-label="Increase sets"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
@@ -347,13 +371,11 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               <div className="flex gap-3 mt-8">
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize || soldOut}
+                disabled={soldOut}
                 className={`group relative flex-1 h-16 flex items-center justify-between px-2 pl-8 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${
                   added
                     ? "bg-[#2a4d3e] text-white shadow-[0_20px_40px_rgba(42,77,62,0.25)]"
-                    : !selectedSize
-                      ? "bg-transparent border border-charcoal/20 text-charcoal/45 cursor-not-allowed"
-                      : "bg-charcoal text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(0,0,0,0.12)]"
+                    : "bg-charcoal text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(0,0,0,0.12)]"
                 }`}
               >
                 <div className="relative z-10 overflow-hidden h-5 flex items-center">
@@ -378,9 +400,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       >
                         {soldOut
                           ? "Sold Out"
-                          : selectedSize
-                            ? "Add to Cart"
-                            : "Select a Size"}
+                          : "Add Sets"}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -389,9 +409,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   className={`relative z-10 w-12 h-12 flex items-center justify-center transition-all duration-700 ${
                     added
                       ? "bg-white text-[#2a4d3e] scale-110"
-                      : !selectedSize
-                        ? "bg-transparent"
-                        : "bg-white/10 border border-white/30 text-white group-hover:w-14 group-hover:bg-white group-hover:text-charcoal"
+                      : "bg-white/10 border border-white/30 text-white group-hover:w-14 group-hover:bg-white group-hover:text-charcoal"
                   }`}
                 >
                   <AnimatePresence mode="wait">
@@ -404,7 +422,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       >
                         <Check className="w-5 h-5" />
                       </motion.div>
-                    ) : selectedSize ? (
+                    ) : (
                       <motion.div
                         key="arrow"
                         initial={{ scale: 0 }}
@@ -413,37 +431,35 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       >
                         <ArrowLeft className="w-4 h-4 rotate-180 group-hover:translate-x-1 transition-transform" />
                       </motion.div>
-                    ) : null}
+                    )}
                   </AnimatePresence>
                 </div>
               </button>
 
-              {isShopifyConfigured() && (
-                <button
-                  onClick={handleBuyNow}
-                  disabled={!selectedSize || soldOut}
-                  className={`h-16 px-7 font-bold uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shrink-0 ${
-                    !selectedSize
-                      ? "border border-gold/30 text-gold/40 cursor-not-allowed"
-                      : "bg-gold text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(201,169,110,0.3)]"
-                  }`}
-                >
-                  Buy Now
-                </button>
-              )}
+              <button
+                onClick={handleReviewOrder}
+                disabled={soldOut}
+                className={`h-16 px-7 font-bold uppercase tracking-[0.2em] text-[10px] transition-all duration-300 shrink-0 ${
+                  soldOut
+                    ? "border border-gold/30 text-gold/40 cursor-not-allowed"
+                    : "bg-gold text-white hover:bg-gold-dark shadow-[0_20px_40px_rgba(201,169,110,0.3)]"
+                }`}
+              >
+                Review Cart
+              </button>
               </div>
 
               {/* Back-in-stock / size alert — capture lost demand */}
               {soldOut && (
-                <StockAlertForm handle={product.handle} size={selectedSize} />
+                <StockAlertForm handle={product.handle} size="Set" />
               )}
 
               {/* Trust signals */}
               <div className="grid grid-cols-3 gap-2 mt-8 pt-6 border-t border-charcoal/10">
                 {[
-                  { icon: Banknote, label: "COD Available" },
-                  { icon: Truck, label: "Free Ship ₹2,999+" },
-                  { icon: RefreshCcw, label: "7-Day Returns" },
+                  { icon: Banknote, label: "GST Invoice" },
+                  { icon: Truck, label: "All-India Dispatch" },
+                  { icon: RefreshCcw, label: "MOQ 4 Sets" },
                 ].map(({ icon: Icon, label }) => (
                   <div
                     key={label}
@@ -548,19 +564,27 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
           <div className="lg:col-span-4 flex flex-col pt-2 lg:pt-4 lg:pl-8 order-3 lg:order-3">
             {/* Desktop Right Column Top: Product Title */}
             <div className="hidden lg:block mb-10 border-b border-charcoal/10 pb-6">
-              <p className="eyebrow mb-3">{product.category} Collection</p>
+              <p className="eyebrow mb-3">
+                {getStyleCode(product)} - {product.category} Collection
+              </p>
               <h1 className="text-4xl lg:text-5xl font-serif font-light tracking-tight leading-[1.05] mb-4">
                 {product.title}
               </h1>
               <div className="flex items-center justify-between">
                 <p className="text-2xl font-serif text-charcoal font-medium">
-                  {formatPrice(product.salePrice ?? product.price)}
+                  {formatPrice(product.salePrice ?? product.price)}/set
                 </p>
                 <div className="flex items-center gap-2 text-charcoal/40 font-bold text-xs tracking-widest uppercase">
                   <div className="w-4 h-px bg-charcoal/40 transform -rotate-45" />
                   <span>{selectedColor} | AUTUMN</span>
                 </div>
               </div>
+              <a
+                href={buildProductInquiryUrl(product)}
+                className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-charcoal hover:text-gold-dark"
+              >
+                Ask availability on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
+              </a>
             </div>
 
             {/* Mobile Sizing & Colors Block */}
@@ -626,29 +650,24 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                 </div>
               </div>
 
-              {/* Size Selection */}
+              {/* Ratio Pack */}
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <p className="text-[10px] font-bold tracking-widest uppercase text-charcoal/50">
-                    Size
+                    Size Ratio Pack
                   </p>
-                  <button className="text-[10px] font-bold tracking-widest uppercase text-gold underline underline-offset-2">
-                    Guide
-                  </button>
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-gold">
+                    {SIZE_RATIO_LABEL}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size) => (
-                    <button
+                  {B2B_CONFIG.sizeRatio.map((size) => (
+                    <span
                       key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`tap-luxe h-12 flex-1 min-w-[60px] border text-sm font-semibold transition-all duration-300 ${
-                        selectedSize === size
-                          ? "bg-charcoal text-white border-charcoal"
-                          : "bg-transparent border-charcoal/15 text-charcoal hover:border-charcoal/50"
-                      }`}
+                      className="tap-luxe h-12 flex-1 min-w-[60px] border border-charcoal bg-charcoal text-white text-sm font-semibold flex items-center justify-center"
                     >
                       {size}
-                    </button>
+                    </span>
                   ))}
                 </div>
               </div>
@@ -656,9 +675,9 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               {/* Trust signals (mobile) */}
               <div className="flex items-center justify-between gap-2 pt-4 border-t border-charcoal/10">
                 {[
-                  { icon: Banknote, label: "COD" },
-                  { icon: Truck, label: "Free Ship ₹2,999+" },
-                  { icon: RefreshCcw, label: "7-Day Returns" },
+                  { icon: Banknote, label: "GST" },
+                  { icon: Truck, label: "Dispatch" },
+                  { icon: RefreshCcw, label: "MOQ 4 Sets" },
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-1.5">
                     <Icon className="w-3.5 h-3.5 text-gold" strokeWidth={1.5} />
@@ -678,7 +697,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   onClick={() => toggleSection("info")}
                   className="w-full text-left font-sans font-bold text-xs lg:text-sm tracking-widest hover:text-gold transition-colors flex items-center justify-between py-5 lg:py-6 uppercase"
                 >
-                  The Details
+                  Wholesale Details
                   <ChevronDown
                     className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "info" ? "rotate-180 text-gold" : "text-charcoal/40"}`}
                     strokeWidth={2}
@@ -693,9 +712,9 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       className="overflow-hidden"
                     >
                       <p className="pb-6 text-sm leading-relaxed text-charcoal/70 font-serif italic">
-                        {product.description} Engineered with precision,
-                        featuring cutting-edge materials tailored for the modern
-                        aesthetic.
+                        {product.description} Ordered as a reseller-ready
+                        ratio pack: 1 set = {B2B_CONFIG.setSize} pcs in{" "}
+                        {SIZE_RATIO_LABEL}. MOQ applies across the cart.
                       </p>
                     </motion.div>
                   )}
@@ -708,7 +727,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   onClick={() => toggleSection("craft")}
                   className="w-full text-left font-sans font-bold text-xs lg:text-sm tracking-widest hover:text-gold transition-colors flex items-center justify-between py-5 lg:py-6 uppercase"
                 >
-                  Craftsmanship
+                  Buyer Notes
                   <ChevronDown
                     className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "craft" ? "rotate-180 text-gold" : "text-charcoal/40"}`}
                     strokeWidth={2}
@@ -723,9 +742,9 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       className="overflow-hidden"
                     >
                       <ul className="pb-6 text-sm leading-relaxed text-charcoal/70 font-serif italic list-disc list-inside space-y-1">
-                        <li>100% Premium Sustainable Fabric</li>
-                        <li>Intricate hand-embroidery details</li>
-                        <li>Dry clean exclusively</li>
+                        <li>Style code: {getStyleCode(product)}</li>
+                        <li>Wholesale set price shown before tier discounts</li>
+                        <li>Confirm stock, GST invoice, dispatch, and Razorpay payment on WhatsApp</li>
                       </ul>
                     </motion.div>
                   )}
@@ -738,7 +757,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   onClick={() => toggleSection("shipping")}
                   className="w-full text-left font-sans font-bold text-xs lg:text-sm tracking-widest hover:text-gold transition-colors flex items-center justify-between py-5 lg:py-6 uppercase"
                 >
-                  Shipping & Returns
+                  Wholesale Dispatch
                   <ChevronDown
                     className={`w-4 h-4 transition-transform duration-300 ${expandedSection === "shipping" ? "rotate-180 text-gold" : "text-charcoal/40"}`}
                     strokeWidth={2}
@@ -753,8 +772,9 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                       className="overflow-hidden"
                     >
                       <p className="pb-6 text-sm leading-relaxed text-charcoal/70 font-serif italic">
-                        Complimentary express global shipping on orders over
-                        ₹5,000. Returns accepted within 14 days of delivery.
+                        Wholesale orders are confirmed on WhatsApp with stock,
+                        GST invoice details, dispatch city, and Razorpay payment
+                        link before shipping.
                       </p>
                     </motion.div>
                   )}
@@ -762,7 +782,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               </div>
             </div>
 
-            {/* Designer's Note & Guarantees (Fills empty space on Desktop) */}
+            {/* Reseller planning and guarantees */}
             <div className="hidden lg:flex flex-col mt-10 gap-6">
               <div className="panel-luxe frame-luxe p-8 relative overflow-hidden group">
                 <div className="absolute -top-4 -right-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
@@ -775,18 +795,21 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
                   </svg>
                 </div>
                 <h4 className="text-[9px] uppercase tracking-[0.3em] font-bold text-charcoal/40 mb-4 relative z-10">
-                  Designer&apos;s Note
+                  Buyer Margin Note
                 </h4>
                 <p className="font-serif italic text-charcoal/80 text-base leading-relaxed relative z-10">
-                  &quot;This silhouette was born from a desire to merge
-                  traditional royal court elegance with the effortless comfort
-                  required by the modern woman. Every stitch tells a story of
-                  our heritage.&quot;
+                  &quot;Use the per-piece cost to plan boutique pricing, but keep
+                  margin estimates market-aware. Final resale depends on your
+                  city, channel, and customer segment.&quot;
                 </p>
                 <div className="mt-6 text-[11px] font-sans font-bold uppercase tracking-widest text-charcoal relative z-10">
-                  — Creative Director
+                  Wholesale Planning
                 </div>
               </div>
+
+              <ResellerMarginEstimator
+                wholesalePerPiece={getPerPiecePrice(product.salePrice ?? product.price)}
+              />
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col items-center justify-center text-center py-6 px-4 border border-charcoal/10 bg-white/50 hover:bg-white transition-colors">
@@ -819,11 +842,11 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
         <div className="flex gap-2">
         <button
           onClick={handleAddToCart}
-          disabled={!selectedSize || soldOut}
+          disabled={soldOut}
           className={`flex-1 h-14 flex items-center justify-center gap-3 transition-all duration-500 font-bold uppercase tracking-[0.2em] text-[11px] overflow-hidden relative ${
             added
               ? "bg-[#2a4d3e] text-white scale-[0.98]"
-              : !selectedSize
+              : soldOut
                 ? "bg-transparent border border-charcoal/20 text-charcoal/45"
                 : "bg-charcoal text-white active:scale-[0.98]"
           }`}
@@ -850,32 +873,28 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
               >
                 {soldOut ? (
                   "Sold Out"
-                ) : selectedSize ? (
+                ) : (
                   <>
-                    <span>Add to Cart</span>
+                    <span>Add Sets</span>
                     <ShoppingBag className="w-4 h-4 opacity-50" />
                   </>
-                ) : (
-                  "Select a Size"
                 )}
               </motion.div>
             )}
           </AnimatePresence>
         </button>
 
-        {isShopifyConfigured() && (
-          <button
-            onClick={handleBuyNow}
-            disabled={!selectedSize || soldOut}
-            className={`h-14 px-5 font-bold uppercase tracking-[0.2em] text-[11px] flex items-center justify-center shrink-0 transition-all duration-500 ${
-              !selectedSize
-                ? "border border-gold/30 text-gold/40"
-                : "bg-gold text-white hover:bg-gold-dark active:scale-[0.98]"
-            }`}
-          >
-            Buy Now
-          </button>
-        )}
+        <button
+          onClick={handleReviewOrder}
+          disabled={soldOut}
+          className={`h-14 px-5 font-bold uppercase tracking-[0.2em] text-[11px] flex items-center justify-center shrink-0 transition-all duration-500 ${
+            soldOut
+              ? "border border-gold/30 text-gold/40"
+              : "bg-gold text-white hover:bg-gold-dark active:scale-[0.98]"
+          }`}
+        >
+          Review Cart
+        </button>
         </div>
       </div>
 
@@ -893,7 +912,7 @@ function DashboardProductDetail({ product }: { product: MockProduct }) {
             <div>
               <span className="eyebrow mb-3">Explore More</span>
               <h2 className="font-serif text-3xl lg:text-5xl font-light">
-                You May Also <span className="italic">Like</span>
+                Related Wholesale <span className="italic">Styles</span>
               </h2>
             </div>
             <Link

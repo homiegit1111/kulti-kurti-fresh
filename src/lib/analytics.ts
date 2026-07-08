@@ -111,3 +111,31 @@ export function trackViewItem(item: AnalyticsLineItem): void {
     items: [item],
   });
 }
+
+export function trackWholesaleRegister(params: Record<string, unknown> = {}): void {
+  trackEvent("wholesale_register", params);
+}
+
+export function trackAddSetsToCart(item: AnalyticsLineItem): void {
+  trackEvent("add_sets_to_cart", {
+    currency: "INR",
+    value: (item.price ?? 0) * (item.quantity ?? 1),
+    items: [item],
+  });
+}
+
+export function trackBeginWhatsappOrder(params: Record<string, unknown>): void {
+  trackEvent("begin_whatsapp_order", params);
+}
+
+export function trackBulkOrderAdd(params: Record<string, unknown>): void {
+  trackEvent("bulk_order_add", params);
+}
+
+export function trackMoqBlockedCheckout(params: Record<string, unknown>): void {
+  trackEvent("moq_blocked_checkout", params);
+}
+
+export function trackTierUnlocked(params: Record<string, unknown>): void {
+  trackEvent("tier_unlocked", params);
+}

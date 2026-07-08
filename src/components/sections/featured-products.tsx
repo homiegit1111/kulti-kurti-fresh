@@ -11,9 +11,11 @@ import {
   formatPrice,
   COLOR_MAP,
   type MockProduct,
-} from "@/lib/shopify";
+} from "@/lib/commerce/catalog";
 import { useCart } from "@/lib/cart-context";
 import { useWishlist } from "@/lib/wishlist-context";
+import { B2B_CONFIG } from "@/lib/b2b/config";
+import { getPerPiecePrice } from "@/lib/b2b/pricing";
 
 const categories = ["All", "Kurtis", "Lehengas", "Co-ords", "Sarees"];
 
@@ -276,10 +278,10 @@ export default function FeaturedProducts() {
                   {/* Quick Add Tray Overlay */}
                   <div className="absolute inset-x-0 bottom-0 translate-y-full bg-charcoal/95 backdrop-blur p-4 transition-transform duration-500 ease-[cubic-bezier(0.25,_1,_0.5,_1)] group-hover:translate-y-0 flex flex-col gap-2">
                     <p className="text-[10px] text-white/60 uppercase tracking-widest text-center">
-                      Quick Add Size
+                      Add Wholesale Set
                     </p>
                     <div className="flex flex-wrap gap-1.5 justify-center">
-                      {product.sizes.map((size) => (
+                      {product.sizes.slice(0, 1).map((size) => (
                         <button
                           key={size}
                           onClick={(e) => {
@@ -287,9 +289,9 @@ export default function FeaturedProducts() {
                             handleQuickAdd(product, size);
                           }}
                           disabled={isAdding || isAdded}
-                          className="bg-white/10 hover:bg-gold hover:text-white transition-colors duration-200 text-[10px] font-semibold text-white px-2.5 py-1 min-w-[32px] border border-white/10"
+                          className="bg-white/10 hover:bg-gold hover:text-white transition-colors duration-200 text-[10px] font-semibold text-white px-3 py-1.5 min-w-[90px] border border-white/10 uppercase tracking-[0.12em]"
                         >
-                          {size}
+                          1 Set
                         </button>
                       ))}
                     </div>
@@ -315,7 +317,7 @@ export default function FeaturedProducts() {
                       {product.salePrice ? (
                         <>
                           <span className="text-sm font-semibold text-charcoal">
-                            {formatPrice(product.salePrice)}
+                            From {formatPrice(product.salePrice)}/set
                           </span>
                           <span className="text-xs text-muted-foreground line-through">
                             {formatPrice(product.price)}
@@ -323,7 +325,7 @@ export default function FeaturedProducts() {
                         </>
                       ) : (
                         <span className="text-sm font-semibold text-charcoal">
-                          {formatPrice(product.price)}
+                          From {formatPrice(product.price)}/set
                         </span>
                       )}
                     </div>
@@ -354,6 +356,12 @@ export default function FeaturedProducts() {
                       )}
                     </div>
                   </div>
+                  <p className="px-4 pb-4 text-[10px] uppercase tracking-[0.16em] text-charcoal/40">
+                    {formatPrice(
+                      getPerPiecePrice(product.salePrice ?? product.price),
+                    )}
+                    /pc - 1 set = {B2B_CONFIG.setSize} pcs
+                  </p>
                 </div>
               </motion.div>
             );

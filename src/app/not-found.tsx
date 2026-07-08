@@ -31,14 +31,14 @@ export default function NotFound() {
         </h1>
         <p className="relative text-sm md:text-base text-charcoal/55 max-w-sm mx-auto font-light leading-relaxed mt-6">
           The page you&rsquo;re looking for has moved or never existed. Let&rsquo;s
-          find you something beautiful instead.
+          get you back to the wholesale catalog.
         </p>
         <div className="relative flex flex-wrap items-center justify-center gap-4 mt-12">
           <Link
             href="/shop"
             className="btn-luxe"
           >
-            Explore the Shop
+            Open Wholesale Catalog
           </Link>
           <Link
             href="/"

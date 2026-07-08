@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * PDP "Client Voices" — customer reviews with photos.
+ * PDP buyer notes and trade feedback with photos.
  *
  * Reads/writes /api/reviews. Strictly on the luxe design system: eyebrow
  * label, serif-light headings, gold stars, hairline dividers, field-luxe
@@ -157,19 +157,19 @@ export default function ReviewsSection({ handle }: { handle: string }) {
   if (!loaded) return null;
 
   return (
-    <section className="mt-20 lg:mt-28" aria-label="Customer reviews">
+    <section className="mt-20 lg:mt-28" aria-label="Buyer notes">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-8 border-b border-charcoal/10">
         <div>
-          <p className="eyebrow mb-3">Client Voices</p>
+          <p className="eyebrow mb-3">Buyer Notes</p>
           <h2 className="font-serif text-3xl lg:text-4xl font-light tracking-tight">
-            Worn &amp; <em className="italic">loved</em>
+            Sourced &amp; <em className="italic">reordered</em>
           </h2>
           {summary.count > 0 && (
             <div className="flex items-center gap-3 mt-4">
               <Stars value={Math.round(summary.average)} />
               <span className="font-serif text-lg">{summary.average.toFixed(1)}</span>
               <span className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
-                {summary.count} review{summary.count > 1 ? "s" : ""}
+                {summary.count} note{summary.count > 1 ? "s" : ""}
               </span>
             </div>
           )}
@@ -185,7 +185,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
               }}
               className="btn-luxe-outline self-start sm:self-auto"
             >
-              Write a review
+              Add buyer note
             </button>
           )
         ) : (
@@ -193,7 +193,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
             <Link href="/login" className="link-luxe text-charcoal">
               Sign in
             </Link>{" "}
-            to share your experience
+            to share trade feedback
           </p>
         )}
       </div>
@@ -201,7 +201,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       {thanks && (
         <div className="panel-luxe p-6 mt-8">
           <p className="font-serif text-lg">
-            Thank you — your words are now part of this piece&apos;s story.
+            Thank you. Your feedback helps other wholesale buyers plan better.
           </p>
         </div>
       )}
@@ -209,7 +209,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       {/* ── Write form ── */}
       {formOpen && (
         <form onSubmit={submit} className="frame-luxe p-8 lg:p-10 mt-10 space-y-7">
-          <p className="eyebrow eyebrow--bare">Your Review</p>
+          <p className="eyebrow eyebrow--bare">Your Buyer Note</p>
 
           <div>
             <span className="field-label">Rating</span>
@@ -235,7 +235,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
 
           <div>
             <label className="field-label" htmlFor="review-body">
-              Your experience
+              Trade feedback
             </label>
             <textarea
               id="review-body"
@@ -245,7 +245,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
               rows={4}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="The fit, the fabric, the moment you wore it…"
+              placeholder="Share fabric quality, customer response, reorder potential, or merchandising notes."
               className="field-luxe resize-none"
             />
           </div>
@@ -286,7 +286,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
 
           <div className="flex items-center gap-6">
             <button type="submit" disabled={submitting} className="btn-luxe">
-              {submitting ? "Sending…" : "Submit review"}
+              {submitting ? "Sending..." : "Submit note"}
             </button>
             <button
               type="button"
@@ -308,7 +308,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       {reviews.length === 0 ? (
         !formOpen && (
           <p className="font-serif text-lg text-charcoal/45 italic mt-10">
-            This piece is waiting for its first story — be the one to tell it.
+            This style is waiting for its first trade note.
           </p>
         )
       ) : (

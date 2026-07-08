@@ -48,13 +48,13 @@ const FALLBACK: Record<string, EditorialDetail> = {
         span("Every Rangat Pehnawa piece begins not on a sketchpad, but at a "),
         span("handloom", ["strong"]),
         span(
-          " — where a single weaver may spend days coaxing a length of cloth into being. We travel to the clusters of Bhuj, Bagru and Chanderi to work directly with the artisans who keep these traditions alive.",
+          " - where a weaving cluster may spend days coaxing a length of cloth into being. We work with craft partners across Bhuj, Bagru and Chanderi so wholesale buyers can source styles with a real material story.",
         ),
       ]),
       block([span("The colour of memory")], "h2"),
       block([
         span(
-          "Our dyes are drawn from the earth — indigo, madder root, pomegranate rind. Each batch is mixed by hand, which means no two bolts of cloth are ever identical. We consider that a feature, not a flaw.",
+          "Our dye and print direction is built for small-batch wholesale drops: rich enough for boutique displays, practical enough for repeat buying, and varied enough that each lot keeps its hand-finished character.",
         ),
       ]),
       block(
@@ -62,11 +62,11 @@ const FALLBACK: Record<string, EditorialDetail> = {
         "blockquote",
       ),
       block([
-        span("What that means for you", ["em"]),
+        span("What that means for trade buyers", ["em"]),
         span(
-          " is a wardrobe with provenance — pieces designed to be worn for seasons, then passed down. Explore the current collection in the ",
+          " is a catalog with provenance: style codes, size-ratio packs, and product stories your customers can understand. Explore the current wholesale catalog in the ",
         ),
-        span("shop", ["L1"]),
+        span("catalog", ["L1"]),
         span("."),
       ], "normal", [{ _key: "L1", _type: "link", href: "/shop" }]),
     ],
@@ -77,7 +77,7 @@ const FALLBACK: Record<string, EditorialDetail> = {
     slug: "the-festive-edit",
     category: "campaign",
     excerpt:
-      "Our latest campaign — celebration, colour, and contemporary silhouettes.",
+      "A festive wholesale drop built around colour, occasion buying, and quick boutique merchandising.",
   },
   "quiet-luxury-loud-roots": {
     _id: "f3",
@@ -85,7 +85,7 @@ const FALLBACK: Record<string, EditorialDetail> = {
     slug: "quiet-luxury-loud-roots",
     category: "journal",
     excerpt:
-      "How minimalism and Indian craftsmanship meet in our design language.",
+      "How restrained craft details become reseller-friendly catalog stories.",
   },
 };
 

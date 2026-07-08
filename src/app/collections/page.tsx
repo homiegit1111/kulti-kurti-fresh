@@ -1,26 +1,26 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import Collections from "@/components/sections/collections";
 import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Collections — Kurtis, Co-ords, Lehengas & Sarees",
+  title: "Wholesale Collections - Kurti Sets for Resellers",
   description:
-    "Explore Rangat Pehnawa's curated collections of women's kurtis, co-ord sets, festive lehengas and sarees. Handcrafted Indian ethnic wear, sizes XS–XXL.",
+    "Explore Rangat Pehnawa modern kurti collections for shoppers, boutiques, and resellers. Fresh drops, practical prices, MOQ 4 sets, and WhatsApp ordering.",
   keywords: [
-    "kurti collections",
-    "ethnic wear collections",
-    "festive kurti",
-    "co-ord sets",
-    "lehengas",
-    "sarees",
+    "wholesale kurti collections",
+    "kurti sets for resellers",
+    "boutique wholesale catalog",
+    "size ratio kurti sets",
+    "kurti manufacturer India",
+    "wholesale ethnic wear",
   ],
   alternates: { canonical: "/collections" },
   openGraph: {
-    title: "Collections | Rangat Pehnawa",
+    title: "Wholesale Collections | Rangat Pehnawa",
     description:
-      "Curated collections of women's kurtis, co-ord sets, lehengas and sarees — handcrafted Indian ethnic wear.",
+      "Curated wholesale drops for boutique owners, online sellers, and bulk buyers.",
     url: "/collections",
     type: "website",
     locale: "en_IN",
@@ -47,7 +47,6 @@ export default function CollectionsPage() {
       <Navbar />
 
       <main className="flex-1 relative z-10 pt-24 lg:pt-32">
-        {/* We reuse the exact same Collections component from the homepage */}
         <Collections />
       </main>
 

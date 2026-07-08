@@ -1,7 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
+/.pnpm-store
 /.pnp
 .pnp.*
 .yarn/*
@@ -30,7 +29,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 !.env.example
 
@@ -41,10 +40,18 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
-
-# agent tooling (vendored Clerk skills, re-fetchable via skills-lock.json)
+# local agent tooling
 /.agents
 
-# bun lockfile (repo uses package-lock.json)
-bun.lock
+# scratch terminal logs
+/terminals
+
+# package manager drift
+package-lock.json
+
+# medusa generated/runtime folders
+/apps/rangat-commerce/.config/
+/apps/rangat-commerce/node_modules/
+/apps/rangat-commerce/apps/backend/.medusa/
+/apps/rangat-commerce/apps/backend/node_modules/
+node_modules

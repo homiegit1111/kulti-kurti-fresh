@@ -1,33 +1,29 @@
-import type { Metadata } from "next";
-import { absoluteUrl } from "@/lib/seo";
+﻿import type { Metadata } from "next";
+import { absoluteUrl, buildProductItemListLd } from "@/lib/seo";
 import { SHOP_FAQS } from "./faqs";
 import ShopClient from "./shop-client";
-import { getProducts } from "@/lib/shopify";
+import { getProducts } from "@/lib/commerce/catalog";
 
-// Render on demand so the keyword H1, category copy and FAQ are in the raw HTML
-// Googlebot/AI crawlers receive (the client island reads ?cat/&sort/&color/&price,
-// which otherwise forces the Suspense fallback during static prerender).
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shop Kurtis for Women — Cotton, Daily & Festive Ethnic Wear",
+  title: "Modern Kurti Catalog - Fresh Drops and Bulk Deals",
   description:
-    "Shop premium kurtis for women online in India — cotton daily kurtis, co-ord sets, anarkalis, lehengas & sarees. Sizes XS–XXL, COD, free shipping over ₹1,999.",
+    "Browse modern kurtis online for shoppers, boutiques, and resellers in India. Fresh drops, practical prices, MOQ 4 sets, and WhatsApp ordering.",
   keywords: [
-    "kurti",
-    "kurtis for women",
-    "women kurti",
-    "daily kurti",
-    "cotton kurti",
-    "kurti online",
-    "ethnic wear for women",
-    "buy kurti online india",
+    "kurti wholesale online",
+    "wholesale kurtis India",
+    "kurti wholesale price",
+    "cotton kurti wholesale",
+    "designer kurti wholesale",
+    "kurtis for boutique owners",
+    "kurti reseller catalog with price",
   ],
   alternates: { canonical: "/shop" },
   openGraph: {
-    title: "Shop Kurtis for Women | Rangat Pehnawa",
+    title: "Modern Kurti Catalog | Rangat Pehnawa",
     description:
-      "Premium cotton, daily & festive kurtis for women. Sizes XS–XXL, COD, free shipping over ₹1,999.",
+      "Modern kurti catalog for shoppers, boutiques, and resellers. Fresh drops, practical prices, and WhatsApp ordering.",
     url: "/shop",
     type: "website",
     locale: "en_IN",
@@ -36,15 +32,18 @@ export const metadata: Metadata = {
 };
 
 export default async function ShopPage() {
-  // CollectionPage + BreadcrumbList + FAQPage structured data. CollectionPage
-  // tells Google/AI this is a category listing; FAQPage (mirrors the visible
-  // accordion) is eligible for AI Overviews and rich results.
+  const products = await getProducts();
+  const itemListLd = buildProductItemListLd(products, {
+    name: "Modern Kurti Catalog",
+    path: "/shop",
+  });
+
   const collectionLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Kurtis & Ethnic Wear for Women",
+    name: "Modern Kurti Catalog",
     description:
-      "Premium women's kurtis and Indian ethnic wear — cotton daily kurtis, co-ord sets, anarkalis, lehengas and sarees.",
+      "Modern kurtis for shoppers, boutique owners, resellers, online sellers, and distributors in India.",
     url: absoluteUrl("/shop"),
     isPartOf: { "@id": absoluteUrl("/#website") },
   };
@@ -82,7 +81,11 @@ export default async function ShopPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
       />
-      <ShopClient initialProducts={await getProducts()} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+      />
+      <ShopClient initialProducts={products} />
     </>
   );
 }

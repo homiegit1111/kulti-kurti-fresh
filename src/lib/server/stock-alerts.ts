@@ -10,7 +10,7 @@
  */
 
 import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { getProductByHandle, type MockProduct } from "@/lib/shopify";
+import { getProductByHandle, type MockProduct } from "@/lib/commerce/catalog";
 import { absoluteUrl } from "@/lib/seo";
 import {
   EMAIL_HAIRLINE,

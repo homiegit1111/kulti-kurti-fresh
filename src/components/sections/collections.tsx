@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { MOCK_COLLECTIONS, getCollections } from "@/lib/shopify";
+import { MOCK_COLLECTIONS, getCollections } from "@/lib/commerce/catalog";
 
 export default function Collections() {
   const [collections, setCollections] = useState(MOCK_COLLECTIONS.slice(0, 4));
@@ -118,7 +118,7 @@ export default function Collections() {
                 {/* Content */}
                 <div className="absolute inset-0 p-6 lg:p-8 flex flex-col justify-end">
                   <span className="inline-block px-3 py-1 bg-white/10 backdrop-blur-md text-white text-[9px] uppercase tracking-widest border border-white/20 mb-4 w-fit opacity-80 group-hover:opacity-100 transition-opacity">
-                    {collection.itemCount > 0 ? `${collection.itemCount} Pieces` : "Shop Collection"}
+                    {collection.itemCount > 0 ? `${collection.itemCount} Styles` : "Shop Collection"}
                   </span>
 
                   <h3 className="text-3xl lg:text-4xl font-serif text-white mb-1 group-hover:-translate-y-2 transition-transform duration-500 ease-out">
@@ -192,7 +192,7 @@ export default function Collections() {
                 <div className="absolute inset-0 p-6 flex flex-col justify-end">
                   <div className="mb-3">
                     <span className="inline-block text-[9px] uppercase tracking-widest text-gold border border-gold/30 px-2 py-0.5 rounded-sm">
-                      {collection.itemCount > 0 ? `${collection.itemCount} Pieces` : "Shop Collection"}
+                      {collection.itemCount > 0 ? `${collection.itemCount} Styles` : "Shop Collection"}
                     </span>
                   </div>
                   <h3 className="font-serif text-3xl text-white font-light mb-2">

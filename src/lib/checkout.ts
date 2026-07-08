@@ -5,6 +5,7 @@
 
 import { trackBeginCheckout, type AnalyticsLineItem } from "@/lib/analytics";
 import type { CartItem } from "@/lib/cart-context";
+import { B2B_CONFIG } from "@/lib/b2b/config";
 
 export function cartItemsToAnalytics(items: CartItem[]): AnalyticsLineItem[] {
   return items.map((i) => ({
@@ -27,5 +28,13 @@ export function trackCheckoutStart(items: CartItem[], subtotal: number): void {
 
 /** True when the merchant has explicitly enabled the Shop Pay express button. */
 export function isShopPayEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_SHOP_PAY_ENABLED === "true";
+  return (
+    B2B_CONFIG.shopifyCheckoutEnabled &&
+    process.env.NEXT_PUBLIC_SHOP_PAY_ENABLED === "true"
+  );
+}
+
+/** True only when legacy hosted Shopify checkout is intentionally re-enabled. */
+export function isShopifyCheckoutEnabled(): boolean {
+  return B2B_CONFIG.shopifyCheckoutEnabled;
 }

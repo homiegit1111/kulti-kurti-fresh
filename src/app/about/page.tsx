@@ -1,11 +1,54 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
+import { absoluteUrl } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: "About Rangat Pehnawa - Wholesale Kurti Brand from Bangalore",
+  description:
+    "Rangat Pehnawa is a Bangalore-based wholesale kurti brand bridging historic Indian craftsmanship with modern, minimalist design. Founded by Harsh Jangid. Serving boutiques and resellers across India.",
+  keywords: [
+    "wholesale kurti brand bangalore",
+    "kurti manufacturer india",
+    "indian ethnic wear wholesale",
+    "kurti supplier bangalore",
+  ],
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About Rangat Pehnawa | Wholesale Kurti Brand from Bangalore",
+    description:
+      "A Bangalore-based wholesale kurti brand bridging historic Indian craftsmanship with modern, minimalist design.",
+    url: "/about",
+    type: "website",
+    locale: "en_IN",
+    siteName: "Rangat Pehnawa",
+    images: [{ url: "/images/foundernew.png", width: 1200, height: 630, alt: "Harsh Jangid, Founder of Rangat Pehnawa" }],
+  },
+};
 
 export default function AboutPage() {
+  const aboutLd = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    url: absoluteUrl("/about"),
+    mainEntity: {
+      "@id": absoluteUrl("/#organization"),
+      "@type": "Organization",
+      name: "Rangat Pehnawa",
+      founder: { "@type": "Person", name: "Harsh Jangid" },
+      description:
+        "Bangalore-based wholesale kurti brand bridging historic Indian craftsmanship with modern, minimalist design for boutiques and resellers across India.",
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutLd) }}
+      />
       <Navbar />
 
       <main className="flex-1 bg-warm-white relative pt-32 pb-24 min-h-screen flex flex-col items-center justify-center">
