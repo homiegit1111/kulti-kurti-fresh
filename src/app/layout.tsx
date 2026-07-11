@@ -125,7 +125,21 @@ export default function RootLayout({
     <html
       lang="en"
       className={`h-full antialiased ${inter.variable} ${playfair.variable}`}
+      suppressHydrationWarning
     >
+      <head>
+        {/*
+          Pre-React theme boot: runs before first paint so the correct palette
+          is on <html> before anything renders — no light-mode flash, no
+          hydration mismatch. Mirrors theme-provider's storage key + DOM
+          contract (data-theme + .dark + color-scheme). Kept inline + tiny.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('rangat-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}var r=document.documentElement;r.setAttribute('data-theme',t);r.classList.toggle('dark',t==='dark');r.style.colorScheme=t;}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans bg-warm-white text-charcoal relative">
         <script
           type="application/ld+json"
@@ -152,31 +166,31 @@ export default function RootLayout({
           colorText: "#1a1a1a",
           colorBackground: "#ffffff",
           fontFamily: "var(--font-inter), 'Segoe UI', sans-serif",
-          borderRadius: "1rem",
+          borderRadius: "0px",
         },
         elements: {
           rootBox: "w-full",
           card: "bg-transparent shadow-none w-full max-w-none p-0 border-none",
-          headerTitle: "font-serif text-4xl font-normal tracking-tight text-charcoal mb-1",
-          headerSubtitle: "text-charcoal/60 font-serif italic text-sm mb-6",
-          socialButtonsBlockButton: "bg-white border border-charcoal/10 hover:border-gold/50 hover:bg-gold/5 transition-all h-14 rounded-full shadow-[0_4px_10px_rgba(0,0,0,0.02)]",
+          headerTitle: "font-black uppercase text-4xl tracking-[-0.04em] text-charcoal mb-1 leading-[0.9]",
+          headerSubtitle: "text-charcoal/60 text-sm mb-6",
+          socialButtonsBlockButton: "bg-white border border-charcoal/20 hover:border-gold hover:bg-gold/10 transition-all h-14 rounded-none",
           socialButtonsBlockButtonText: "text-[10px] font-bold uppercase tracking-widest text-charcoal",
           socialButtonsProviderIcon: "w-4 h-4 grayscale",
           dividerRow: "my-8",
           dividerText: "text-[10px] uppercase tracking-widest text-charcoal/40 font-bold",
           dividerLine: "bg-charcoal/10",
           formFieldLabel: "text-[10px] uppercase tracking-[0.2em] text-charcoal/40 font-bold mb-2",
-          formFieldInput: "border-b border-charcoal/10 rounded-none bg-transparent px-0 py-3 text-lg font-serif text-charcoal focus:border-gold focus:ring-0 transition-colors placeholder:text-charcoal/20 placeholder:font-sans placeholder:text-sm",
-          formButtonPrimary: "bg-charcoal hover:bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] h-14 rounded-full transition-all w-full mt-6 shadow-[0_10px_20px_rgba(0,0,0,0.1)]",
-          footerActionText: "text-charcoal/60 text-xs font-serif italic",
-          footerActionLink: "text-gold hover:text-gold/80 font-bold uppercase tracking-wider text-[10px] ml-2 font-sans",
+          formFieldInput: "border-b border-charcoal/20 rounded-none bg-transparent px-0 py-3 text-lg font-sans text-charcoal focus:border-gold focus:ring-0 transition-colors placeholder:text-charcoal/20 placeholder:font-sans placeholder:text-sm",
+          formButtonPrimary: "bg-charcoal hover:bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] h-14 rounded-none transition-all w-full mt-6",
+          footerActionText: "text-charcoal/60 text-xs",
+          footerActionLink: "text-gold hover:text-charcoal font-bold uppercase tracking-wider text-[10px] ml-2 font-sans",
           identityPreviewText: "text-charcoal font-medium text-sm",
           identityPreviewEditButtonIcon: "text-gold w-4 h-4",
           formFieldAction: "text-[9px] uppercase tracking-wider text-gold font-bold hover:text-charcoal",
           alertText: "text-xs font-medium text-red-600",
-          alert: "bg-red-50 border border-red-100 rounded-lg p-3 mt-4",
+          alert: "bg-red-50 border border-red-100 rounded-none p-3 mt-4",
           verificationLink: "text-gold underline hover:text-charcoal transition-colors",
-          otpCodeFieldInput: "border-b border-charcoal/10 rounded-none text-2xl font-mono text-center focus:border-gold focus:ring-0 text-charcoal px-0"
+          otpCodeFieldInput: "border-b border-charcoal/20 rounded-none text-2xl font-mono text-center focus:border-gold focus:ring-0 text-charcoal px-0"
         }
       }}
     >
