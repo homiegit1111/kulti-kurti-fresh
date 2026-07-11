@@ -76,65 +76,73 @@
     --line: #171814;           /* hairline borders (used with alpha) */
     --accent-lime: #d8ff4f;    /* signature accent                   */
     --accent-red: #cc2f4a;     /* secondary accent                   */
+    /* Ink that sits ON a solid accent fill (lime/white chips & CTAs).
+       Pinned dark in BOTH themes: the lime/white surface is bright in dark
+       mode too, so text on it must stay dark ink or it becomes unreadable.
+       Never role-split — see docs/THEME_TOKENS.md. */
+    --on-accent: #171814;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DARK THEME — premium warm-dark ("atelier at night")
-   Deliberately NOT pure black: espresso/ink browns keyed to the paper
-   palette so the brand's warmth survives the flip. Toggled by `.dark`
-   on <html> (see theme-provider + boot script). Everything here is an
-   OVERRIDE — remove .dark and the site is exactly as before.
+   DARK THEME — premium cool-graphite ("studio at night")
+   Deliberately NOT pure black: cool near-black graphite surfaces that
+   climb in lightness with elevation, keyed to neutral ink so the lime
+   accent glows. Toggled by `.dark` on <html> (see theme-provider + boot
+   script). Everything here is an OVERRIDE — remove .dark and the site is
+   exactly as before.
    ═══════════════════════════════════════════════════════════════ */
 .dark {
-    --background: 40 9% 7%;
-    --foreground: 40 22% 91%;
+    --background: 220 8% 6%;
+    --foreground: 210 14% 90%;
 
-    --card: 40 8% 9%;
-    --card-foreground: 40 22% 91%;
+    --card: 218 9% 9%;
+    --card-foreground: 210 14% 90%;
 
-    --popover: 40 9% 8%;
-    --popover-foreground: 40 22% 91%;
+    --popover: 220 8% 7%;
+    --popover-foreground: 210 14% 90%;
 
-    --primary: 40 22% 91%;
-    --primary-foreground: 40 9% 7%;
+    --primary: 210 14% 90%;
+    --primary-foreground: 220 8% 6%;
 
-    --secondary: 40 6% 15%;
-    --secondary-foreground: 40 22% 91%;
+    --secondary: 216 9% 15%;
+    --secondary-foreground: 210 14% 90%;
 
-    --muted: 40 6% 14%;
-    --muted-foreground: 40 10% 58%;
+    --muted: 216 8% 14%;
+    --muted-foreground: 214 8% 60%;
 
     --accent: 74 100% 65%;
-    --accent-foreground: 40 9% 7%;
+    --accent-foreground: 220 8% 6%;
 
     --destructive: 350 68% 60%;
-    --destructive-foreground: 40 20% 98%;
+    --destructive-foreground: 210 18% 98%;
 
-    --border: 40 12% 20%;
-    --input: 40 12% 20%;
+    --border: 214 10% 21%;
+    --input: 214 10% 21%;
     --ring: 74 100% 65%;
 
-    --sidebar-background: 40 9% 8%;
-    --sidebar-foreground: 40 22% 91%;
-    --sidebar-primary: 40 22% 91%;
-    --sidebar-primary-foreground: 40 9% 7%;
-    --sidebar-accent: 40 6% 14%;
-    --sidebar-accent-foreground: 40 22% 91%;
-    --sidebar-border: 40 12% 20%;
+    --sidebar-background: 220 8% 7%;
+    --sidebar-foreground: 210 14% 90%;
+    --sidebar-primary: 210 14% 90%;
+    --sidebar-primary-foreground: 220 8% 6%;
+    --sidebar-accent: 216 8% 14%;
+    --sidebar-accent-foreground: 210 14% 90%;
+    --sidebar-border: 214 10% 21%;
     --sidebar-ring: 74 100% 65%;
 
-    /* Semantic roles — the warm-dark palette. Surfaces climb in lightness with
+    /* Semantic roles — cool-graphite palette. Surfaces climb in lightness with
        elevation (page → panel → raised block) so depth reads without borders. */
-    --surface: #15120e;         /* page background — warm near-black    */
-    --surface-2: #1e1a14;       /* panels / cards — one step up         */
-    --surface-inverse: #272017; /* former dark blocks → raised surface  */
-    --surface-hover: #2c241a;   /* image placeholder / hover wells      */
-    --warm-gray: #2c241a;       /* legacy warm-gray → dark hover well   */
-    --content: #ece9df;         /* primary text — warm paper-light      */
+    --surface: #0e0f11;         /* page background — cool ink black     */
+    --surface-2: #16181b;       /* panels / cards — graphite            */
+    --surface-inverse: #1f2226; /* former dark blocks → raised slate    */
+    --surface-hover: #262a2f;   /* image placeholder / hover wells      */
+    --warm-gray: #262a2f;       /* legacy warm-gray → dark hover well   */
+    --content: #eef1f4;         /* primary text — cool paper-light      */
     --content-inverse: #f1eee5; /* text on raised surfaces stays light  */
-    --line: #ece9df;            /* hairlines invert (used at low alpha)  */
+    --line: #eef1f4;            /* hairlines invert (used at low alpha) */
     --accent-lime: #d8ff4f;     /* signature lime — unchanged, it pops  */
     --accent-red: #e0576f;      /* red lifted for contrast on dark      */
+    /* --on-accent intentionally NOT overridden: lime/white fills are bright
+       in dark mode too, so ink on them stays dark. */
     color-scheme: dark;
 }
 
@@ -195,6 +203,7 @@
     --color-line: var(--line);
     --color-accent-lime: var(--accent-lime);
     --color-accent-red: var(--accent-red);
+    --color-on-accent: var(--on-accent);
     --color-rangat-pink: hsl(348 35% 36%);
     --color-rangat-teal: hsl(28 30% 36%);
     --color-rangat-sun: hsl(39 54% 58%);
@@ -799,23 +808,47 @@ a,
 
 .inventory-row {
   position: relative;
-  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.25s ease;
+  transition: padding 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.5s ease;
 }
 
 .inventory-row::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: -1;
-  background: #d8ff4f;
+  /* z-index 0 (not -1): the fill sits at the row's own base layer and the row
+     content is lifted to z-index 1 above it. Negative z-index used to drop the
+     fill behind the page whenever framer-motion cleared the reveal transform
+     (which had been supplying a stacking context) — that was the "works ~1-2s
+     then the green stops" bug. This layering needs no stacking context at all. */
+  z-index: 0;
+  background: var(--accent-lime);
   transform: scaleY(0);
   transform-origin: bottom;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  /* Slow, soft settle — the fill dissolves upward rather than snapping in.
+     Longer scale, gently trailing opacity, calm ease with no overshoot. */
+  transition:
+    transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s ease-out;
+}
+
+/* Keep row content above the hover fill regardless of animation state. */
+.inventory-row > * {
+  position: relative;
+  z-index: 1;
 }
 
 .inventory-row:hover::before,
 .inventory-row:focus-visible::before {
   transform: scaleY(1);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-row::before {
+    transition: opacity 0.4s ease;
+    transform: scaleY(1);
+  }
 }
 
 /* Trade-tier cards lift subtly on hover to match the hero's tactile quality. */
@@ -838,30 +871,32 @@ a,
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
-  border: 1px solid rgb(23 24 20 / 0.35);
+  border: 1px solid color-mix(in srgb, var(--content) 35%, transparent);
   padding: 0.85rem 1.25rem;
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  color: var(--content);
   transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 .linebook-button:hover,
 .linebook-button:focus-visible {
-  border-color: #171814;
+  border-color: var(--content);
 }
 
 .linebook-button--dark {
-  border-color: #171814;
-  background: #171814;
-  color: #f2efe6;
+  border-color: var(--surface-inverse);
+  background: var(--surface-inverse);
+  color: var(--content-inverse);
 }
 
 .linebook-button--dark:hover,
 .linebook-button--dark:focus-visible {
-  border-color: #cc2f4a;
-  background: #cc2f4a;
+  border-color: var(--accent-red);
+  background: var(--accent-red);
+  color: #f6f3ec; /* fixed light ink — accent-red is a fixed mid-tone in both themes */
 }
 
 @media (max-width: 639px) {
@@ -931,8 +966,8 @@ a,
     gap: 0.75rem;
     overflow: hidden;
     isolation: isolate;
-    background: #121310;
-    color: #f1eee5;
+    background: var(--surface-inverse);
+    color: var(--content-inverse);
     font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
@@ -947,14 +982,14 @@ a,
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: #d8ff4f;
+    background: var(--accent-lime);
     transform: translateX(-101%);
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-luxe:hover,
 .btn-luxe:focus-visible {
-    color: #121310;
+    color: var(--on-accent);
 }
 
 .btn-luxe:hover::before,
@@ -981,8 +1016,8 @@ a,
     overflow: hidden;
     isolation: isolate;
     background: transparent;
-    color: #171814;
-    border: 1px solid rgb(23 24 20 / 0.3);
+    color: var(--content);
+    border: 1px solid color-mix(in srgb, var(--content) 30%, transparent);
     font-size: 10px;
     font-weight: 800;
     text-transform: uppercase;
@@ -999,15 +1034,15 @@ a,
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: #171814;
+    background: var(--surface-inverse);
     transform: translateY(101%);
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-luxe-outline:hover,
 .btn-luxe-outline:focus-visible {
-    color: #f1eee5;
-    border-color: #171814;
+    color: var(--content-inverse);
+    border-color: var(--surface-inverse);
 }
 
 .btn-luxe-outline:hover::before,
@@ -2048,30 +2083,11 @@ a,
     background-color: #0f0c08 !important;
 }
 
-/* Primary CTA: charcoal→cream block. On dark, invert to a light block with
-   dark ink text; the lime sweep-in still reads as the signature motion. */
-.dark .btn-luxe {
-    background: #ece9df;
-    color: #15120e;
-}
-.dark .btn-luxe:hover,
-.dark .btn-luxe:focus-visible {
-    color: #15120e;
-}
-
-/* Outline CTA: hairline inks to light fill on dark. */
-.dark .btn-luxe-outline {
-    color: var(--content);
-    border-color: hsl(40 22% 91% / 0.3);
-}
-.dark .btn-luxe-outline::before {
-    background: #ece9df;
-}
-.dark .btn-luxe-outline:hover,
-.dark .btn-luxe-outline:focus-visible {
-    color: #15120e;
-    border-color: #ece9df;
-}
+/* Primary/outline CTAs are fully tokenized in their base rules
+   (var(--surface-inverse) / --content-inverse / --content / --on-accent),
+   so they flip for dark mode with no override needed. Do NOT re-add
+   hardcoded .dark .btn-luxe* rules — that drift is what made buttons
+   unreadable in dark mode. */
 
 /* Editorial form field underline. */
 .dark .field-luxe {
@@ -2092,28 +2108,11 @@ a,
     color: hsl(40 22% 91% / 0.5);
 }
 
-/* Hairline panels and linebook button. */
+/* Hairline panels. linebook-button is tokenized in its base rule and
+   flips for dark automatically — no .dark override needed. */
 .dark .panel-luxe {
     background: var(--surface-2);
     border-color: hsl(40 22% 91% / 0.16);
-}
-.dark .linebook-button {
-    border-color: hsl(40 22% 91% / 0.32);
-}
-.dark .linebook-button:hover,
-.dark .linebook-button:focus-visible {
-    border-color: #ece9df;
-}
-.dark .linebook-button--dark {
-    border-color: #ece9df;
-    background: #ece9df;
-    color: #15120e;
-}
-.dark .linebook-button--dark:hover,
-.dark .linebook-button--dark:focus-visible {
-    border-color: var(--accent-red);
-    background: var(--accent-red);
-    color: #15120e;
 }
 
 /* Inventory row hover flood + tier card stay lime — already token-safe. */

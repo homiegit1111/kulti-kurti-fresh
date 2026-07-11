@@ -21,15 +21,15 @@ const trustItems = [
 
 export function WholesaleTrustBar({ className = "" }: { className?: string }) {
   return (
-    <div className={`border-y border-charcoal/10 bg-white/70 ${className}`}>
+    <div className={`border-y border-line/20 bg-surface-2 ${className}`}>
       <div className="mx-auto flex max-w-[1400px] gap-3 overflow-x-auto px-4 py-4 sm:px-6 lg:px-12 hide-scrollbar">
         {trustItems.map(({ label, icon: Icon }) => (
           <div
             key={label}
-            className="flex min-w-fit items-center gap-2 border border-charcoal/10 bg-warm-white px-4 py-3"
+            className="flex min-w-fit items-center gap-2 border border-line/20 bg-surface px-4 py-3"
           >
-            <Icon className="h-3.5 w-3.5 text-gold-dark" strokeWidth={1.5} />
-            <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-charcoal/60">
+            <Icon className="h-3.5 w-3.5 text-content" strokeWidth={1.5} />
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/60">
               {label}
             </span>
           </div>

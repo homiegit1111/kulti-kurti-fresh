@@ -45,6 +45,14 @@ export interface CartItem {
 
 // ── Context type ───────────────────────────────────────────────────────────────
 
+/** Popup payload after add-to-cart (toast — not mini-cart) */
+export interface CartAddedNotice {
+  title: string;
+  image: string;
+  setsAdded: number;
+  handle: string;
+}
+
 interface CartContextType {
   items: CartItem[];
   itemCount: number;
@@ -62,6 +70,9 @@ interface CartContextType {
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  /** Last add-to-cart toast; null when dismissed */
+  addedNotice: CartAddedNotice | null;
+  dismissAddedNotice: () => void;
   // Shopify
   cartId: string | null;
   checkoutUrl: string | null; // redirect here to pay — Shopify handles it
@@ -88,6 +99,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [addedNotice, setAddedNotice] = useState<CartAddedNotice | null>(null);
 
   const shopifyCartEnabled = isShopifyCheckoutEnabled() && isShopifyConfigured();
 
@@ -220,8 +232,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // ── Cart actions ─────────────────────────────────────────────────────────────
 
-  const openCart = useCallback(() => setIsOpen(true), []);
+  /** Navigate to full cart page (no side sheet / hover panel) */
+  const openCart = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.location.assign("/cart");
+    }
+  }, []);
   const closeCart = useCallback(() => setIsOpen(false), []);
+  const dismissAddedNotice = useCallback(() => setAddedNotice(null), []);
 
   const addItem = useCallback(
     (product: MockProduct, size: string, color?: string, sets = 1) => {
@@ -304,7 +322,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return [...prev, newItem];
       });
 
-      setIsOpen(true);
+      // Toast only — do not open mini/full cart (one clear feedback path)
+      setAddedNotice({
+        title: product.title,
+        image: product.image,
+        setsAdded: setQuantity,
+        handle: product.handle,
+      });
     },
     [cartId, shopifyCartEnabled, syncAddToShopify, enqueueSync],
   );
@@ -467,6 +491,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
+      addedNotice,
+      dismissAddedNotice,
       cartId,
       checkoutUrl,
       isSyncing,
@@ -487,6 +513,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
+      addedNotice,
+      dismissAddedNotice,
       cartId,
       checkoutUrl,
       isSyncing,

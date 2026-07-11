@@ -185,13 +185,37 @@ export async function sendAbandonedCartEmail(
   }
 }
 
-/** Stamp that a recovery email was sent (so we don't re-send). */
-async function markEmailSent(cartId: string): Promise<void> {
+/**
+ * Atomically claim a cart for emailing: stamp email_sent_at ONLY if it's still
+ * null. Returns true if this caller won the claim. This is the guard against
+ * duplicate win-back emails — we stamp BEFORE sending, so a stamp-write failure
+ * can never leave a sent cart un-stamped, and two concurrent sweeps can't both
+ * send (the second claim updates zero rows). Worst case is a rare un-sent email
+ * (claim won but send failed), which is far better than spamming a customer.
+ */
+async function claimCartForEmail(cartId: string): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+  if (!supabase) return false;
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({ email_sent_at: new Date().toISOString() })
+    .eq("cart_id", cartId)
+    .is("email_sent_at", null)
+    .select("cart_id");
+  if (error) {
+    console.error("[abandoned-cart] claim failed:", error.message);
+    return false;
+  }
+  return (data?.length ?? 0) > 0;
+}
+
+/** Release a claim if the send failed, so a later sweep can retry. */
+async function releaseCartClaim(cartId: string): Promise<void> {
   const supabase = createServiceRoleClient();
   if (!supabase) return;
   await supabase
     .from(TABLE)
-    .update({ email_sent_at: new Date().toISOString() })
+    .update({ email_sent_at: null })
     .eq("cart_id", cartId);
 }
 
@@ -206,10 +230,16 @@ export async function runAbandonedCartSweep(): Promise<SweepResult> {
   const carts = await findAbandonedCarts();
   let emailed = 0;
   for (const cart of carts) {
+    // Claim first: if we can't win the claim, another sweep already has it.
+    const claimed = await claimCartForEmail(cart.cart_id);
+    if (!claimed) continue;
+
     const ok = await sendAbandonedCartEmail(cart);
     if (ok) {
-      await markEmailSent(cart.cart_id);
       emailed += 1;
+    } else {
+      // Send failed — release so the next sweep can retry this cart.
+      await releaseCartClaim(cart.cart_id);
     }
   }
   return { scanned: carts.length, emailed, skipped: carts.length - emailed };

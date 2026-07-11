@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -14,6 +14,8 @@ import { SHOP_FAQS } from "./faqs";
 import { StickyMobileB2BCta } from "@/components/b2b/sticky-mobile-b2b-cta";
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 const sortOptions = [
   { label: "Newest", value: "newest" },
@@ -143,31 +145,38 @@ function ShopContent({
   const hasActiveFacets = Boolean(activeColor || activePrice) || activeCategory !== "All";
 
   return (
-    <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
+    <div className="bg-surface min-h-screen text-content font-sans flex flex-col">
       <Navbar />
 
       <main className="flex-1 relative z-10 pt-28 lg:pt-36 pb-32">
-        {/* Editorial header */}
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 mb-12">
+        {/* Editorial catalogue header */}
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 mb-12">
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex flex-col md:flex-row md:items-end md:justify-between gap-6"
+            transition={{ duration: 0.65, ease: EASE }}
+            className="border-b-2 border-line pb-6"
           >
-            <div>
-              <p className="eyebrow mb-3">Fresh Kurti Catalog</p>
-              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-charcoal font-light tracking-tight">
-                Modern kurtis{" "}
-                <span className="italic text-gold-dark">for real wardrobes</span>
-              </h1>
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="eyebrow mb-4">Wholesale line book / Catalogue</p>
+                <h1 className="font-sans font-black uppercase leading-[0.82] tracking-[-0.06em] text-[clamp(3rem,10vw,8.5rem)]">
+                  <span className="block">The</span>
+                  <span className="block text-transparent [-webkit-text-stroke:1px_#171814] sm:ml-[6vw]">
+                    Kurti
+                  </span>
+                  <span className="block">Index</span>
+                </h1>
+              </div>
+              <p className="max-w-xs text-sm leading-6 text-content/55 md:pb-2 md:text-right">
+                Price-smart cottons, office fits and color-pop styles for
+                shoppers, boutiques and online resellers. Set pricing, actual
+                availability, direct ordering.
+              </p>
             </div>
-            <p className="text-sm font-sans text-charcoal/50 max-w-xs leading-relaxed md:text-right md:pb-2">
-              Price-smart cottons, office fits, and color-pop styles for
-              shoppers, boutiques, and online resellers.
-            </p>
           </motion.div>
-          <div className="mt-8 flex flex-wrap gap-3">
+
+          <div className="mt-6 flex flex-wrap gap-3">
             <a href={buildCatalogRequestUrl()} className="btn-luxe-outline">
               Get Catalog on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
             </a>
@@ -175,7 +184,8 @@ function ShopContent({
               Open Bulk Deals <Table2 className="h-3.5 w-3.5" />
             </a>
           </div>
-          <div className="mt-6 grid gap-3 border-y border-charcoal/10 py-4 sm:grid-cols-4">
+
+          <div className="mt-8 grid gap-3 border-y border-line/20 py-5 sm:grid-cols-4">
             {[
               ["Low-mid", "to high-mid range"],
               ["Fresh", "newness first"],
@@ -183,8 +193,10 @@ function ShopContent({
               ["WhatsApp", "stock support"],
             ].map(([value, label]) => (
               <div key={value}>
-                <p className="text-xl font-black text-charcoal">{value}</p>
-                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-charcoal/45">
+                <p className="text-2xl font-black uppercase tracking-[-0.03em] text-content">
+                  {value}
+                </p>
+                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-content/45">
                   {label}
                 </p>
               </div>
@@ -192,7 +204,8 @@ function ShopContent({
           </div>
         </div>
 
-        <div className="mb-10 border-y border-charcoal bg-charcoal py-3 text-white">
+        {/* Marquee — ink + lime */}
+        <div className="mb-10 border-y border-line bg-surface-inverse py-3 text-content-inverse">
           <div className="flex w-max animate-marquee gap-8 whitespace-nowrap px-4">
             {[
               "Daily cotton kurtis",
@@ -210,26 +223,27 @@ function ShopContent({
             ].map((item, index) => (
               <span
                 key={`${item}-${index}`}
-                className="text-[11px] font-bold uppercase tracking-[0.18em]"
+                className="flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.18em]"
               >
                 {item}
+                <span className="h-1.5 w-1.5 shrink-0 bg-accent-lime" />
               </span>
             ))}
           </div>
         </div>
 
         {/* Sticky filter bar */}
-        <div className="sticky top-[72px] z-40 mb-12 border-y border-charcoal/10 bg-warm-white/95 lg:top-[72px]">
-          
+        <div className="sticky top-[72px] z-40 mb-12 border-y border-line/20 bg-surface/95 backdrop-blur lg:top-[72px]">
+
           {/* Mobile Toggle Button (Only visible when scrolled down) */}
           <div
             className={`md:hidden overflow-hidden transition-all duration-300 ${
-              isScrolled ? "max-h-12 border-b border-charcoal/10" : "max-h-0"
+              isScrolled ? "max-h-12 border-b border-line/20" : "max-h-0"
             }`}
           >
             <button
               onClick={() => setIsManualExpand(!isManualExpand)}
-              className="w-full flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal hover:text-gold transition-colors focus-visible:outline-none"
+              className="w-full flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] font-bold text-content hover:text-accent-red transition-colors focus-visible:outline-none"
             >
               {isManualExpand ? "Hide Filters" : "Filters & Sort"}
               <ChevronDown
@@ -245,18 +259,18 @@ function ShopContent({
               shouldShowFiltersMobile ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
             }`}
           >
-            <div className="max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
 
-            {/* Pill Categories */}
+            {/* Category filters */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 hide-scrollbar">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setParam("cat", cat)}
-                  className={`relative mr-5 shrink-0 px-1 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-colors duration-200 after:absolute after:left-0 after:-bottom-px after:h-px after:w-full after:origin-right after:scale-x-0 after:bg-gold after:transition-transform last:mr-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                  className={`relative mr-5 shrink-0 px-1 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-colors duration-200 after:absolute after:left-0 after:-bottom-px after:h-0.5 after:w-full after:origin-right after:scale-x-0 after:bg-accent-lime after:transition-transform last:mr-0 focus-visible:outline-none ${
                     activeCategory === cat
-                      ? "text-charcoal after:scale-x-100 after:origin-left"
-                      : "text-charcoal/40 hover:text-charcoal hover:after:scale-x-100 hover:after:origin-left"
+                      ? "text-content after:scale-x-100 after:origin-left"
+                      : "text-content/40 hover:text-content hover:after:scale-x-100 hover:after:origin-left"
                   }`}
                 >
                   {cat}
@@ -266,14 +280,14 @@ function ShopContent({
 
             {/* Meta & Sort Dropdown */}
             <div className="flex items-center justify-between w-full md:w-auto gap-6 shrink-0 relative">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal/35 hidden lg:block">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/40 hidden lg:block">
                 {filtered.length} Styles
               </span>
 
               <div className="relative">
                 <button
                   onClick={() => setIsSortOpen(!isSortOpen)}
-                  className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-charcoal hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+                  className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-content hover:text-accent-red transition-colors focus-visible:outline-none"
                 >
                   Sort By: {sortOptions.find((o) => o.value === sortBy)?.label}
                   <ChevronDown className={`w-3 h-3 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
@@ -285,7 +299,8 @@ function ShopContent({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 top-full mt-4 w-52 bg-white shadow-[0_24px_48px_-16px_rgba(0,0,0,0.15)] border border-charcoal/10 overflow-hidden z-50"
+                      transition={{ duration: 0.3, ease: EASE }}
+                      className="absolute right-0 top-full mt-4 w-52 bg-surface border border-line overflow-hidden z-50"
                     >
                       {sortOptions.map((opt) => (
                         <button
@@ -296,8 +311,8 @@ function ShopContent({
                           }}
                           className={`w-full text-left px-5 py-3 text-[10px] uppercase tracking-[0.2em] font-bold transition-colors ${
                             sortBy === opt.value
-                              ? "bg-charcoal/5 text-charcoal"
-                              : "text-charcoal/50 hover:bg-charcoal/5 hover:text-charcoal"
+                              ? "bg-accent-lime text-on-accent"
+                              : "text-content/55 hover:bg-line/5 hover:text-content"
                           }`}
                         >
                           {opt.label}
@@ -311,16 +326,16 @@ function ShopContent({
           </div>
 
           {/* Facets: price bands + color swatches */}
-          <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
             <div className="flex gap-2 flex-wrap">
               {priceBands.map((band) => (
                 <button
                   key={band.value}
                   onClick={() => toggleParam("price", band.value)}
-                  className={`px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                  className={`px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] border transition-colors duration-200 focus-visible:outline-none ${
                     activePrice === band.value
-                      ? "bg-charcoal text-white border-charcoal"
-                      : "bg-transparent border-charcoal/15 text-charcoal/55 hover:border-charcoal/50 hover:text-charcoal"
+                      ? "bg-accent-lime text-on-accent border-line"
+                      : "bg-transparent border-line/20 text-content/55 hover:border-line hover:text-content"
                   }`}
                 >
                   {band.label}
@@ -340,10 +355,10 @@ function ShopContent({
                       title={color}
                       aria-label={`Filter by ${color}`}
                       aria-pressed={isActive}
-                      className={`w-5 h-5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                      className={`w-5 h-5 transition-all focus-visible:outline-none ${
                         isActive
-                          ? "ring-2 ring-charcoal ring-offset-2 ring-offset-warm-white"
-                          : "ring-1 ring-charcoal/10 hover:ring-charcoal/30"
+                          ? "ring-2 ring-accent-red ring-offset-2 ring-offset-surface"
+                          : "ring-1 ring-line/15 hover:ring-line/40"
                       }`}
                       style={{ backgroundColor: swatch }}
                     />
@@ -355,7 +370,7 @@ function ShopContent({
             {hasActiveFacets && (
               <button
                 onClick={clearAll}
-                className="ml-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.15em] text-charcoal/50 hover:text-charcoal transition-colors"
+                className="ml-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.15em] text-content/50 hover:text-accent-red transition-colors"
               >
                 <X className="w-3 h-3" /> Clear filters
               </button>
@@ -365,7 +380,7 @@ function ShopContent({
         </div>
 
         {/* Product grid */}
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-12">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-10">
           <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-6 md:gap-y-12">
             <AnimatePresence mode="popLayout">
               {filtered.map((product) => (
@@ -375,7 +390,7 @@ function ShopContent({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.4 }}
+                    transition={{ duration: 0.4, ease: EASE }}
                   >
                     <LivingProductCard
                       product={product}
@@ -390,45 +405,44 @@ function ShopContent({
           {/* Loading state */}
           {isLoading && (
             <div className="text-center py-32">
-              <p className="font-serif text-2xl text-charcoal/40 italic">
+              <p className="text-sm font-bold uppercase tracking-[0.3em] text-content/40">
                 Loading the collection...
               </p>
             </div>
           )}
 
-          {/* Minimal Empty State */}
+          {/* Empty State */}
           {!isLoading && filtered.length === 0 && (
-            <div className="mx-auto max-w-2xl border border-charcoal/10 bg-white px-6 py-16 text-center">
-              <p className="eyebrow eyebrow--bare mb-3">No Matching Styles</p>
-              <h2 className="font-serif text-3xl font-light text-charcoal">
+            <div className="mx-auto max-w-2xl border border-line/20 bg-surface-2 px-6 py-16 text-center">
+              <p className="eyebrow eyebrow--bare mb-4 justify-center">No Matching Styles</p>
+              <h2 className="font-sans text-2xl sm:text-3xl font-black uppercase leading-[0.9] tracking-[-0.04em] text-content">
                 Adjust filters or ask for the latest wholesale catalog.
               </h2>
-              <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-charcoal/55">
+              <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-content/55">
                 Some trade drops sell through quickly. WhatsApp us for current
                 stock, new arrivals, and style-code availability.
               </p>
-              {hasActiveFacets && (
-                <button
-                  onClick={clearAll}
-                  className="mt-8 btn-luxe-outline"
-                >
-                  Clear all filters
-                </button>
-              )}
-              <a href={buildCatalogRequestUrl()} className="ml-3 mt-8 inline-flex btn-luxe">
-                WhatsApp Catalog <MessageCircle className="h-3.5 w-3.5" />
-              </a>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                {hasActiveFacets && (
+                  <button onClick={clearAll} className="btn-luxe-outline">
+                    Clear all filters
+                  </button>
+                )}
+                <a href={buildCatalogRequestUrl()} className="btn-luxe">
+                  WhatsApp Catalog <MessageCircle className="h-3.5 w-3.5" />
+                </a>
+              </div>
             </div>
           )}
         </div>
 
         {/* SEO content and FAQ */}
-        <section className="max-w-3xl mx-auto px-6 lg:px-12 mt-32 border-t border-charcoal/10 pt-20">
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 mt-32 border-t-2 border-line pt-16">
           <p className="eyebrow mb-4">The Shop</p>
-          <h2 className="font-serif text-3xl text-charcoal font-light mb-6">
-            Modern kurti catalog <span className="italic">online in India</span>
+          <h2 className="font-sans text-3xl sm:text-4xl font-black uppercase leading-[0.9] tracking-[-0.045em] text-content mb-6">
+            Modern kurti catalog online in India
           </h2>
-          <div className="space-y-4 text-sm leading-relaxed text-charcoal/60 font-sans">
+          <div className="space-y-4 text-sm leading-6 text-content/60">
             <p>
               Rangat Pehnawa is a modern kurti catalog for shoppers, boutique
               owners, online sellers and distributors. The edit spans
@@ -443,17 +457,17 @@ function ShopContent({
             </p>
           </div>
 
-          <h2 className="font-serif text-3xl text-charcoal font-light mt-16 mb-8">
-            Frequently <span className="italic">Asked</span>
+          <h2 className="font-sans text-3xl sm:text-4xl font-black uppercase leading-[0.9] tracking-[-0.045em] text-content mt-16 mb-8">
+            Frequently Asked
           </h2>
-          <div className="divide-y divide-charcoal/10 border-y border-charcoal/10">
+          <div className="border-t border-line/20">
             {SHOP_FAQS.map((faq) => (
-              <details key={faq.q} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-serif text-base text-charcoal transition-colors hover:text-gold-dark">
+              <details key={faq.q} className="group border-b border-line/20 py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-sm font-bold uppercase tracking-[0.02em] text-content transition-colors hover:text-accent-red">
                   {faq.q}
-                  <ChevronDown className="w-4 h-4 shrink-0 text-gold transition-transform duration-300 group-open:rotate-180" />
+                  <ChevronDown className="w-4 h-4 shrink-0 text-content/45 transition-transform duration-300 group-open:rotate-180 group-open:text-accent-red" />
                 </summary>
-                <p className="mt-4 text-sm leading-relaxed text-charcoal/60 font-sans max-w-xl">
+                <p className="mt-4 max-w-xl text-sm leading-6 text-content/60">
                   {faq.a}
                 </p>
               </details>

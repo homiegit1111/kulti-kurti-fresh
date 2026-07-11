@@ -410,7 +410,7 @@ export default function CheckoutPage() {
   const medusaBackend = process.env.NEXT_PUBLIC_COMMERCE_BACKEND === "medusa";
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#ece9df] font-sans text-[#171814]">
+    <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
       <Navbar />
       <main className="flex-1 pt-28 pb-24 lg:pt-36">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
@@ -418,7 +418,7 @@ export default function CheckoutPage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-10 border-b-2 border-[#171814] pb-8"
+            className="mb-10 border-b-2 border-line pb-8"
           >
             <p className="eyebrow mb-4">Wholesale checkout</p>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -426,7 +426,7 @@ export default function CheckoutPage() {
                 <h1 className="text-[clamp(3rem,9vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
                   Checkout
                 </h1>
-                <p className="mt-6 max-w-2xl text-sm leading-6 text-[#171814]/60">
+                <p className="mt-6 max-w-2xl text-sm leading-6 text-content/60">
                   WhatsApp confirmation is always available. Razorpay checkout
                   works when payment keys are configured, while mock/keyless
                   mode falls back cleanly to a payment-link request.
@@ -441,15 +441,15 @@ export default function CheckoutPage() {
           <WholesaleTrustBar className="mb-10" />
 
           {items.length === 0 ? (
-            <section className="mx-auto max-w-2xl border border-[#171814]/20 bg-[#f2efe6] px-6 py-20 text-center">
-              <ShoppingBag className="mx-auto mb-6 h-10 w-10 text-[#171814]/30" strokeWidth={1} />
+            <section className="mx-auto max-w-2xl border border-line/20 bg-surface-2 px-6 py-20 text-center">
+              <ShoppingBag className="mx-auto mb-6 h-10 w-10 text-content/30" strokeWidth={1} />
               <p className="eyebrow eyebrow--bare mb-4 justify-center">No sets yet</p>
               <h2 className="text-[clamp(2rem,6vw,3.5rem)] font-black uppercase leading-[0.85] tracking-[-0.05em]">
                 Build a cart
                 <br />
                 before checkout
               </h2>
-              <p className="mx-auto mt-6 max-w-md text-sm leading-6 text-[#171814]/60">
+              <p className="mx-auto mt-6 max-w-md text-sm leading-6 text-content/60">
                 MOQ starts at {B2B_CONFIG.minimumOrderSets} sets. Add styles
                 from the catalog or use the bulk linesheet for faster entry.
               </p>
@@ -461,19 +461,19 @@ export default function CheckoutPage() {
           ) : (
             <div className="grid gap-10 lg:grid-cols-12">
               <section className="lg:col-span-7">
-                <div className="border border-[#171814]/20 bg-[#f2efe6]">
-                  <div className="flex items-baseline justify-between gap-4 border-b border-[#171814]/20 p-6">
+                <div className="border border-line/20 bg-surface-2">
+                  <div className="flex items-baseline justify-between gap-4 border-b border-line/20 p-6">
                     <div>
                       <p className="eyebrow eyebrow--bare mb-3">Order summary</p>
                       <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.03em] sm:text-4xl">
                         {totals.totalSets} sets
                       </h2>
                     </div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#171814]/45">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">
                       {totals.totalPieces} pieces
                     </p>
                   </div>
-                  <div className="divide-y divide-[#171814]/15">
+                  <div className="divide-y divide-line/15">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-4 p-4 sm:p-6">
                         <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-[#d4d0c5]">
@@ -482,21 +482,21 @@ export default function CheckoutPage() {
                         <div className="flex flex-1 flex-col gap-2">
                           <div className="flex justify-between gap-4">
                             <div>
-                              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#cc2f4a]">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent-red">
                                 {getStyleCode(item)}
                               </p>
-                              <h3 className="mt-1 text-lg font-bold leading-tight tracking-[-0.02em] text-[#171814]">
+                              <h3 className="mt-1 text-lg font-bold leading-tight tracking-[-0.02em] text-content">
                                 {item.title}
                               </h3>
                             </div>
-                            <p className="text-lg font-black tracking-[-0.02em] text-[#171814]">
+                            <p className="text-lg font-black tracking-[-0.02em] text-content">
                               {formatPrice(calculateLineTotal(item, totals.totalSets))}
                             </p>
                           </div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#171814]/45">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content/45">
                             {item.quantity} sets - {item.quantity * B2B_CONFIG.setSize} pcs - {SIZE_RATIO_LABEL}
                           </p>
-                          <p className="text-xs text-[#171814]/55">
+                          <p className="text-xs text-content/55">
                             {formatPrice(item.salePrice ?? item.price)}/set
                           </p>
                         </div>
@@ -508,8 +508,8 @@ export default function CheckoutPage() {
 
               <aside className="lg:col-span-5">
                 <form onSubmit={beginRazorpayPayment} className="sticky top-32 space-y-6">
-                  <div className="border border-[#171814]/20 bg-[#121310] p-6 text-[#f1eee5] sm:p-8">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#d8ff4f]">
+                  <div className="border border-line/20 bg-surface-inverse p-6 text-content-inverse sm:p-8">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-lime">
                       Order status
                     </p>
                     <h2 className="mt-3 text-3xl font-black uppercase leading-[0.9] tracking-[-0.03em]">
@@ -518,12 +518,12 @@ export default function CheckoutPage() {
                     <div className="mt-6">
                       <MoqProgress totals={totals} tone="dark" />
                     </div>
-                    <div className="mt-8 space-y-3 border-t border-[#f1eee5]/20 pt-6">
+                    <div className="mt-8 space-y-3 border-t border-content-inverse/20 pt-6">
                       <Summary label="Final total" value={formatPrice(totals.subtotal)} strong />
                     </div>
                   </div>
 
-                  <div className="border border-[#171814]/20 bg-[#f2efe6] p-6 sm:p-8">
+                  <div className="border border-line/20 bg-surface-2 p-6 sm:p-8">
                     <p className="eyebrow mb-6">Buyer details</p>
                     <div className="grid gap-5">
                       <Field label="Buyer name" value={buyer.buyerName} onChange={(value) => updateBuyer("buyerName", value)} />
@@ -532,7 +532,7 @@ export default function CheckoutPage() {
                       <Field label="WhatsApp phone" value={buyer.whatsappPhone} onChange={(value) => updateBuyer("whatsappPhone", value)} />
                       <Field label="Email" type="email" value={buyer.email} onChange={(value) => updateBuyer("email", value)} />
                       <Field label="GSTIN optional" value={buyer.gstin} onChange={(value) => updateBuyer("gstin", value)} />
-                      <label className="flex items-center gap-3 text-xs text-[#171814]/60">
+                      <label className="flex items-center gap-3 text-xs text-content/60">
                         <input
                           type="checkbox"
                           checked={buyer.wantsGstInvoice}
@@ -544,7 +544,7 @@ export default function CheckoutPage() {
                     </div>
 
                     {status && (
-                      <p className="mt-6 border border-[#171814]/20 border-l-2 border-l-[#cc2f4a] bg-[#ece9df] px-4 py-3 text-xs leading-6 text-[#171814]/65">
+                      <p className="mt-6 border border-line/20 border-l-2 border-l-accent-red bg-surface px-4 py-3 text-xs leading-6 text-content/65">
                         {status}
                       </p>
                     )}
@@ -629,14 +629,14 @@ function Summary({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1eee5]/45">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
         {label}
       </span>
       <span
         className={
           strong
-            ? "text-3xl font-black tracking-[-0.03em] text-[#d8ff4f]"
-            : "text-lg font-bold tracking-[-0.02em] text-[#f1eee5]/80"
+            ? "text-3xl font-black tracking-[-0.03em] text-accent-lime"
+            : "text-lg font-bold tracking-[-0.02em] text-content-inverse/80"
         }
       >
         {value}

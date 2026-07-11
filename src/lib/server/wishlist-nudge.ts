@@ -184,18 +184,37 @@ export async function runWishlistNudgeSweep(): Promise<NudgeSweepResult> {
     ).filter((p): p is MockProduct => Boolean(p));
     if (!products.length) continue;
 
+    // Stamp the cooldown BEFORE sending. If the send then fails we release the
+    // stamp so a later sweep retries; but a stamp-write failure can never leave
+    // a sent nudge un-stamped (which, on a daily cron, would nudge every day).
+    if (supabase) {
+      const { error: stampError } = await supabase
+        .from("wishlist_nudges")
+        .upsert({
+          clerk_user_id: candidate.clerkUserId,
+          last_sent_at: new Date().toISOString(),
+        });
+      if (stampError) continue;
+    }
+
     const ok = await sendBrandedEmail({
       to: candidate.email,
       email: renderWishlistNudgeEmail(candidate.firstName, products),
       refId: `wishlist-nudge:${candidate.clerkUserId}`,
       fromEnvVar: "WISHLIST_NUDGE_FROM",
     });
-    if (ok && supabase) {
-      await supabase.from("wishlist_nudges").upsert({
-        clerk_user_id: candidate.clerkUserId,
-        last_sent_at: new Date().toISOString(),
-      });
+    if (ok) {
       emailed += 1;
+    } else if (supabase) {
+      // Release: push last_sent_at back so the cooldown doesn't block a retry.
+      await supabase
+        .from("wishlist_nudges")
+        .update({
+          last_sent_at: new Date(
+            Date.now() - (cooldownDays() + 1) * 86_400_000,
+          ).toISOString(),
+        })
+        .eq("clerk_user_id", candidate.clerkUserId);
     }
   }
 

@@ -121,7 +121,7 @@ export default function PrivacyPage() {
           </p>
         </LegalSection>
 
-        <p className="text-[11px] text-charcoal/40 italic">
+        <p className="text-[11px] text-charcoal/40">
           This policy is provided as a starting template and should be reviewed
           by qualified legal counsel before launch to confirm it reflects your
           actual data practices and obligations.

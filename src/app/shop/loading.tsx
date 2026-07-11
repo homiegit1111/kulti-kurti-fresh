@@ -10,8 +10,8 @@ export default function ShopLoading() {
       <main className="flex-1 relative z-10 bg-warm-white pt-28 lg:pt-32 overflow-hidden min-h-screen">
         {/* Header Skeleton */}
         <div className="px-4 lg:px-20 mb-10 flex flex-col items-center text-center relative z-10">
-          <div className="h-[1px] w-12 bg-charcoal/10 mb-4 animate-pulse" />
-          <div className="w-64 h-16 md:h-24 bg-charcoal/5 rounded-2xl animate-pulse mb-4" />
+          <div className="h-[2px] w-12 bg-gold mb-4 animate-pulse" />
+          <div className="w-64 h-16 md:h-24 bg-charcoal/5 animate-pulse mb-4" />
         </div>
 
         {/* Toolbar Skeleton */}
@@ -20,11 +20,11 @@ export default function ShopLoading() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="w-24 h-10 bg-charcoal/5 rounded-full animate-pulse"
+                className="w-24 h-10 bg-charcoal/5 animate-pulse"
               />
             ))}
           </div>
-          <div className="w-32 h-10 bg-charcoal/5 rounded-full animate-pulse" />
+          <div className="w-32 h-10 bg-charcoal/5 animate-pulse" />
         </div>
 
         {/* Masonry Grid Skeleton */}
@@ -40,7 +40,7 @@ export default function ShopLoading() {
             return (
               <div
                 key={idx}
-                className={`break-inside-avoid w-full rounded-[2rem] bg-charcoal/5 animate-pulse ${heightClass}`}
+                className={`break-inside-avoid w-full bg-charcoal/5 animate-pulse ${heightClass}`}
               />
             );
           })}

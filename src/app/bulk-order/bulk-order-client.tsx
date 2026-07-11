@@ -97,48 +97,48 @@ export default function BulkOrderClient() {
   };
 
   return (
-    <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col">
+    <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
       <Navbar />
-      <main className="flex-1 pt-28 lg:pt-36 pb-24">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12">
-          <header className="mb-10 border-b border-charcoal/10 pb-8">
-            <p className="eyebrow mb-3">Bulk Deals</p>
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light tracking-tight">
-                  Bulk <span className="italic">Deals</span>
-                </h1>
-                <p className="mt-4 max-w-xl text-sm leading-relaxed text-charcoal/55">
-                  Build a practical kurti bulk cart across multiple styles.
-                  MOQ is {B2B_CONFIG.minimumOrderSets} sets total; 1 set ={" "}
-                  {B2B_CONFIG.setSize} pcs in {SIZE_RATIO_LABEL}.
-                </p>
-              </div>
-              <Link href="/cart" className="btn-luxe-outline group w-fit">
-                Review Cart
-                <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+      <main className="flex-1 pt-28 pb-24 lg:pt-36 lg:pb-28">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
+          <header className="mb-10 grid gap-8 border-b-2 border-line pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-red">
+                Bulk desk / Wholesale cart
+              </p>
+              <h1 className="mt-4 max-w-[11ch] text-[clamp(2.8rem,7vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.07em]">
+                Bulk deals
+              </h1>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-content/60">
+                Build a practical kurti bulk cart across multiple styles.
+                MOQ is {B2B_CONFIG.minimumOrderSets} sets total; 1 set ={" "}
+                {B2B_CONFIG.setSize} pcs in {SIZE_RATIO_LABEL}.
+              </p>
             </div>
+            <Link href="/cart" className="btn-luxe-outline group w-fit">
+              Review cart
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+            </Link>
           </header>
 
           <WholesaleTrustBar className="mb-8" />
 
-          <section className="sticky top-20 z-30 mb-6 border-y border-charcoal/10 bg-warm-white/95 py-4">
+          <section className="sticky top-20 z-30 mb-6 border-y border-line/20 bg-surface/95 py-4 backdrop-blur-sm">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                <div className="flex flex-wrap gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-charcoal/50">
+                <div className="flex flex-wrap gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-content/50">
                   <span>{totalSets} sets</span>
                   <span>{totalPieces} pcs</span>
-                  <span>{totals.appliedTier?.label || "MOQ pending"}</span>
-                  <span>{totals.discountPercent}% savings</span>
+                  <span className="text-content">{totals.appliedTier?.label || "MOQ pending"}</span>
+                  <span className="text-accent-red">{totals.discountPercent}% savings</span>
                 </div>
                 <label className="relative block max-w-md lg:w-80">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-charcoal/35" />
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-content/35" />
                   <input
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search style, code, color"
-                    className="h-11 w-full border border-charcoal/15 bg-white pl-9 pr-3 text-sm text-charcoal outline-none placeholder:text-charcoal/35 focus:border-gold"
+                    className="h-11 w-full border border-line/20 bg-surface-2 pl-9 pr-3 text-sm text-content outline-none transition-colors placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent"
                   />
                 </label>
               </div>
@@ -162,16 +162,16 @@ export default function BulkOrderClient() {
             </div>
           </section>
 
-          <div className="overflow-x-auto border border-charcoal/10 bg-white">
+          <div className="overflow-x-auto border border-line/20 bg-surface-2">
             <table className="w-full min-w-[760px] border-collapse">
-              <thead className="bg-charcoal text-white">
-                <tr className="text-left text-[10px] uppercase tracking-[0.2em]">
+              <thead className="bg-surface-inverse text-content-inverse">
+                <tr className="text-left text-[9px] uppercase tracking-[0.22em]">
                   <th className="px-4 py-4 font-bold">Style</th>
                   <th className="px-4 py-4 font-bold">Code</th>
                   <th className="px-4 py-4 font-bold">Pack</th>
                   <th className="px-4 py-4 font-bold">Price</th>
                   <th className="px-4 py-4 font-bold">Sets</th>
-                  <th className="px-4 py-4 font-bold text-right">Line</th>
+                  <th className="px-4 py-4 text-right font-bold">Line</th>
                 </tr>
               </thead>
               <tbody>
@@ -179,10 +179,10 @@ export default function BulkOrderClient() {
                   const sets = setsById[product.id] ?? 0;
                   const setPrice = product.salePrice ?? product.price;
                   return (
-                    <tr key={product.id} className="border-b border-charcoal/10">
+                    <tr key={product.id} className="border-b border-line/15 transition-colors hover:bg-surface">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="relative h-16 w-12 shrink-0 bg-warm-gray overflow-hidden">
+                          <div className="relative h-16 w-12 shrink-0 overflow-hidden bg-surface-hover">
                             <Image
                               src={product.image}
                               alt={product.title}
@@ -194,38 +194,38 @@ export default function BulkOrderClient() {
                           <div>
                             <Link
                               href={`/shop/${product.handle}`}
-                              className="font-serif text-base text-charcoal hover:text-gold-dark"
+                              className="text-sm font-bold uppercase tracking-[-0.01em] text-content transition-colors hover:text-accent-red"
                             >
                               {product.title}
                             </Link>
-                            <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-charcoal/40">
+                            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-content/40">
                               {product.category}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-charcoal/45">
+                      <td className="px-4 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-content/45">
                         {getStyleCode(product)}
                       </td>
-                      <td className="px-4 py-4 text-xs text-charcoal/60">
+                      <td className="px-4 py-4 text-xs text-content/60">
                         {SIZE_RATIO_LABEL}
                       </td>
                       <td className="px-4 py-4">
-                        <p className="text-sm font-semibold">
+                        <p className="text-sm font-bold">
                           {formatPrice(setPrice)}/set
                         </p>
-                        <p className="text-[10px] uppercase tracking-[0.14em] text-charcoal/35">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-content/40">
                           {formatPrice(getPerPiecePrice(setPrice))}/pc
                         </p>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex w-28 items-center border border-charcoal/15 bg-white">
+                        <div className="flex w-28 items-center border border-line/20 bg-white">
                           <button
                             type="button"
                             onClick={() =>
                               updateSets(product.id, String(Math.max(0, sets - 1)))
                             }
-                            className="flex h-10 w-9 items-center justify-center text-charcoal/45 hover:bg-charcoal/5 hover:text-charcoal"
+                            className="flex h-10 w-9 items-center justify-center text-content/45 transition-colors hover:bg-surface-inverse hover:text-accent-lime"
                             aria-label={`Decrease sets for ${product.title}`}
                           >
                             <Minus className="h-3 w-3" strokeWidth={1.6} />
@@ -238,20 +238,20 @@ export default function BulkOrderClient() {
                             onChange={(event) =>
                               updateSets(product.id, event.target.value)
                             }
-                            className="h-10 w-10 border-x border-charcoal/15 bg-transparent text-center text-sm font-semibold outline-none"
+                            className="h-10 w-10 border-x border-line/20 bg-transparent text-center text-sm font-bold outline-none"
                             aria-label={`Sets for ${product.title}`}
                           />
                           <button
                             type="button"
                             onClick={() => updateSets(product.id, String(sets + 1))}
-                            className="flex h-10 w-9 items-center justify-center text-charcoal/45 hover:bg-charcoal/5 hover:text-charcoal"
+                            className="flex h-10 w-9 items-center justify-center text-content/45 transition-colors hover:bg-surface-inverse hover:text-accent-lime"
                             aria-label={`Increase sets for ${product.title}`}
                           >
                             <Plus className="h-3 w-3" strokeWidth={1.6} />
                           </button>
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-right font-serif text-lg">
+                      <td className="px-4 py-4 text-right text-lg font-black tracking-[-0.02em]">
                         {sets > 0 ? formatPrice(setPrice * sets) : "-"}
                       </td>
                     </tr>
@@ -259,11 +259,11 @@ export default function BulkOrderClient() {
                 })}
                 {visibleProducts.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center">
-                      <p className="font-serif text-2xl font-light text-charcoal">
+                    <td colSpan={6} className="px-4 py-16 text-center">
+                      <p className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.04em]">
                         No styles match this search.
                       </p>
-                      <p className="mt-2 text-sm text-charcoal/50">
+                      <p className="mt-3 text-sm text-content/55">
                         Try a style code, color, or category from the wholesale catalog.
                       </p>
                     </td>
@@ -273,13 +273,13 @@ export default function BulkOrderClient() {
             </table>
           </div>
 
-          <div className="mt-8 grid gap-4 border border-charcoal/10 bg-charcoal p-6 text-warm-white md:grid-cols-3 md:items-center">
+          <div className="mt-8 grid gap-6 border border-line/20 bg-surface-inverse p-6 text-content-inverse md:grid-cols-3 md:items-center lg:p-10">
             <div className="md:col-span-2">
-              <p className="eyebrow eyebrow--bare mb-2">Order Path</p>
-              <h2 className="font-serif text-3xl font-light">
+              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">Order path</p>
+              <h2 className="mt-4 max-w-[20ch] text-3xl font-black uppercase leading-[0.9] tracking-[-0.04em] lg:text-4xl">
                 Add selected sets, then confirm availability and payment.
               </h2>
-              <p className="mt-3 text-xs leading-relaxed text-white/55">
+              <p className="mt-4 text-xs leading-6 text-content-inverse/55">
                 WhatsApp remains the fastest way to confirm stock. Checkout is
                 Razorpay-ready once payment keys are configured.
               </p>
@@ -289,11 +289,11 @@ export default function BulkOrderClient() {
                 type="button"
                 onClick={addSelected}
                 disabled={selectedRows.length === 0}
-                className="btn-luxe bg-warm-white text-charcoal disabled:opacity-45"
+                className="btn-luxe border-content-inverse bg-surface-2 text-content hover:bg-accent-lime hover:text-on-accent disabled:opacity-45"
               >
-                Add to Cart <Plus className="h-3.5 w-3.5" />
+                Add to cart <Plus className="h-3.5 w-3.5" />
               </button>
-              <Link href="/checkout" className="btn-luxe-outline border-white/30 text-white hover:bg-white hover:text-charcoal">
+              <Link href="/checkout" className="btn-luxe-outline border-content-inverse/40 text-content-inverse hover:bg-surface-2 hover:text-content">
                 Checkout <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>

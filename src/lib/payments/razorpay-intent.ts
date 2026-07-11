@@ -5,7 +5,7 @@ export type RazorpayCheckoutIntent = {
   amount: number;
   currency: string;
   receipt: string;
-  medusaCartId?: string;
+  commerceOrderId?: string;
   createdAt: number;
 };
 
@@ -65,8 +65,8 @@ function parseIntent(value: unknown): RazorpayCheckoutIntent | null {
     amount: Math.round(intent.amount),
     currency: intent.currency.slice(0, 8),
     receipt: intent.receipt.slice(0, 80),
-    ...(typeof intent.medusaCartId === "string"
-      ? { medusaCartId: intent.medusaCartId.slice(0, 120) }
+    ...(typeof intent.commerceOrderId === "string"
+      ? { commerceOrderId: intent.commerceOrderId.slice(0, 120) }
       : {}),
     createdAt: intent.createdAt,
   };

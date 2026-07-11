@@ -14,11 +14,11 @@ import { auth } from "@clerk/nextjs/server";
 import { registerStockAlert } from "@/lib/server/stock-alerts";
 import { isServiceRoleConfigured } from "@/lib/supabase/admin";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
+import { isValidEmail } from "@/lib/email-validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const HANDLE_RE = /^[a-z0-9][a-z0-9-]{0,128}$/;
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const handle = (body.product_handle ?? "").trim().toLowerCase();
   const size = (body.size ?? "").trim().slice(0, 16) || null;
 
-  if (!EMAIL_RE.test(email) || email.length > 254) {
+  if (!isValidEmail(email)) {
     return NextResponse.json(
       { error: "Please enter a valid email address." },
       { status: 400 },

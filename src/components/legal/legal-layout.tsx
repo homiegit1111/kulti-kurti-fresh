@@ -25,7 +25,7 @@ export function LegalLayout({
               {eyebrow}
             </span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-serif text-charcoal tracking-tight leading-[1.1]">
+          <h1 className="text-4xl md:text-5xl font-black uppercase text-charcoal tracking-[-0.03em] leading-[1.05]">
             {title}
           </h1>
           <p className="text-[11px] uppercase tracking-[0.2em] text-charcoal/40 mt-4">
@@ -33,7 +33,7 @@ export function LegalLayout({
           </p>
         </div>
 
-        <div className="space-y-6 text-[15px] leading-relaxed text-charcoal/70 font-light [&_h2]:font-serif [&_h2]:text-charcoal [&_h2]:text-xl [&_h2]:mt-10 [&_h2]:mb-3 [&_strong]:text-charcoal [&_strong]:font-medium [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_a]:text-charcoal [&_a]:underline">
+        <div className="space-y-6 text-[15px] leading-relaxed text-charcoal/70 [&_h2]:font-black [&_h2]:uppercase [&_h2]:tracking-[-0.02em] [&_h2]:text-charcoal [&_h2]:text-xl [&_h2]:mt-10 [&_h2]:mb-3 [&_strong]:text-charcoal [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_a]:text-charcoal [&_a]:underline">
           {children}
         </div>
       </div>

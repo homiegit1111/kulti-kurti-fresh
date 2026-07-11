@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, Package, ArrowRight, Mail } from "lucide-react";
+import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useCart } from "@/lib/cart-context";
@@ -43,88 +44,163 @@ function OrderConfirmationContent() {
     setCleared(true);
   }, [clearCart, confirmed]);
 
+  const orderLabel = orderName
+    ? orderName.startsWith("#")
+      ? orderName
+      : `#${orderName}`
+    : "";
+
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
       <Navbar />
-      <main className="flex-1 bg-warm-white pt-32 pb-24 min-h-screen">
-        <div className="container mx-auto px-4 max-w-2xl">
-          <div className="panel-luxe frame-luxe overflow-hidden">
-            <div className="h-1 bg-gold" />
-            <div className="px-8 py-12 lg:px-12 lg:py-16 text-center">
-              <div className="w-20 h-20 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-8">
-                <CheckCircle2 className="w-9 h-9 text-gold-dark" strokeWidth={1} />
-              </div>
-
-              <p className="eyebrow eyebrow--bare mb-4">
-                {confirmed ? "Wholesale order confirmed" : "Wholesale confirmation pending"}
-              </p>
-              <h1 className="font-serif text-4xl lg:text-5xl font-light text-charcoal mb-6">
-                {confirmed ? "Your order is " : "Confirmation "}
-                <span className="italic">{confirmed ? "confirmed" : "pending"}</span>
-              </h1>
-
-              {orderName ? (
-                <p className="text-charcoal/70 font-sans text-sm leading-relaxed max-w-md mx-auto mb-2">
-                  Order{" "}
-                  <span className="font-semibold text-charcoal">
-                    {orderName.startsWith("#") ? orderName : `#${orderName}`}
-                  </span>{" "}
-                  has been confirmed successfully.
-                </p>
-              ) : (
-                <p className="text-charcoal/70 font-sans text-sm leading-relaxed max-w-md mx-auto mb-2">
-                  {confirmed
-                    ? "Your wholesale order has been confirmed and is now being prepared for dispatch coordination."
-                    : "Open checkout or WhatsApp to confirm this wholesale order before we reserve stock or clear your cart."}
-                </p>
-              )}
-
-              {confirmed && (
-                <div className="flex items-center justify-center gap-2 text-charcoal/60 text-xs mb-10">
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>
-                    A wholesale confirmation email
-                    {email ? (
-                      <>
-                        {" "}
-                        has been sent to{" "}
-                        <span className="font-medium text-charcoal">{email}</span>
-                      </>
-                    ) : (
-                      " is on its way to your inbox"
-                    )}
-                    .
+      <main className="flex-1 pt-28 pb-24 lg:pt-36">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="border border-line/20 bg-surface-2"
+          >
+            <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+              {/* Left: editorial headline */}
+              <div className="border-b border-line/20 px-6 py-14 sm:px-10 lg:border-b-0 lg:border-r lg:py-20">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center border ${
+                      confirmed
+                        ? "border-line bg-accent-lime"
+                        : "border-line/25 bg-transparent"
+                    }`}
+                  >
+                    <CheckCircle2
+                      className="h-5 w-5 text-content"
+                      strokeWidth={1.5}
+                    />
                   </span>
+                  <p className="eyebrow eyebrow--bare">
+                    {confirmed
+                      ? "Wholesale order confirmed"
+                      : "Wholesale confirmation pending"}
+                  </p>
                 </div>
-              )}
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href={confirmed ? "/account" : "/checkout"}
-                  className="btn-luxe"
-                >
-                  <Package className="w-3.5 h-3.5" />
-                  {confirmed ? "View Buyer Account" : "Return to Checkout"}
-                </Link>
-                <Link
-                  href="/shop"
-                  className="btn-luxe-outline"
-                >
-                  Back to Catalog <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <h1 className="mt-8 text-[clamp(3rem,9vw,6.5rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
+                  {confirmed ? (
+                    <>
+                      Order
+                      <br />
+                      placed
+                    </>
+                  ) : (
+                    <>
+                      Confirm
+                      <br />
+                      pending
+                    </>
+                  )}
+                </h1>
+
+                <p className="mt-8 max-w-md text-sm leading-6 text-content/60">
+                  {orderName
+                    ? "Your wholesale order has been logged and is now being prepared for dispatch coordination."
+                    : confirmed
+                      ? "Your wholesale order has been confirmed and is now being prepared for dispatch coordination."
+                      : "Open checkout or WhatsApp to confirm this wholesale order before we reserve stock or clear your cart."}
+                </p>
+
+                <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                  <Link href={confirmed ? "/account" : "/checkout"} className="btn-luxe">
+                    <Package className="h-3.5 w-3.5" />
+                    {confirmed ? "View buyer account" : "Return to checkout"}
+                  </Link>
+                  <Link href="/shop" className="btn-luxe-outline">
+                    Back to catalog <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
 
-              {confirmed && cleared && (
-                <p className="mt-10 text-[10px] uppercase tracking-widest text-charcoal/30 font-medium">
-                  Your cart has been cleared
+              {/* Right: detail ledger */}
+              <div className="bg-surface-inverse px-6 py-14 text-content-inverse sm:px-10 lg:py-20">
+                <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-lime">
+                  Order ledger
                 </p>
-              )}
+
+                <div className="mt-8 divide-y divide-content-inverse/15 border-t border-content-inverse/20">
+                  <DetailRow
+                    label="Status"
+                    value={confirmed ? "Confirmed" : "Pending"}
+                    accent={confirmed}
+                  />
+                  {orderLabel && (
+                    <DetailRow label="Order" value={orderLabel} />
+                  )}
+                  {paymentId && (
+                    <DetailRow label="Payment ID" value={paymentId} />
+                  )}
+                  {medusaOrderId && (
+                    <DetailRow label="Medusa order" value={medusaOrderId} />
+                  )}
+                  {email && <DetailRow label="Buyer email" value={email} />}
+                </div>
+
+                {confirmed && (
+                  <div className="mt-8 flex items-start gap-2 text-xs leading-6 text-content-inverse/55">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      A wholesale confirmation email
+                      {email ? (
+                        <>
+                          {" "}
+                          has been sent to{" "}
+                          <span className="font-semibold text-content-inverse">
+                            {email}
+                          </span>
+                        </>
+                      ) : (
+                        " is on its way to your inbox"
+                      )}
+                      .
+                    </span>
+                  </div>
+                )}
+
+                {confirmed && cleared && (
+                  <p className="mt-10 text-[9px] font-bold uppercase tracking-[0.24em] text-content-inverse/35">
+                    Your cart has been cleared
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </main>
       <Footer />
-    </>
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 py-4">
+      <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-content-inverse/45">
+        {label}
+      </span>
+      <span
+        className={`break-all text-right text-sm font-bold tracking-tight ${
+          accent ? "text-accent-lime" : "text-content-inverse"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
 
@@ -132,13 +208,13 @@ export default function OrderConfirmationPage() {
   return (
     <Suspense
       fallback={
-        <>
+        <div className="flex min-h-screen flex-col bg-surface">
           <Navbar />
-          <main className="flex-1 min-h-[80vh] flex items-center justify-center bg-warm-white pt-32 pb-24">
-            <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+          <main className="flex flex-1 items-center justify-center pt-32 pb-24">
+            <div className="h-8 w-8 animate-spin border-2 border-line border-t-transparent" />
           </main>
           <Footer />
-        </>
+        </div>
       }
     >
       <OrderConfirmationContent />

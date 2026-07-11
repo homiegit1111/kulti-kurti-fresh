@@ -1,4 +1,12 @@
+import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+
+function safeEqual(expected: string, received: string): boolean {
+  const a = Buffer.from(expected, "utf8");
+  const b = Buffer.from(received, "utf8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
 
 /**
  * Shared guard for scheduled endpoints (mirrors /api/cron/abandoned-cart).
@@ -18,9 +26,10 @@ export function requireCronSecret(req: NextRequest): NextResponse | null {
       { status: 503 },
     );
   }
-  const auth = req.headers.get("authorization");
-  const fromHeader = auth === `Bearer ${secret}`;
-  const fromQuery = new URL(req.url).searchParams.get("secret") === secret;
+  const auth = req.headers.get("authorization") ?? "";
+  const fromHeader = safeEqual(`Bearer ${secret}`, auth);
+  const querySecret = new URL(req.url).searchParams.get("secret") ?? "";
+  const fromQuery = safeEqual(secret, querySecret);
   if (!fromHeader && !fromQuery) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

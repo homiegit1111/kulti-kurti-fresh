@@ -57,56 +57,67 @@ export default function ContactPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 relative z-10 bg-warm-white pt-28 lg:pt-32 pb-24">
-        <div className="px-6 lg:px-20 max-w-6xl mx-auto">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-16">
-            <p className="eyebrow mb-4">Wholesale Support</p>
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-charcoal font-light">
-              Catalog, MOQ, payment, and dispatch help.
-            </h1>
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-charcoal/55">
-              Tell us about your boutique, reseller channel, or bulk buying
-              plan. WhatsApp is fastest for catalog requests and availability.
-            </p>
-            <a href={buildCatalogRequestUrl()} className="mt-8 inline-flex btn-luxe">
-              Get Catalog on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
-            </a>
+      <main className="flex-1 relative z-10 bg-surface text-content pt-28 lg:pt-36 pb-24 lg:pb-28">
+        <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="grid gap-8 border-b-2 border-line pb-6 lg:grid-cols-[1fr_auto] lg:items-end"
+          >
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-red">
+                Wholesale support
+              </p>
+              <h1 className="mt-4 max-w-[13ch] text-[clamp(2.8rem,7vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.07em]">
+                Catalog, MOQ, payment, dispatch.
+              </h1>
+            </div>
+            <div className="max-w-[34ch]">
+              <p className="text-sm leading-6 text-content/60">
+                Tell us about your boutique, reseller channel, or bulk buying
+                plan. WhatsApp is fastest for catalog requests and availability.
+              </p>
+              <a href={buildCatalogRequestUrl()} className="btn-luxe mt-6 inline-flex">
+                Get catalog on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
+              </a>
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+          <div className="mt-12 grid grid-cols-1 gap-12 lg:grid-cols-3 lg:gap-16">
             {/* Contact Info */}
             <div className="space-y-8">
               <div className="flex gap-4">
-                <div className="w-11 h-11 flex items-center justify-center border border-gold/30 text-gold-dark shrink-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-line/20">
                   <Mail className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-charcoal uppercase tracking-wider">Email</h3>
-                  <a href="mailto:rangatpehnawa@gmail.com" className="text-sm text-muted-foreground hover:text-gold transition-colors mt-1 block">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">Email</h3>
+                  <a href="mailto:rangatpehnawa@gmail.com" className="mt-1 block text-sm font-semibold text-content transition-colors hover:text-accent-red">
                     rangatpehnawa@gmail.com
                   </a>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <div className="w-11 h-11 flex items-center justify-center border border-gold/30 text-gold-dark shrink-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-line/20">
                   <Phone className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-charcoal uppercase tracking-wider">Phone</h3>
-                  <a href="tel:8660452247" className="text-sm text-muted-foreground hover:text-gold transition-colors mt-1 block">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">Phone</h3>
+                  <a href="tel:8660452247" className="mt-1 block text-sm font-semibold text-content transition-colors hover:text-accent-red">
                     8660452247
                   </a>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <div className="w-11 h-11 flex items-center justify-center border border-gold/30 text-gold-dark shrink-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center border border-line/20">
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-charcoal uppercase tracking-wider">Studio</h3>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">Studio</h3>
+                  <p className="mt-1 text-sm leading-6 text-content/60">
                     3rd Floor, NR Complex, 36,<br />
                     Siddanna Ln, Cubbonpete,<br />
                     Bengaluru 560002
@@ -114,22 +125,22 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-charcoal/10">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">Wholesale Rules</p>
-                <p className="text-sm text-muted-foreground">
+              <div className="border-t border-line/20 pt-8">
+                <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.24em] text-content/45">Wholesale rules</p>
+                <p className="text-sm leading-6 text-content/60">
                   MOQ {B2B_CONFIG.minimumOrderSets} sets. 1 set ={" "}
                   {B2B_CONFIG.setSize} pcs in {SIZE_RATIO_LABEL}.
                 </p>
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="mt-2 text-sm leading-6 text-content/60">
                   GST invoice and Razorpay payment support available after order
                   confirmation.
                 </p>
               </div>
 
-              <div className="pt-8 border-t border-charcoal/10">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-3">Hours</p>
-                <p className="text-sm text-muted-foreground">Mon – Sat: 10am – 7pm IST</p>
-                <p className="text-sm text-muted-foreground">Sun: Closed</p>
+              <div className="border-t border-line/20 pt-8">
+                <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.24em] text-content/45">Hours</p>
+                <p className="text-sm leading-6 text-content/60">Mon – Sat: 10am – 7pm IST</p>
+                <p className="text-sm leading-6 text-content/60">Sun: Closed</p>
               </div>
             </div>
 
@@ -137,17 +148,18 @@ export default function ContactPage() {
             <div className="lg:col-span-2">
               {submitted ? (
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-20 border border-charcoal/10 bg-white frame-luxe"
+                  transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
+                  className="border border-line/20 bg-surface-2 px-8 py-20 text-center"
                 >
-                  <div className="w-14 h-14 rounded-full border border-gold/40 flex items-center justify-center mx-auto mb-6">
-                    <Check className="h-6 w-6 text-gold-dark" strokeWidth={1.5} />
+                  <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center bg-surface-inverse text-accent-lime">
+                    <Check className="h-6 w-6" strokeWidth={1.5} />
                   </div>
-                  <h2 className="font-serif text-3xl font-light text-charcoal mb-3">
-                    Message <span className="italic">Sent</span>
+                  <h2 className="text-4xl font-black uppercase leading-[0.9] tracking-[-0.04em]">
+                    Message sent
                   </h2>
-                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-content/60">
                     Thank you for reaching out. We&apos;ll reply with wholesale
                     catalog, MOQ, dispatch, and payment guidance.
                   </p>
@@ -236,7 +248,7 @@ export default function ContactPage() {
                   <Turnstile onVerify={setToken} onExpire={() => setToken("")} />
 
                   {error && (
-                    <div className="p-4 text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                    <div className="border border-accent-red/40 bg-accent-red/10 p-4 text-xs font-semibold uppercase tracking-[0.1em] text-accent-red">
                       {error}
                     </div>
                   )}

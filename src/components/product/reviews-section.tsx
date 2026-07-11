@@ -56,7 +56,7 @@ function Stars({
             aria-label={`${star} star${star > 1 ? "s" : ""}`}
             onClick={() => onSelect?.(star)}
             className={`tap-luxe transition-colors duration-300 ${
-              star <= value ? "text-gold" : "text-charcoal/20 hover:text-gold/60"
+              star <= value ? "text-accent-red" : "text-content/20 hover:text-accent-red/60"
             }`}
           >
             ★
@@ -65,7 +65,7 @@ function Stars({
           <span
             key={star}
             aria-hidden
-            className={star <= value ? "text-gold" : "text-charcoal/15"}
+            className={star <= value ? "text-accent-red" : "text-content/15"}
           >
             ★
           </span>
@@ -95,7 +95,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
     try {
       const res = await fetch(`/api/reviews?handle=${encodeURIComponent(handle)}`);
       if (!res.ok) return;
-      const data = await res.json();
+      const data = (await res.json()) as { reviews?: Review[]; summary?: Summary };
       setReviews(data.reviews ?? []);
       setSummary(data.summary ?? { count: 0, average: 0 });
     } catch {
@@ -133,7 +133,11 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       for (const photo of photos.slice(0, 3)) form.append("photos", photo);
 
       const res = await fetch("/api/reviews", { method: "POST", body: form });
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        reviews?: Review[];
+        summary?: Summary;
+      };
       if (!res.ok) {
         setError(data.error ?? "Could not save your review. Please try again.");
         return;
@@ -161,13 +165,13 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-8 border-b border-charcoal/10">
         <div>
           <p className="eyebrow mb-3">Buyer Notes</p>
-          <h2 className="font-serif text-3xl lg:text-4xl font-light tracking-tight">
-            Sourced &amp; <em className="italic">reordered</em>
+          <h2 className="font-black uppercase text-3xl lg:text-4xl tracking-[-0.04em] leading-[0.95]">
+            Sourced &amp; reordered
           </h2>
           {summary.count > 0 && (
             <div className="flex items-center gap-3 mt-4">
               <Stars value={Math.round(summary.average)} />
-              <span className="font-serif text-lg">{summary.average.toFixed(1)}</span>
+              <span className="text-lg font-bold tracking-tight">{summary.average.toFixed(1)}</span>
               <span className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
                 {summary.count} note{summary.count > 1 ? "s" : ""}
               </span>
@@ -200,7 +204,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
 
       {thanks && (
         <div className="panel-luxe p-6 mt-8">
-          <p className="font-serif text-lg">
+          <p className="text-lg text-charcoal/80">
             Thank you. Your feedback helps other wholesale buyers plan better.
           </p>
         </div>
@@ -307,7 +311,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       {/* ── Review list ── */}
       {reviews.length === 0 ? (
         !formOpen && (
-          <p className="font-serif text-lg text-charcoal/45 italic mt-10">
+          <p className="text-lg text-charcoal/45 mt-10">
             This style is waiting for its first trade note.
           </p>
         )
@@ -328,7 +332,7 @@ export default function ReviewsSection({ handle }: { handle: string }) {
                 </span>
               </div>
               {review.title && (
-                <h3 className="font-serif text-xl font-light mt-4">{review.title}</h3>
+                <h3 className="font-black uppercase text-lg tracking-[-0.02em] mt-4">{review.title}</h3>
               )}
               <p className="text-sm leading-relaxed text-charcoal/70 mt-3 max-w-2xl">
                 {review.body}

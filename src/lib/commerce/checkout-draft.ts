@@ -1,10 +1,14 @@
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
 import {
   calculateWholesaleTotals,
+  getBaseSetPrice,
+  wholesaleTierPromoCode,
   type WholesaleTotals,
 } from "@/lib/b2b/pricing";
 import { validateCartMOQ } from "@/lib/b2b/validation";
 import { getStyleCode } from "@/lib/b2b/style-code";
+import { getProductByHandle } from "@/lib/commerce/catalog";
+import { isValidEmail } from "@/lib/email-validation";
 import type { CartItem } from "@/lib/cart-context";
 import type {
   CommerceBuyer,
@@ -15,18 +19,26 @@ import { buyerIdentityMetadata, withBuyerIdentity } from "./buyer-identity";
 
 type RawRecord = Record<string, unknown>;
 
-export type CheckoutSource = "razorpay" | "whatsapp" | "medusa";
+export type CheckoutSource = "razorpay" | "phonepe" | "whatsapp";
 
 export type CheckoutDraftErrorCode =
   | "EMPTY_CART"
   | "BELOW_MOQ"
-  | "INVALID_CART";
+  | "INVALID_CART"
+  | "UNKNOWN_PRODUCT"
+  | "INVALID_BUYER";
 
 export interface WholesaleCheckoutBuyer extends CommerceBuyer {
   buyerName?: string;
   whatsappPhone?: string;
   wantsGstInvoice?: boolean;
   shippingCity?: string;
+  shippingRecipient?: string;
+  shippingAddress1?: string;
+  shippingAddress2?: string;
+  shippingState?: string;
+  shippingPinCode?: string;
+  termsAccepted?: boolean;
 }
 
 export interface WholesaleCheckoutLine
@@ -142,6 +154,46 @@ function parseItems(value: unknown): WholesaleCheckoutLine[] {
     .filter((item): item is WholesaleCheckoutLine => item !== null);
 }
 
+/**
+ * Re-price every line from the authoritative catalog (active commerce backend),
+ * ignoring whatever price the client sent. This is the sole defence against a
+ * tampered request body setting `price: 1` to pay ₹1 for a real order — the
+ * signed Razorpay amount is derived from these totals, so it MUST come from the
+ * server, never the client. A handle we can't price is rejected (fail-closed).
+ */
+async function repriceLinesFromCatalog(
+  items: WholesaleCheckoutLine[],
+): Promise<
+  | { ok: true; items: WholesaleCheckoutLine[] }
+  | { ok: false; unknownHandle: string }
+> {
+  const productByHandle = new Map<string, Awaited<ReturnType<typeof getProductByHandle>>>();
+  const repriced: WholesaleCheckoutLine[] = [];
+  for (const line of items) {
+    let product = productByHandle.get(line.handle);
+    if (product === undefined) {
+      product = await getProductByHandle(line.handle);
+      productByHandle.set(line.handle, product);
+    }
+    const selectedVariantPrice = line.variantId
+      ? product?.variantPrices?.[line.variantId]
+      : undefined;
+    const setPrice = selectedVariantPrice ?? (product ? getBaseSetPrice(product) : null);
+    if (setPrice === null || !Number.isFinite(setPrice) || setPrice <= 0) {
+      return { ok: false, unknownHandle: line.handle };
+    }
+    repriced.push({
+      ...line,
+      price: setPrice,
+      salePrice: null,
+      setPrice,
+      lineBaseTotal: setPrice * line.quantity,
+    });
+  }
+
+  return { ok: true, items: repriced };
+}
+
 function parseBuyer(body: RawRecord): WholesaleCheckoutBuyer {
   const city = stringValue(body.city, 80);
   const whatsappPhone = stringValue(body.whatsappPhone, 40);
@@ -149,6 +201,11 @@ function parseBuyer(body: RawRecord): WholesaleCheckoutBuyer {
   const businessType =
     stringValue(body.businessType, 60) || stringValue(body.business_type, 60);
   const accountSource = stringValue(body.accountSource, 40);
+  const shippingRecipient = stringValue(body.shippingRecipient, 120);
+  const shippingAddress1 = stringValue(body.shippingAddress1, 240);
+  const shippingAddress2 = stringValue(body.shippingAddress2, 240);
+  const shippingState = stringValue(body.shippingState, 80);
+  const shippingPinCode = stringValue(body.shippingPinCode, 10);
 
   return {
     name: buyerName,
@@ -161,6 +218,12 @@ function parseBuyer(body: RawRecord): WholesaleCheckoutBuyer {
     gstin: stringValue(body.gstin, 20).toUpperCase(),
     wantsGstInvoice: booleanValue(body.wantsGstInvoice),
     shippingCity: stringValue(body.shippingCity, 80) || city,
+    shippingRecipient,
+    shippingAddress1,
+    shippingAddress2,
+    shippingState,
+    shippingPinCode,
+    termsAccepted: booleanValue(body.termsAccepted),
     email: stringValue(body.email, 160),
     buyerReference: stringValue(body.buyerReference, 64),
     accountSource:
@@ -171,7 +234,7 @@ function parseBuyer(body: RawRecord): WholesaleCheckoutBuyer {
 }
 
 function buildReceipt(source: CheckoutSource): string {
-  const prefix = source === "razorpay" ? "rp" : source === "medusa" ? "md" : "wa";
+  const prefix = source === "razorpay" ? "rp" : "wa";
   // Razorpay receipts must be unique and no longer than 40 chars.
   return `${prefix}_${Date.now().toString(36)}`.slice(0, 40);
 }
@@ -218,14 +281,15 @@ function toCommerceLine(line: WholesaleCheckoutLine): CommerceCartLine {
   };
 }
 
-export function buildWholesaleCheckoutDraft(
+export async function buildWholesaleCheckoutDraft(
   rawBody: unknown,
   source: CheckoutSource,
-): WholesaleCheckoutDraftResult {
+  context: { clerkUserId?: string | null; checkoutIdempotencyKey?: string } = {},
+): Promise<WholesaleCheckoutDraftResult> {
   const body = rawBody && typeof rawBody === "object" ? (rawBody as RawRecord) : {};
-  const items = parseItems(body.items);
+  const parsedItems = parseItems(body.items);
 
-  if (items.length === 0) {
+  if (parsedItems.length === 0) {
     return {
       ok: false,
       status: 400,
@@ -233,6 +297,17 @@ export function buildWholesaleCheckoutDraft(
       error: "Cart is empty.",
     };
   }
+
+  const repriced = await repriceLinesFromCatalog(parsedItems);
+  if (!repriced.ok) {
+    return {
+      ok: false,
+      status: 400,
+      code: "UNKNOWN_PRODUCT",
+      error: `A product in your cart is no longer available (${repriced.unknownHandle}). Please refresh your cart.`,
+    };
+  }
+  const items = repriced.items;
 
   const totals = calculateWholesaleTotals(items as CartItem[]);
   const moq = validateCartMOQ(items as CartItem[]);
@@ -259,6 +334,29 @@ export function buildWholesaleCheckoutDraft(
   }
 
   const buyer = withBuyerIdentity(parseBuyer(body));
+  const buyerName = buyer.buyerName?.trim() || buyer.name?.trim() || "";
+  const phoneDigits = (buyer.whatsappPhone || buyer.phone || "").replace(/D/g, "");
+  if (
+    !buyerName ||
+    !buyer.businessName?.trim() ||
+    !buyer.businessType?.trim() ||
+    phoneDigits.length !== 10 ||
+    !buyer.email ||
+    !isValidEmail(buyer.email) ||
+    !buyer.shippingRecipient?.trim() ||
+    !buyer.shippingAddress1?.trim() ||
+    !buyer.shippingCity?.trim() ||
+    !buyer.shippingState?.trim() ||
+    !/^[1-9][0-9]{5}$/.test(buyer.shippingPinCode ?? "") ||
+    !buyer.termsAccepted
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      code: "INVALID_BUYER",
+      error: "Complete contact, dispatch address, and wholesale terms are required.",
+    };
+  }
   const receipt = buildReceipt(source);
   const notes = buildNotes(source, buyer, totals);
 
@@ -275,8 +373,11 @@ export function buildWholesaleCheckoutDraft(
       commerceDraft: {
         lines: items.map(toCommerceLine),
         buyer,
+        clerkUserId: context.clerkUserId ?? null,
+        checkoutIdempotencyKey: context.checkoutIdempotencyKey,
         currencyCode: "INR",
         source,
+        tierPromoCode: wholesaleTierPromoCode(totals.discountPercent),
       },
     },
   };

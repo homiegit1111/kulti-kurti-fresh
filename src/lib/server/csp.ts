@@ -56,6 +56,7 @@ const SCRIPT_HOSTS = [
   "https://*.clerk.com",
   "https://www.googletagmanager.com",
   "https://www.google-analytics.com",
+  "https://checkout.razorpay.com",
 ];
 
 /**
@@ -77,20 +78,32 @@ export function buildCsp(nonce?: string): string {
     ...SCRIPT_HOSTS,
   ].join(" ");
 
-  return [
+  // Never send upgrade-insecure-requests in dev: LAN phone testing is HTTP
+  // (http://192.168.x.x:3000). That directive rewrites CSS/JS to https:// and
+  // the page renders as bare unstyled HTML. Production keeps the upgrade.
+  const directives = [
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
     "frame-ancestors 'self'",
     `script-src ${scriptSrc}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https:",
+    // http: in dev so LAN phone origin can load /_next/image + local media
+    `img-src 'self' data: blob: https:${dev ? " http:" : ""}`,
+    // Hero film / product video on homepage
+    `media-src 'self' blob:${dev ? " http:" : ""}`,
     "font-src 'self' data:",
-    "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.sanity.io https://cdn.sanity.io https://*.supabase.co",
-    "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com",
+    // ws: / http: for Turbopack HMR when opening dev from a phone on LAN
+    `connect-src 'self'${dev ? " http: https: ws: wss:" : ""} https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.sanity.io https://cdn.sanity.io https://*.supabase.co`,
+    "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev https://*.clerk.com https://checkout.razorpay.com https://api.razorpay.com",
     "worker-src 'self' blob:",
     "form-action 'self' https://*.myshopify.com",
-    "upgrade-insecure-requests",
     "report-uri /api/csp-report",
-  ].join("; ");
+  ];
+
+  if (!dev) {
+    directives.splice(directives.length - 1, 0, "upgrade-insecure-requests");
+  }
+
+  return directives.join("; ");
 }

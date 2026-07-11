@@ -144,7 +144,7 @@ function FooterLinkColumn({
 }) {
   return (
     <div className="flex flex-col">
-      <h3 className="mb-6 font-serif text-[11px] uppercase tracking-[0.3em] text-gold font-bold">
+      <h3 className="mb-6 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
         {title}
       </h3>
       <ul className="flex flex-col gap-4">
@@ -152,7 +152,7 @@ function FooterLinkColumn({
           <li key={link.label}>
             <Link
               href={link.href}
-              className="text-xs tracking-wider text-white/60 transition-colors duration-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 focus-visible:ring-offset-2 focus-visible:ring-offset-charcoal"
+              className="text-sm font-bold uppercase tracking-[0.02em] text-content-inverse/65 transition-colors duration-300 hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime focus-visible:ring-offset-2 focus-visible:ring-offset-surface-inverse"
             >
               {link.label}
             </Link>
@@ -203,7 +203,7 @@ function NewsletterForm() {
     <div className="space-y-3">
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center border-b border-white/20 pb-3 pt-4 group"
+        className="group relative flex items-center border-b border-[#f1eee5]/25 pb-3 pt-4"
       >
         <Input
           type="email"
@@ -211,7 +211,7 @@ function NewsletterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Your email address"
-          className="w-full bg-transparent border-none outline-none px-0 text-base text-white placeholder:text-white/30 font-serif focus-visible:ring-0 rounded-none"
+          className="w-full rounded-none border-none bg-transparent px-0 text-base text-content-inverse outline-none placeholder:text-content-inverse/35 focus-visible:ring-0"
           required
           disabled={status === "loading"}
         />
@@ -219,11 +219,11 @@ function NewsletterForm() {
           type="submit"
           aria-label="Subscribe"
           disabled={status === "loading"}
-          className="absolute right-0 rounded-full px-2 py-2 text-gold uppercase text-[10px] tracking-[0.2em] font-bold hover:text-white transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 disabled:opacity-50"
+          className="absolute right-0 rounded-none px-2 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-accent-lime transition-colors duration-300 hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime disabled:opacity-50"
         >
           {status === "loading" ? "..." : "Subscribe"}
         </button>
-        <div className="absolute bottom-[-1px] left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-focus-within:w-full" />
+        <div className="absolute bottom-[-1px] left-0 h-[2px] w-0 bg-accent-lime transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-focus-within:w-full" />
       </form>
 
       {/* Bot protection renders only when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set. */}
@@ -231,8 +231,8 @@ function NewsletterForm() {
 
       {message ? (
         <p
-          className={`text-xs font-serif ${
-            status === "error" ? "text-red-400" : "text-gold"
+          className={`text-xs font-semibold ${
+            status === "error" ? "text-accent-red" : "text-accent-lime"
           }`}
           role="status"
         >
@@ -245,18 +245,24 @@ function NewsletterForm() {
 
 export function Footer() {
   return (
-    <footer className="relative bg-charcoal text-warm-white pt-24 overflow-hidden border-t border-white/10">
+    <footer className="relative overflow-hidden border-t border-[#f1eee5]/10 bg-surface-inverse pt-24 pb-24 text-content-inverse lg:pb-0">
+      {/* Giant faded editorial wordmark (background device) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-[3vw] left-0 select-none text-[26vw] font-black uppercase leading-[0.7] tracking-[-0.06em] text-content-inverse/[0.04]"
+      >
+        Rangat
+      </div>
+
       {/* Newsletter and brand story */}
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-12 mb-20 lg:mb-32 grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+      <div className="relative z-10 mx-auto mb-20 grid max-w-[1400px] grid-cols-1 items-start gap-16 px-6 lg:mb-32 lg:grid-cols-2 lg:px-12">
         {/* Left: Newsletter */}
-        <div className="space-y-6 max-w-md">
-          <p className="text-[10px] font-sans uppercase tracking-[0.24em] text-gold font-semibold">
-            Fresh Drops
-          </p>
-          <h2 className="font-serif text-4xl lg:text-5xl text-warm-white font-light leading-[1.1]">
+        <div className="max-w-md space-y-6">
+          <p className="eyebrow eyebrow--bare text-accent-lime">Fresh Drops</p>
+          <h2 className="text-[clamp(2.4rem,5vw,3.4rem)] font-black uppercase leading-[0.92] tracking-[-0.055em] text-content-inverse">
             Fresh kurti drops, price-smart picks, and catalog alerts.
           </h2>
-          <p className="text-sm text-white/50 leading-relaxed font-serif">
+          <p className="text-sm leading-relaxed text-content-inverse/55">
             New kurti drops, reseller notes, and catalog updates for shoppers, boutique owners, and online sellers.
           </p>
 
@@ -264,21 +270,21 @@ export function Footer() {
         </div>
 
         {/* Right: Brand Mini-Manifesto */}
-        <div className="lg:pl-20 flex flex-col justify-center h-full">
-          <div className="inline-flex items-center gap-3 mb-6">
-            <h2 className="font-serif text-3xl tracking-widest text-white uppercase">
+        <div className="flex h-full flex-col justify-center lg:pl-20">
+          <div className="mb-6 inline-flex items-baseline gap-3">
+            <h2 className="text-3xl font-black uppercase tracking-[-0.03em] text-content-inverse">
               Rangat
             </h2>
-            <span className="font-sans text-[10px] font-medium tracking-[0.3em] text-gold uppercase pt-1">
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
               Pehnawa Studio
             </span>
           </div>
-          <p className="text-sm text-white/50 leading-relaxed font-serif max-w-md">
+          <p className="max-w-md text-sm leading-relaxed text-content-inverse/55">
             Rangat Pehnawa brings modern kurti drops, practical prices, and WhatsApp-first ordering for shoppers, boutiques, and online sellers across India.
           </p>
           <a
             href={buildCatalogRequestUrl()}
-            className="mt-6 inline-flex w-fit border border-gold/40 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-gold transition-colors hover:bg-gold hover:text-charcoal"
+            className="mt-6 inline-flex w-fit border border-[#f1eee5]/30 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content-inverse transition-colors hover:border-accent-lime hover:bg-accent-lime hover:text-on-accent"
           >
             Get WhatsApp Catalog
           </a>
@@ -292,7 +298,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="text-white/40 transition-all duration-300 hover:text-gold hover:-translate-y-1"
+                  className="text-content-inverse/45 transition-all duration-300 hover:-translate-y-1 hover:text-accent-lime"
                 >
                   <Icon className="h-5 w-5" />
                 </a>
@@ -303,20 +309,20 @@ export function Footer() {
       </div>
 
       {/* Link columns */}
-      <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-16 lg:pb-24 grid grid-cols-2 md:grid-cols-4 gap-12 lg:gap-8 border-t border-white/10 pt-16">
+      <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-2 gap-12 border-t border-[#f1eee5]/10 px-6 pb-16 pt-16 md:grid-cols-4 lg:gap-8 lg:px-12 lg:pb-24">
         <FooterLinkColumn title="Shop" links={shopLinks} />
         <FooterLinkColumn title="Company" links={companyLinks} />
         <FooterLinkColumn title="Support" links={supportLinks} />
 
         <div className="flex flex-col">
-          <h3 className="mb-6 font-serif text-[11px] uppercase tracking-[0.3em] text-gold font-bold">
+          <h3 className="mb-6 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
             Contact
           </h3>
-          <ul className="flex flex-col gap-4 text-xs tracking-wider text-white/60">
+          <ul className="flex flex-col gap-4 text-sm text-content-inverse/65">
             <li>
               <a
                 href="mailto:rangatpehnawa@gmail.com"
-                className="transition-colors duration-300 hover:text-white"
+                className="font-semibold transition-colors duration-300 hover:text-content-inverse"
               >
                 rangatpehnawa@gmail.com
               </a>
@@ -324,13 +330,13 @@ export function Footer() {
             <li>
               <a
                 href="tel:8660452247"
-                className="transition-colors duration-300 hover:text-white"
+                className="font-semibold transition-colors duration-300 hover:text-content-inverse"
               >
                 8660452247
               </a>
             </li>
             <li className="pt-2">
-              <span className="text-[10px] uppercase tracking-widest text-gold/60 block mb-1">
+              <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.24em] text-accent-red">
                 Studio
               </span>
               3rd Floor, NR Complex, 36,
@@ -344,23 +350,23 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10">
+      <div className="relative z-10 border-t border-[#f1eee5]/10">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row lg:px-12">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center text-gold font-serif font-bold text-[10px]">
+            <div className="flex h-6 w-6 items-center justify-center border border-accent-lime/40 bg-accent-lime/10 text-[10px] font-black text-accent-lime">
               R
             </div>
-            <p className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-medium">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
               Copyright {new Date().getFullYear()} Rangat Pehnawa. All rights reserved.
             </p>
           </div>
 
-          <div className="flex items-center gap-6 text-[9px] uppercase tracking-[0.2em] text-white/40 font-medium">
+          <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
             {bottomLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="transition-colors duration-300 hover:text-white"
+                className="transition-colors duration-300 hover:text-accent-lime"
               >
                 {link.label}
               </Link>

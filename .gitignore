@@ -14,6 +14,7 @@
 
 # next.js
 /.next/
+/.open-next/
 /out/
 
 # production
@@ -55,3 +56,4 @@ package-lock.json
 /apps/rangat-commerce/apps/backend/.medusa/
 /apps/rangat-commerce/apps/backend/node_modules/
 node_modules
+.aider*

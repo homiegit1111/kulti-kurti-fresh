@@ -159,12 +159,12 @@ function OtpInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
-          className={`h-14 w-full min-w-0 border bg-warm-white/60 text-center font-serif text-2xl text-charcoal outline-none transition-all disabled:opacity-50 ${
+          className={`h-14 w-full min-w-0 border bg-surface-2 text-center text-2xl font-black text-content outline-none transition-all disabled:opacity-50 ${
             error
-              ? "border-red-300 bg-red-50/50"
+              ? "border-accent-red bg-accent-red/10"
               : char
-                ? "border-charcoal/30 bg-white shadow-sm"
-                : "border-charcoal/10 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)]"
+                ? "border-line bg-white"
+                : "border-line/20 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f]"
           }`}
         />
       ))}
@@ -413,8 +413,8 @@ function UnifiedAuthInner() {
   // Initial SDK boot — keep it minimal and on-brand (no heavy animation).
   if (!isLoaded) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-warm-white">
-        <Loader2 className="h-5 w-5 animate-spin text-charcoal/40" />
+      <div className="flex min-h-screen w-full items-center justify-center bg-surface">
+        <Loader2 className="h-5 w-5 animate-spin text-content/40" />
       </div>
     );
   }
@@ -427,9 +427,9 @@ function UnifiedAuthInner() {
         : `Enter the code we sent to ${emailAddress}`;
 
   return (
-    <div className="min-h-screen w-full bg-warm-white text-charcoal lg:grid lg:grid-cols-[1.1fr_1fr]">
+    <div className="min-h-screen w-full bg-surface text-content lg:grid lg:grid-cols-[1.1fr_1fr]">
       {/* ───────────────────────── Editorial image panel ───────────────────────── */}
-      <aside className="relative hidden overflow-hidden lg:block">
+      <aside className="relative hidden overflow-hidden bg-surface-inverse lg:block">
         <Image
           src="/images/hero.png"
           alt="Rangat Pehnawa"
@@ -438,22 +438,25 @@ function UnifiedAuthInner() {
           sizes="55vw"
           className="object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/25 to-charcoal/40" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,19,16,0.45)_0%,rgba(18,19,16,0.15)_40%,rgba(18,19,16,0.85)_100%)]" />
+        <div className="pointer-events-none absolute -right-8 -top-16 select-none text-[26vw] font-black uppercase leading-none text-content-inverse/[0.06]">
+          R
+        </div>
         <div className="absolute inset-0 flex flex-col justify-between p-12 xl:p-16">
           <div className="flex items-center gap-3">
-            <span className="h-px w-10 bg-gold" />
-            <span className="font-sans text-xs font-semibold uppercase tracking-[0.4em] text-white/80">
+            <span className="h-px w-10 bg-accent-lime" />
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-content-inverse/80">
               Rangat Pehnawa
             </span>
           </div>
           <div className="max-w-md">
-            <p className="font-sans text-xs font-semibold uppercase tracking-[0.4em] text-gold">
+            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
               The Art of Rangat
             </p>
-            <h2 className="mt-5 font-serif text-4xl leading-[1.15] tracking-tight text-white xl:text-5xl">
+            <h2 className="mt-5 text-[clamp(2.5rem,4vw,4rem)] font-black uppercase leading-[0.85] tracking-[-0.06em] text-content-inverse">
               Heritage craft, woven for the modern wardrobe.
             </h2>
-            <p className="mt-5 max-w-sm font-sans text-sm leading-relaxed text-white/70">
+            <p className="mt-5 max-w-sm text-sm leading-6 text-content-inverse/65">
               Sign in to track orders, save your favourites, and unlock members-only edits.
             </p>
           </div>
@@ -461,16 +464,10 @@ function UnifiedAuthInner() {
       </aside>
 
       {/* ───────────────────────────── Auth panel ──────────────────────────────── */}
-      <main className="relative flex min-h-screen items-center justify-center px-6 py-12 sm:px-10">
-        {/* faint gold wash, brand-aligned, GPU-cheap (static) */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -right-24 top-[-10%] h-80 w-80 rounded-full bg-gold/10 blur-[110px]" />
-          <div className="absolute -left-20 bottom-[-10%] h-72 w-72 rounded-full bg-gold/[0.07] blur-[110px]" />
-        </div>
-
+      <main className="relative flex min-h-screen items-center justify-center bg-surface px-6 py-12 sm:px-10">
         <Link
           href="/"
-          className="absolute left-6 top-6 z-20 inline-flex items-center gap-2 border border-charcoal/15 bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-charcoal/60 backdrop-blur-sm transition-colors hover:text-charcoal"
+          className="absolute left-6 top-6 z-20 inline-flex items-center gap-2 border border-line/20 bg-surface-2 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-content/60 transition-colors hover:border-line hover:text-content"
         >
           <ArrowLeft className="h-3 w-3" /> Store
         </Link>
@@ -495,15 +492,15 @@ function UnifiedAuthInner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.3 }}
-                className="font-serif text-3xl tracking-tight text-charcoal"
+                className="text-4xl font-black uppercase leading-[0.9] tracking-[-0.05em] text-content"
               >
                 {step === "email" && "Welcome"}
-                {step === "name" && "Create your profile"}
-                {step === "otp" && "Verify your email"}
+                {step === "name" && "Create profile"}
+                {step === "otp" && "Verify email"}
               </motion.h1>
             </AnimatePresence>
             <div className="mt-3 flex items-center gap-3">
-              <span className="h-px w-6 bg-gold/60" />
+              <span className="h-px w-6 bg-accent-red" />
               <div className="relative flex h-8 items-center">
                 <AnimatePresence mode="wait">
                   <motion.p
@@ -512,13 +509,13 @@ function UnifiedAuthInner() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="text-center font-sans text-[11px] uppercase leading-relaxed tracking-[0.18em] text-charcoal/55"
+                    className="text-center text-[10px] font-semibold uppercase leading-relaxed tracking-[0.18em] text-content/55"
                   >
                     {subtitle}
                   </motion.p>
                 </AnimatePresence>
               </div>
-              <span className="h-px w-6 bg-gold/60" />
+              <span className="h-px w-6 bg-accent-red" />
             </div>
           </div>
 
@@ -531,7 +528,7 @@ function UnifiedAuthInner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 role="alert"
-                className="mb-5 border border-red-100 bg-red-50/80 px-4 py-3 text-center text-xs font-medium text-red-600"
+                className="mb-5 border border-accent-red/40 bg-accent-red/10 px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em] text-accent-red"
               >
                 {localError}
               </motion.div>
@@ -541,7 +538,7 @@ function UnifiedAuthInner() {
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
-                className="mb-5 border border-charcoal/10 bg-white/70 px-4 py-3 text-center text-xs font-medium text-charcoal/70"
+                className="mb-5 border border-line/20 bg-surface-2 px-4 py-3 text-center text-xs font-medium text-content/70"
               >
                 {notice}
               </motion.div>
@@ -553,13 +550,13 @@ function UnifiedAuthInner() {
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-4 border border-charcoal/5 bg-white/70 px-8 py-12 text-center"
+              className="flex flex-col items-center gap-4 border border-line/20 bg-surface-2 px-8 py-12 text-center"
             >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-charcoal text-white">
+              <span className="flex h-14 w-14 items-center justify-center bg-surface-inverse text-accent-lime">
                 <Check className="h-6 w-6" />
               </span>
-              <p className="font-serif text-xl text-charcoal">You&apos;re in</p>
-              <p className="flex items-center gap-2 text-xs text-charcoal/50">
+              <p className="text-2xl font-black uppercase tracking-[-0.03em] text-content">You&apos;re in</p>
+              <p className="flex items-center gap-2 text-xs text-content/50">
                 <Loader2 className="h-3 w-3 animate-spin" /> Taking you to your account…
               </p>
             </motion.div>
@@ -586,25 +583,25 @@ function UnifiedAuthInner() {
                       disabled={busy}
                       value={emailAddress}
                       onChange={(e) => setEmailAddress(e.target.value)}
-                      className="h-14 w-full border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                      className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f] disabled:opacity-60"
                       placeholder="name@example.com"
                     />
                     <PrimaryButton busy={busy} label="Continue" loadingLabel="Sending code…" />
                   </form>
 
                   <div className="my-7 flex items-center gap-4">
-                    <span className="h-px flex-1 bg-charcoal/10" />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-charcoal/35">
+                    <span className="h-px flex-1 bg-line/15" />
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/40">
                       or
                     </span>
-                    <span className="h-px flex-1 bg-charcoal/10" />
+                    <span className="h-px flex-1 bg-line/15" />
                   </div>
 
                   <button
                     type="button"
                     onClick={handleOAuth}
                     disabled={oauthLoading || busy}
-                    className="flex h-14 w-full items-center justify-center gap-3 border border-charcoal/10 bg-white text-xs font-semibold tracking-wide text-charcoal shadow-sm transition-all hover:border-charcoal/25 disabled:opacity-60"
+                    className="flex h-14 w-full items-center justify-center gap-3 border border-line/20 bg-surface-2 text-[11px] font-bold uppercase tracking-[0.14em] text-content transition-all hover:border-line hover:bg-white hover:text-on-accent disabled:opacity-60"
                   >
                     {oauthLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -616,7 +613,7 @@ function UnifiedAuthInner() {
                     )}
                   </button>
 
-                  <p className="mt-7 text-center text-[11px] leading-relaxed text-charcoal/40">
+                  <p className="mt-7 text-center text-[10px] font-medium uppercase tracking-[0.14em] leading-relaxed text-content/40">
                     No password needed — we&apos;ll email you a secure 6-digit code.
                   </p>
                 </motion.div>
@@ -640,7 +637,7 @@ function UnifiedAuthInner() {
                         disabled={busy}
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="h-14 w-full border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                        className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f] disabled:opacity-60"
                         placeholder="First name"
                       />
                       <input
@@ -650,7 +647,7 @@ function UnifiedAuthInner() {
                         disabled={busy}
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="h-14 w-full border border-charcoal/10 bg-white/70 px-5 text-sm font-medium text-charcoal outline-none transition-all placeholder:text-charcoal/35 focus:border-gold focus:bg-white focus:shadow-[0_0_0_3px_rgba(193,154,107,0.12)] disabled:opacity-60"
+                        className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f] disabled:opacity-60"
                         placeholder="Last name"
                       />
                     </div>
@@ -659,7 +656,7 @@ function UnifiedAuthInner() {
                       type="button"
                       onClick={resetToEmail}
                       disabled={busy}
-                      className="mt-1 py-2 text-xs font-medium text-charcoal/40 transition-colors hover:text-charcoal disabled:opacity-50"
+                      className="mt-1 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-content/40 transition-colors hover:text-content disabled:opacity-50"
                     >
                       Use a different email
                     </button>
@@ -706,7 +703,7 @@ function UnifiedAuthInner() {
                       type="button"
                       onClick={handleResend}
                       disabled={resendIn > 0 || busy}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-charcoal/50 transition-colors hover:text-charcoal disabled:cursor-not-allowed disabled:text-charcoal/30"
+                      className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-content/50 transition-colors hover:text-content disabled:cursor-not-allowed disabled:text-content/30"
                     >
                       <RefreshCw className="h-3 w-3" />
                       {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}
@@ -715,7 +712,7 @@ function UnifiedAuthInner() {
                       type="button"
                       onClick={resetToEmail}
                       disabled={busy}
-                      className="text-xs font-medium text-charcoal/40 transition-colors hover:text-charcoal disabled:opacity-50"
+                      className="text-[10px] font-bold uppercase tracking-[0.16em] text-content/40 transition-colors hover:text-content disabled:opacity-50"
                     >
                       Wrong email?
                     </button>
@@ -728,13 +725,13 @@ function UnifiedAuthInner() {
           {/* Clerk Smart CAPTCHA mount point (bot protection) */}
           <div id="clerk-captcha" className="mt-6 empty:mt-0 flex justify-center" />
 
-          <p className="mt-8 text-center text-[10px] leading-relaxed text-charcoal/35">
+          <p className="mt-8 text-center text-[10px] leading-relaxed text-content/40">
             By continuing you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-2 hover:text-charcoal/60">
+            <Link href="/terms" className="underline decoration-[#cc2f4a] decoration-2 underline-offset-2 hover:text-content">
               Terms
             </Link>{" "}
             &amp;{" "}
-            <Link href="/privacy" className="underline underline-offset-2 hover:text-charcoal/60">
+            <Link href="/privacy" className="underline decoration-[#cc2f4a] decoration-2 underline-offset-2 hover:text-content">
               Privacy Policy
             </Link>
             .
@@ -764,7 +761,7 @@ function PrimaryButton({
       type="submit"
       disabled={busy || disabled}
       aria-busy={busy}
-      className="group relative flex h-14 w-full items-center justify-center overflow-hidden bg-charcoal text-xs font-semibold uppercase tracking-[0.18em] text-white transition-all hover:bg-black hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.4)] disabled:cursor-not-allowed disabled:opacity-50"
+      className="group relative flex h-14 w-full items-center justify-center overflow-hidden bg-surface-inverse text-[11px] font-bold uppercase tracking-[0.18em] text-content-inverse transition-all hover:bg-accent-lime hover:text-on-accent disabled:cursor-not-allowed disabled:opacity-50"
     >
       {busy ? (
         <span className="flex items-center gap-2">
@@ -809,22 +806,21 @@ function GoogleIcon() {
 export default function UnifiedAuthPage() {
   if (!isAuthEnabled) {
     return (
-      <div className="bg-warm-white min-h-screen text-charcoal font-sans flex flex-col items-center justify-center px-6 text-center relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-24 top-[-10%] h-80 w-80 rounded-full bg-gold/10 blur-[110px]" />
-          <div className="absolute -left-20 bottom-[-10%] h-72 w-72 rounded-full bg-gold/[0.07] blur-[110px]" />
+      <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface px-6 text-center font-sans text-content">
+        <div className="pointer-events-none absolute -right-8 -top-16 select-none text-[30vw] font-black uppercase leading-none text-content/[0.05]">
+          R
         </div>
-        <div className="relative panel-luxe frame-luxe max-w-lg w-full px-10 py-16">
-          <p className="eyebrow justify-center mb-5">Sign In</p>
-          <h1 className="font-serif text-4xl md:text-5xl font-light mb-5">
-            Coming <span className="italic">very soon</span>
+        <div className="relative panel-luxe frame-luxe w-full max-w-lg px-10 py-16">
+          <p className="mb-5 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-red">Sign in</p>
+          <h1 className="mb-5 text-[clamp(2.8rem,6vw,4.5rem)] font-black uppercase leading-[0.85] tracking-[-0.06em]">
+            Coming very soon
           </h1>
-          <p className="text-sm text-charcoal/55 max-w-md mx-auto mb-10 leading-relaxed">
+          <p className="mx-auto mb-10 max-w-md text-sm leading-6 text-content/60">
             Sign-in isn&apos;t enabled on this storefront yet. You can still browse
             the full collection and check out as a guest.
           </p>
           <Link href="/shop" className="btn-luxe">
-            Continue Shopping
+            Continue shopping
           </Link>
         </div>
       </div>

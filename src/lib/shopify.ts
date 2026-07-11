@@ -253,37 +253,31 @@ export const MOCK_PRODUCTS: MockProduct[] = [
 
 export const MOCK_COLLECTIONS = [
   {
-    id: "col_01",
-    title: "Summer Edit",
-    handle: "summer-edit",
-    image: "/images/collection-summer.png",
-    itemCount: 42,
-    description: "Light fabrics, breezy silhouettes, and sunshine tones.",
-  },
-  {
-    id: "col_02",
-    title: "Ethnic Luxe",
-    handle: "ethnic-luxe",
-    image: "/images/collection-ethnic.png",
-    itemCount: 38,
-    description: "Grand celebrations, rich textures, and timeless heritage.",
-  },
-  {
-    id: "col_03",
-    title: "The Minimalist",
-    handle: "the-minimalist",
-    image: "/images/collection-minimal.png",
-    itemCount: 27,
-    description: "Effortless refinement, clean cuts, and everyday luxury.",
-  },
-  {
-    id: "col_04",
-    title: "Festive Glow",
-    handle: "festive-collection",
-    image: "/images/collection-ethnic.png",
-    itemCount: 31,
+    id: "col_coords",
+    title: "Co-ords",
+    handle: "co-ords",
+    image: "/images/product-2.png",
+    itemCount: 2,
     description:
-      "Celebration-ready layers, luminous accents, and heirloom details.",
+      "Matching top-and-bottom co-ord sets, styled for effortless, put-together looks.",
+  },
+  {
+    id: "col_2pcs",
+    title: "2 Pcs Set",
+    handle: "2-pcs-set",
+    image: "/images/collection-minimal.png",
+    itemCount: 3,
+    description:
+      "Kurta paired with a coordinated bottom — the boutique reseller's everyday bestseller.",
+  },
+  {
+    id: "col_dupatta",
+    title: "Dupatta Set",
+    handle: "dupatta-set",
+    image: "/images/premium_dupatta.png",
+    itemCount: 3,
+    description:
+      "Complete three-piece ensembles finished with a flowing dupatta for festive racks.",
   },
 ];
 

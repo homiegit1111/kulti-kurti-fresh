@@ -1,22 +1,32 @@
 import { isShopifyConfigured } from "@/lib/shopify";
-import { isMedusaConfigured, medusaCommerceAdapter } from "./medusa-adapter";
 import { mockCommerceAdapter } from "./mock-adapter";
 import { legacyShopifyCommerceAdapter } from "./shopify-legacy-adapter";
+import {
+  isSupabaseCommerceConfigured,
+  supabaseCommerceAdapter,
+} from "./supabase-adapter";
 import type { CommerceAdapter, CommerceBackend } from "./types";
 
 function requestedBackend(): CommerceBackend | null {
   const value = process.env.NEXT_PUBLIC_COMMERCE_BACKEND;
-  if (value === "mock" || value === "shopify" || value === "medusa") {
+  if (
+    value === "mock" ||
+    value === "shopify" ||
+    value === "supabase"
+  ) {
     return value;
   }
+  // "medusa" is retired; treat any legacy value as unset so auto-detect runs.
   return null;
 }
 
 export function getCommerceAdapter(): CommerceAdapter {
   const requested = requestedBackend();
 
-  if (requested === "medusa") {
-    return isMedusaConfigured() ? medusaCommerceAdapter : mockCommerceAdapter;
+  if (requested === "supabase") {
+    return isSupabaseCommerceConfigured()
+      ? supabaseCommerceAdapter
+      : mockCommerceAdapter;
   }
 
   if (requested === "shopify") {
@@ -27,7 +37,8 @@ export function getCommerceAdapter(): CommerceAdapter {
 
   if (requested === "mock") return mockCommerceAdapter;
 
-  if (isMedusaConfigured()) return medusaCommerceAdapter;
+  // Auto-detect: Supabase is the primary backend now.
+  if (isSupabaseCommerceConfigured()) return supabaseCommerceAdapter;
   if (isShopifyConfigured()) return legacyShopifyCommerceAdapter;
   return mockCommerceAdapter;
 }
@@ -42,13 +53,3 @@ export type {
   CommerceCollection,
   CommerceProduct,
 } from "./types";
-
-export {
-  getWholesaleSetPrice,
-  toMedusaProductSeedDraft,
-  toMedusaProductSeedDrafts,
-  type MedusaProductSeedDraft,
-  type MedusaProductSeedPrice,
-  type MedusaProductSeedVariant,
-  type MedusaProductStatus,
-} from "./medusa-product-sync";

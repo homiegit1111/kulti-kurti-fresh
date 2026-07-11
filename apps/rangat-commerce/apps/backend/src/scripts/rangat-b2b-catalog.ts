@@ -9,12 +9,44 @@ export type RangatB2BSeedProduct = {
   color: string
   category: string
   sku: string
+  collectionHandle: string
+}
+
+export type RangatB2BSeedCollection = {
+  title: string
+  handle: string
+  image: string
+  description: string
 }
 
 export type RangatB2BMetadata = Record<
   string,
   string | number | boolean
 >
+
+export const RANGAT_B2B_COLLECTIONS: RangatB2BSeedCollection[] = [
+  {
+    title: "Co-ords",
+    handle: "co-ords",
+    image: "/images/product-2.png",
+    description:
+      "Matching top-and-bottom co-ord sets, styled for effortless, put-together looks.",
+  },
+  {
+    title: "2 Pcs Set",
+    handle: "2-pcs-set",
+    image: "/images/collection-minimal.png",
+    description:
+      "Kurta paired with a coordinated bottom — the boutique reseller's everyday bestseller.",
+  },
+  {
+    title: "Dupatta Set",
+    handle: "dupatta-set",
+    image: "/images/premium_dupatta.png",
+    description:
+      "Complete three-piece ensembles finished with a flowing dupatta for festive racks.",
+  },
+]
 
 export const RANGAT_B2B_SIZE_OPTIONS = ["S", "M", "L", "XL"] as const
 export const RANGAT_B2B_SET_SIZE = 4
@@ -37,6 +69,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Sage",
     category: "Kurtis",
     sku: "RP-KURTI-001",
+    collectionHandle: "2-pcs-set",
   },
   {
     title: "Ivory Cotton Straight Kurta Set",
@@ -48,6 +81,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Ivory",
     category: "Kurtis",
     sku: "RP-COTTON-002",
+    collectionHandle: "2-pcs-set",
   },
   {
     title: "Navy Mirror Work Kurta Set",
@@ -59,6 +93,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Navy",
     category: "Kurtis",
     sku: "RP-KURTI-003",
+    collectionHandle: "dupatta-set",
   },
   {
     title: "Terracotta Block Print Saree",
@@ -70,6 +105,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Terracotta",
     category: "Sarees",
     sku: "RP-SAREE-004",
+    collectionHandle: "dupatta-set",
   },
   {
     title: "Blush Silk Lehenga Ensemble",
@@ -81,6 +117,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Blush",
     category: "Lehengas",
     sku: "RP-LEHENGA-005",
+    collectionHandle: "dupatta-set",
   },
   {
     title: "Forest Embroidered Co-ord Set",
@@ -92,6 +129,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Forest",
     category: "Co-ords",
     sku: "RP-COORD-006",
+    collectionHandle: "co-ords",
   },
   {
     title: "Pearl Georgette Kurta Set",
@@ -103,6 +141,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Pearl",
     category: "Kurtis",
     sku: "RP-KURTI-007",
+    collectionHandle: "co-ords",
   },
   {
     title: "Mustard Cotton Anarkali Suit",
@@ -114,6 +153,7 @@ export const RANGAT_B2B_SEED_PRODUCTS: RangatB2BSeedProduct[] = [
     color: "Mustard",
     category: "Kurtis",
     sku: "RP-KURTI-008",
+    collectionHandle: "2-pcs-set",
   },
 ]
 
@@ -128,6 +168,7 @@ export function productMetadata(product: RangatB2BSeedProduct): RangatB2BMetadat
     minimum_order_sets: RANGAT_B2B_MINIMUM_ORDER_SETS,
     category: product.category,
     color_family: product.color,
+    collection_handle: product.collectionHandle,
   }
 }
 
@@ -149,6 +190,7 @@ export function toMedusaCreateProductInput(
   product: RangatB2BSeedProduct,
   shippingProfileId: string,
   salesChannelId: string,
+  collectionId?: string,
 ) {
   return {
     title: product.title,
@@ -156,6 +198,7 @@ export function toMedusaCreateProductInput(
     description: product.description,
     status: ProductStatus.PUBLISHED,
     shipping_profile_id: shippingProfileId,
+    ...(collectionId ? { collection_id: collectionId } : {}),
     images: [{ url: product.image }],
     options: [{ title: "Size", values: [...RANGAT_B2B_SIZE_OPTIONS] }],
     variants: RANGAT_B2B_SIZE_OPTIONS.map((size) => ({
@@ -172,10 +215,12 @@ export function toMedusaCreateProductInput(
 
 export function validateRangatB2BSeedCatalog(
   products = RANGAT_B2B_SEED_PRODUCTS,
+  collections = RANGAT_B2B_COLLECTIONS,
 ): string[] {
   const errors: string[] = []
   const handles = new Set<string>()
   const skus = new Set<string>()
+  const collectionHandles = new Set(collections.map((c) => c.handle))
 
   for (const product of products) {
     if (!product.title.trim()) errors.push("Product title is required.")
@@ -194,6 +239,12 @@ export function validateRangatB2BSeedCatalog(
       errors.push(`${product.title}: duplicate style code ${product.sku}.`)
     }
     skus.add(product.sku)
+
+    if (!collectionHandles.has(product.collectionHandle)) {
+      errors.push(
+        `${product.title}: unknown collection handle ${product.collectionHandle}.`
+      )
+    }
   }
 
   return errors

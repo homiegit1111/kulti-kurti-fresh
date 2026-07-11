@@ -2,7 +2,15 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { buildCsp, generateNonce, isNonceCapableRoute } from "@/lib/server/csp";
 
-const isProtectedRoute = createRouteMatcher(["/account(.*)"]);
+// Routes that require a signed-in Clerk user at the edge. /admin and
+// /api/admin also enforce an allowlist check inside each handler
+// (requireAdmin) — this edge gate is defence-in-depth so an unauthenticated
+// request never even reaches admin code.
+const isProtectedRoute = createRouteMatcher([
+  "/account(.*)",
+  "/admin(.*)",
+  "/api/admin(.*)",
+]);
 
 const authEnabled = Boolean(
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,

@@ -36,9 +36,9 @@ export const LivingProductCard = memo(function LivingProductCard({
     : 0;
 
   return (
-    <article className={`group flex h-full flex-col bg-white ${heightClass}`}>
-      <div className="relative overflow-hidden bg-warm-gray">
-        <Link href={`/shop/${product.handle}`} className="relative block aspect-[3/4] overflow-hidden">
+    <article className={`group flex h-full flex-col border border-line/15 bg-surface ${heightClass}`}>
+      <div className="relative overflow-hidden bg-surface-hover">
+        <Link href={`/shop/${product.handle}`} className="relative block aspect-square overflow-hidden">
           <Image
             src={product.image}
             alt={product.title}
@@ -49,7 +49,15 @@ export const LivingProductCard = memo(function LivingProductCard({
         </Link>
 
         {(soldOut || onSale || product.isNew) && (
-          <span className="absolute left-3 top-3 bg-white px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-charcoal shadow-sm">
+          <span
+            className={`absolute left-0 top-0 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] ${
+              onSale
+                ? "bg-accent-red text-content-inverse"
+                : product.isNew && !soldOut
+                  ? "bg-accent-lime text-on-accent"
+                  : "bg-surface-inverse text-content-inverse"
+            }`}
+          >
             {soldOut ? "Sold out" : onSale ? `${discountPct}% off` : "New"}
           </span>
         )}
@@ -62,10 +70,10 @@ export const LivingProductCard = memo(function LivingProductCard({
               ? `Remove ${product.title} from wishlist`
               : `Save ${product.title} to wishlist`
           }
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center bg-white text-charcoal shadow-sm transition-colors hover:text-gold-dark"
+          className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center bg-surface text-content transition-colors hover:bg-surface-inverse hover:text-content-inverse"
         >
           <Heart
-            className={isWishlisted ? "h-4 w-4 fill-gold text-gold" : "h-4 w-4"}
+            className={isWishlisted ? "h-4 w-4 fill-accent-red text-accent-red" : "h-4 w-4"}
             strokeWidth={1.7}
           />
         </button>
@@ -73,31 +81,31 @@ export const LivingProductCard = memo(function LivingProductCard({
 
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-charcoal/42">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/45">
             {product.category}
           </p>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-charcoal/35">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/35">
             {getStyleCode(product)}
           </p>
         </div>
 
         <Link href={`/shop/${product.handle}`} className="mt-2 block">
-          <h3 className="min-h-[2.7rem] font-serif text-base leading-snug text-charcoal transition-colors group-hover:text-gold-dark sm:text-lg">
+          <h3 className="min-h-[2.5rem] text-base font-bold leading-tight tracking-[-0.025em] text-content sm:text-lg">
             {product.title}
           </h3>
         </Link>
 
-        <div className="mt-4 border-t border-charcoal/10 pt-3">
+        <div className="mt-4 border-t border-line/20 pt-3">
           <div className="flex items-end justify-between gap-3">
             <div>
-              <p className="text-base font-semibold text-charcoal">{formatPrice(setPrice)}</p>
-              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-charcoal/40">
+              <p className="text-base font-bold text-content">{formatPrice(setPrice)}</p>
+              <p className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-content/45">
                 {SIZE_RATIO_LABEL} set
               </p>
             </div>
-            <p className="text-right text-sm font-semibold text-charcoal/70">
+            <p className="text-right text-sm font-bold text-content/70">
               {formatPrice(perPiece)}
-              <span className="block text-[10px] uppercase tracking-[0.12em] text-charcoal/35">
+              <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-content/40">
                 per pc
               </span>
             </p>
@@ -121,7 +129,7 @@ export const LivingProductCard = memo(function LivingProductCard({
               ? `${product.title} is sold out`
               : `Add ${B2B_CONFIG.defaultLineSets} set of ${product.title}`
           }
-          className="mt-4 flex h-10 w-full items-center justify-center gap-2 border border-charcoal/15 bg-white text-[10px] font-bold uppercase tracking-[0.16em] text-charcoal transition-colors hover:bg-charcoal hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+          className="mt-4 flex h-10 w-full items-center justify-center gap-2 border border-line/20 bg-surface text-[10px] font-bold uppercase tracking-[0.18em] text-content transition-colors hover:bg-surface-inverse hover:text-content-inverse disabled:cursor-not-allowed disabled:opacity-45"
         >
           {soldOut ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
           {soldOut ? "Sold out" : "Add set"}

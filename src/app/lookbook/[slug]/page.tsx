@@ -150,20 +150,23 @@ export default async function EditorialDetailPage({
           </Link>
 
           {entry.category && (
-            <span className="block text-[9px] uppercase tracking-[0.3em] text-gold font-bold mb-3">
-              {entry.category}
-            </span>
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="w-6 h-[2px] bg-gold" />
+              <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold">
+                {entry.category}
+              </span>
+            </div>
           )}
-          <h1 className="font-serif text-4xl md:text-5xl text-charcoal leading-[1.1] tracking-tight">
+          <h1 className="text-[clamp(2.5rem,7vw,4.5rem)] font-black uppercase text-charcoal leading-[0.86] tracking-[-0.05em]">
             {entry.title}
           </h1>
           {entry.excerpt && (
-            <p className="text-base text-charcoal/60 font-light mt-5 leading-relaxed">
+            <p className="text-base text-charcoal/60 mt-5 leading-relaxed">
               {entry.excerpt}
             </p>
           )}
 
-          <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-charcoal/5 mt-10">
+          <div className="relative aspect-[16/10] overflow-hidden bg-charcoal/5 mt-10 border border-charcoal/10">
             <Image
               src={cover}
               alt={entry.title}
@@ -179,7 +182,7 @@ export default async function EditorialDetailPage({
               <LookbookPortableText value={body} />
             </div>
           ) : (
-            <p className="text-sm text-charcoal/40 font-light mt-10 italic">
+            <p className="text-sm text-charcoal/40 mt-10">
               {isSanityConfigured()
                 ? "This story is being written."
                 : "Connect Sanity to publish the full editorial."}

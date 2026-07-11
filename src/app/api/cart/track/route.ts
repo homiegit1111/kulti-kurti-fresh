@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
+import { verifyTurnstile, clientIpFromHeaders } from "@/lib/server/turnstile";
+import { isAuthEnabled } from "@/lib/auth/config";
 import {
   recordCartActivity,
   type CartSnapshot,
   type CartSnapshotItem,
 } from "@/lib/server/abandoned-cart";
+import { isValidEmail } from "@/lib/email-validation";
 
 export const runtime = "nodejs";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Records a cart snapshot for abandoned-cart recovery.
@@ -28,16 +30,51 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { cartId, email, items, subtotal, checkoutUrl } = body;
+  const { cartId, email, items, subtotal, checkoutUrl } = body as Partial<
+    CartSnapshot
+  > & { turnstileToken?: string };
 
   if (!cartId || typeof cartId !== "string") {
     return NextResponse.json({ error: "cartId required" }, { status: 400 });
   }
-  if (!email || !EMAIL_RE.test(email)) {
-    return NextResponse.json({ error: "valid email required" }, { status: 400 });
-  }
   if (!Array.isArray(items) || items.length === 0) {
     return NextResponse.json({ error: "items required" }, { status: 400 });
+  }
+
+  // Anti-spam-relay: this endpoint enqueues an address for branded win-back
+  // email, so we must not let a caller queue an arbitrary third party's inbox.
+  // Signed-in users: use their Clerk-verified email, ignoring the client value.
+  // Guests: require a Turnstile token (dormant/allow-through until keys are set)
+  // so the endpoint can't be scripted into a mass mailer.
+  let resolvedEmail = "";
+  const signedInUserId = isAuthEnabled ? (await auth()).userId : null;
+
+  if (signedInUserId) {
+    const user = await currentUser();
+    resolvedEmail =
+      user?.primaryEmailAddress?.emailAddress?.toLowerCase() ?? "";
+  } else {
+    const turnstileToken =
+      typeof (body as { turnstileToken?: unknown }).turnstileToken === "string"
+        ? (body as { turnstileToken: string }).turnstileToken
+        : null;
+    const verdict = await verifyTurnstile(
+      turnstileToken,
+      clientIpFromHeaders(req.headers),
+    );
+    if (!verdict.ok) {
+      return NextResponse.json(
+        { error: "Bot verification failed." },
+        { status: 403 },
+      );
+    }
+    if (isValidEmail(email)) {
+      resolvedEmail = email.toLowerCase();
+    }
+  }
+
+  if (!isValidEmail(resolvedEmail)) {
+    return NextResponse.json({ error: "valid email required" }, { status: 400 });
   }
 
   // Trim the payload to known fields (don't trust the client blindly).
@@ -53,7 +90,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const ok = await recordCartActivity({
     cartId,
-    email,
+    email: resolvedEmail,
     items: safeItems,
     subtotal: Number(subtotal ?? 0),
     checkoutUrl: checkoutUrl ?? null,

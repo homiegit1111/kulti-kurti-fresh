@@ -19,6 +19,7 @@ import {
   ALLOWED_PHOTO_TYPES,
   MAX_PHOTO_BYTES,
   MAX_REVIEW_PHOTOS,
+  deleteReviewPhotos,
   getPublishedReviews,
   summarize,
   uploadReviewPhoto,
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (url) photoUrls.push(url);
   }
 
-  const ok = await upsertReview({
+  const { ok, supersededPhotoUrls } = await upsertReview({
     productHandle: handle,
     clerkUserId: userId,
     authorName,
@@ -147,11 +148,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     photoUrls,
   });
   if (!ok) {
+    // Upsert failed after upload — delete the just-uploaded files so they don't
+    // orphan in the bucket.
+    await deleteReviewPhotos(photoUrls);
     return NextResponse.json(
       { error: "Could not save your review. Please try again." },
       { status: 500 },
     );
   }
+
+  // On edit, remove photos the new submission replaced.
+  await deleteReviewPhotos(supersededPhotoUrls);
 
   const reviews = await getPublishedReviews(handle);
   return NextResponse.json({ ok: true, reviews, summary: summarize(reviews) });

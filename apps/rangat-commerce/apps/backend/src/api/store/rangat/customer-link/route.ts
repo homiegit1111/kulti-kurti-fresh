@@ -1,3 +1,4 @@
+import crypto from "node:crypto"
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import {
@@ -61,6 +62,13 @@ function configuredSecret() {
 function requestSecret(req: MedusaRequest) {
   const raw = req.headers[INTERNAL_SECRET_HEADER]
   return (Array.isArray(raw) ? raw[0] : raw ?? "").trim()
+}
+
+function secretsMatch(expected: string, received: string) {
+  const a = Buffer.from(expected, "utf8")
+  const b = Buffer.from(received, "utf8")
+  if (a.length !== b.length) return false
+  return crypto.timingSafeEqual(a, b)
 }
 
 function stringValue(value: unknown, maxLength: number) {
@@ -141,7 +149,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  if (requestSecret(req) !== secret) {
+  if (!secretsMatch(secret, requestSecret(req))) {
     res.status(401).json({ ok: false, code: "UNAUTHORIZED" })
     return
   }

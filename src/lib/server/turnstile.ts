@@ -62,7 +62,9 @@ export async function verifyTurnstile(
 
 /** Pull the client IP from common proxy headers (best-effort). */
 export function clientIpFromHeaders(headers: Headers): string | null {
+  const cloudflareIp = headers.get("cf-connecting-ip");
+  if (cloudflareIp) return cloudflareIp;
   const xff = headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim();
-  return headers.get("cf-connecting-ip") || headers.get("x-real-ip") || null;
+  return headers.get("x-real-ip") || null;
 }

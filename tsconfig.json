@@ -30,5 +30,10 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "sanity", "apps/rangat-commerce"]
+  "exclude": [
+    "node_modules",
+    "sanity",
+    "apps/rangat-commerce",
+    "open-next.config.ts"
+  ]
 }

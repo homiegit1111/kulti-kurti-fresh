@@ -18,36 +18,72 @@ export type { CommerceCollection, CommerceProduct };
 // product helpers to commerce-neutral helpers.
 export type MockProduct = CommerceProduct;
 
+const CATALOG_TIMEOUT_MS = 4500;
+
+async function withCatalogTimeout<T>(
+  promise: Promise<T>,
+  fallback: T,
+): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((resolve) => {
+        timeout = setTimeout(() => resolve(fallback), CATALOG_TIMEOUT_MS);
+      }),
+    ]);
+  } catch {
+    return fallback;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
+
 export async function getProducts(
   limit = 12,
   category?: string,
 ): Promise<CommerceProduct[]> {
   const adapter = getCommerceAdapter();
   const input: ProductQuery = { limit, category };
-  const products = await adapter.getProducts(input);
+  // In a real Supabase deployment an unavailable catalog must be visibly
+  // unavailable. Falling back to mock products here would let checkout price
+  // demo data when the production database is down or misconfigured.
+  const fallback = adapter.backend === "supabase"
+    ? []
+    : MOCK_PRODUCTS.filter(
+        (product) => !category || category === "All" || product.category === category,
+      ).slice(0, limit);
+  const products = await withCatalogTimeout(adapter.getProducts(input), fallback);
 
   if (products.length > 0 || adapter.backend === "mock") return products;
-  return MOCK_PRODUCTS.filter(
-    (product) => !category || category === "All" || product.category === category,
-  ).slice(0, limit);
+  return fallback;
 }
 
 export async function getProductByHandle(
   handle: string,
 ): Promise<CommerceProduct | null> {
   const adapter = getCommerceAdapter();
-  const product = await adapter.getProductByHandle(handle);
+  const fallback = adapter.backend === "supabase"
+    ? null
+    : MOCK_PRODUCTS.find((item) => item.handle === handle) ?? null;
+  const product = await withCatalogTimeout(
+    adapter.getProductByHandle(handle),
+    fallback,
+  );
 
   if (product || adapter.backend === "mock") return product;
-  return MOCK_PRODUCTS.find((fallback) => fallback.handle === handle) ?? null;
+  return fallback;
 }
 
 export async function getCollections(): Promise<CommerceCollection[]> {
   const adapter = getCommerceAdapter();
-  const collections = await adapter.getCollections();
+  const collections = await withCatalogTimeout(
+    adapter.getCollections(),
+    adapter.backend === "supabase" ? [] : MOCK_COLLECTIONS,
+  );
 
   if (collections.length > 0 || adapter.backend === "mock") return collections;
-  return MOCK_COLLECTIONS;
+  return adapter.backend === "supabase" ? [] : MOCK_COLLECTIONS;
 }
 
 export async function getProductsByCollection(
@@ -55,10 +91,14 @@ export async function getProductsByCollection(
   limit = 20,
 ): Promise<CommerceProduct[]> {
   const adapter = getCommerceAdapter();
-  const products = await adapter.getProductsByCollection(handle, limit);
+  const fallback = adapter.backend === "supabase" ? [] : MOCK_PRODUCTS.slice(0, limit);
+  const products = await withCatalogTimeout(
+    adapter.getProductsByCollection(handle, limit),
+    fallback,
+  );
 
   if (products.length > 0 || adapter.backend === "mock") return products;
-  return MOCK_PRODUCTS.slice(0, limit);
+  return fallback;
 }
 
 export async function getCollectionByHandle(handle: string): Promise<{
@@ -78,16 +118,18 @@ export async function getCollectionByHandle(handle: string): Promise<{
 
 export async function searchProducts(query: string): Promise<CommerceProduct[]> {
   const adapter = getCommerceAdapter();
-  const products = await adapter.searchProducts(query);
-
-  if (products.length > 0 || adapter.backend === "mock") return products;
-
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return MOCK_PRODUCTS.filter(
-    (product) =>
-      product.title.toLowerCase().includes(q) ||
-      product.category.toLowerCase().includes(q) ||
-      product.description.toLowerCase().includes(q),
-  );
+  const fallback = adapter.backend === "supabase"
+    ? []
+    : MOCK_PRODUCTS.filter(
+        (product) =>
+          product.title.toLowerCase().includes(q) ||
+          product.category.toLowerCase().includes(q) ||
+          product.description.toLowerCase().includes(q),
+      );
+  const products = await withCatalogTimeout(adapter.searchProducts(query), fallback);
+
+  if (products.length > 0 || adapter.backend === "mock") return products;
+  return fallback;
 }

@@ -1,0 +1,23 @@
+# Railway deploy config for the Medusa backend.
+#
+# Recommended topology (two Railway services off this same repo/dir, plus the
+# Postgres and Redis plugins):
+#
+#   1) "rangat-web"    — MEDUSA_WORKER_MODE=server   (HTTP + admin)
+#   2) "rangat-worker" — MEDUSA_WORKER_MODE=worker   (jobs/subscribers)
+#
+# Both share DATABASE_URL + REDIS_URL. Only the web service needs a public
+# domain. Set the root directory to apps/rangat-commerce/apps/backend.
+#
+# `predeploy` runs `medusa db:migrate` before each release so schema is always
+# current. Run the catalog seed once manually: `pnpm seed`.
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "pnpm install --frozen-lockfile && pnpm build"
+
+[deploy]
+startCommand = "pnpm predeploy && pnpm start"
+numReplicas = 1
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

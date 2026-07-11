@@ -72,30 +72,26 @@ export default async function LookbookPage() {
     <>
       <Navbar />
 
-      <main className="flex-1 bg-warm-white relative pt-32 pb-24 min-h-screen">
-        <div className="max-w-6xl mx-auto px-6 w-full relative z-10">
+      <main className="flex-1 bg-surface text-content pt-28 pb-24 lg:pt-36 lg:pb-28 min-h-screen">
+        <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10">
           {/* Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 mb-4">
-              <span className="w-4 h-[1px] bg-gold" />
-              <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold">
-                The Lookbook
-              </span>
+          <div className="grid gap-8 border-b-2 border-line pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-red">
+                The Lookbook / Journal
+              </p>
+              <h1 className="mt-4 max-w-[13ch] text-[clamp(3rem,8vw,7.5rem)] font-black uppercase leading-[0.82] tracking-[-0.07em]">
+                Stories in colour &amp; craft.
+              </h1>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-charcoal mb-5 tracking-tight leading-[1.1]">
-              Stories woven <br />
-              <span className="text-charcoal/40 italic font-light">
-                in colour & craft.
-              </span>
-            </h1>
-            <p className="text-sm md:text-base text-charcoal/60 max-w-md mx-auto font-light leading-relaxed">
+            <p className="max-w-[32ch] text-sm leading-6 text-content/60">
               A visual journal — editorials, campaigns, and the hands behind the
               cloth.
             </p>
           </div>
 
           {/* Editorial grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="mt-10 grid grid-cols-1 gap-px bg-line/15 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((entry, idx) => {
               const cover =
                 sanityImageUrl(entry.coverImageRef, 800) ??
@@ -104,30 +100,33 @@ export default async function LookbookPage() {
                 <Link
                   key={entry._id}
                   href={`/lookbook/${entry.slug}`}
-                  className="group block"
+                  className="group block bg-surface"
                 >
                   <article>
-                    <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-charcoal/5">
+                    <div className="relative aspect-[4/5] overflow-hidden bg-surface-hover">
                       <Image
                         src={cover}
                         alt={entry.title}
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-charcoal/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                      <span className="absolute left-0 top-0 bg-accent-lime px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-on-accent">
+                        0{idx + 1}
+                      </span>
                     </div>
-                    <div className="pt-5">
+                    <div className="border-t border-line/20 px-4 py-5">
                       {entry.category && (
-                        <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-red">
                           {entry.category}
                         </span>
                       )}
-                      <h2 className="font-serif text-2xl text-charcoal mt-2 leading-tight group-hover:text-gold transition-colors duration-300">
+                      <h2 className="mt-2 text-2xl font-black uppercase leading-[0.95] tracking-[-0.03em] transition-transform duration-300 group-hover:translate-x-1">
                         {entry.title}
                       </h2>
                       {entry.excerpt && (
-                        <p className="text-sm text-charcoal/55 font-light mt-2 leading-relaxed line-clamp-2">
+                        <p className="mt-2 text-sm leading-6 text-content/60 line-clamp-2">
                           {entry.excerpt}
                         </p>
                       )}
@@ -139,9 +138,9 @@ export default async function LookbookPage() {
           </div>
 
           {usingFallback && !isSanityConfigured() && (
-            <p className="text-center text-[11px] text-charcoal/30 mt-16 font-light tracking-wide">
+            <p className="mt-16 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-content/35">
               Connect Sanity (see&nbsp;
-              <code className="text-charcoal/40">sanity/README.md</code>) to
+              <code className="text-content/50">sanity/README.md</code>) to
               publish live editorial here.
             </p>
           )}

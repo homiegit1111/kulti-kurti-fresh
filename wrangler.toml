@@ -1,0 +1,61 @@
+# Cloudflare Workers deploy config for the Next.js app via @opennextjs/cloudflare.
+#
+# Why OpenNext and not @cloudflare/next-on-pages: the Pages adapter was archived
+# on 2025-09-29 and Cloudflare now points all Next.js App Router apps at
+# @opennextjs/cloudflare, which runs on the Workers runtime with the full
+# Node.js compatibility layer. That matters here because payment webhook
+# verification uses node:crypto (HMAC) and the service-role Supabase client is a
+# server-side Node fetch — neither would survive the old edge-only Pages model
+# without a rewrite.
+#
+# Setup (one time):
+#   1. bun add @opennextjs/cloudflare
+#   2. bun add -d wrangler @cloudflare/workers-types
+#   3. Set secrets with `wrangler secret put <NAME>` (NOT in this file).
+#   4. Create an R2 bucket for the incremental cache (see below), or remove the
+#      r2_buckets binding to run without ISR/data-cache persistence.
+
+"$schema" = "./node_modules/wrangler/config-schema.json"
+
+name = "rangat-pehnawa"
+# custom-worker.ts forwards fetch to OpenNext and adds scheduled().
+main = "custom-worker.ts"
+compatibility_date = "2026-07-10"
+
+# Required for node:crypto, Buffer, and other Node built-ins the payment routes
+# and Supabase client depend on.
+compatibility_flags = ["nodejs_compat"]
+
+# Serve hashed static assets straight from Cloudflare's edge (OpenNext output).
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+# ── Scheduled worker: replaces Vercel Cron ───────────────────────────────────
+# Vercel Cron hit /api/cron/daily at 08:00. On Cloudflare, a Cron Trigger fires
+# the Worker's scheduled() handler (see custom-worker.ts), which does an
+# internal fetch to the same HTTP endpoint with the CRON_SECRET bearer. Keeping
+# the HTTP route intact means the job logic is unchanged and still runs on any
+# platform.
+#
+# NOTE: sub-daily/real cron needs the paid Workers plan ($5/mo). The free plan's
+# ~10ms CPU cap can't run these sweeps. A single daily job fits the paid plan's
+# 15-min scheduled budget comfortably.
+[triggers]
+crons = ["*/5 * * * *", "30 2 * * *"]
+
+# ── Incremental cache (ISR / Next data cache) ────────────────────────────────
+# OpenNext persists Next's incremental cache in R2. Create the bucket once:
+#   wrangler r2 bucket create rangat-next-cache
+# If you don't need ISR persistence yet, delete this block and set the cache to
+# a no-op in open-next.config.ts.
+[[r2_buckets]]
+binding = "NEXT_INC_CACHE_R2_BUCKET"
+bucket_name = "rangat-next-cache"
+
+[vars]
+# Non-secret, public build-time vars can live here or in the Cloudflare
+# dashboard. SECRETS (service-role key, Clerk secret key, Razorpay/PhonePe
+# secrets, CRON_SECRET, RESEND key) must be set via `wrangler secret put`, never
+# committed here. See DEPLOY_CLOUDFLARE.md for the full list.
+NODE_ENV = "production"

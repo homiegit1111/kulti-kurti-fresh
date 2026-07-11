@@ -36,7 +36,7 @@ export default function StockAlertForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, product_handle: handle, size }),
       });
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? "Could not save your alert. Please try again.");
         setState("idle");
@@ -53,7 +53,7 @@ export default function StockAlertForm({
     return (
       <div className="panel-luxe p-6 mt-6">
         <p className="eyebrow eyebrow--bare mb-2">Noted</p>
-        <p className="font-serif text-lg font-light">
+        <p className="text-lg leading-snug text-charcoal/70">
           We&apos;ll write to you when this wholesale style is available again
           {size ? ` in size ${size}` : ""}.
         </p>
@@ -64,7 +64,7 @@ export default function StockAlertForm({
   return (
     <form onSubmit={submit} className="frame-luxe p-6 lg:p-8 mt-6">
       <p className="eyebrow eyebrow--bare mb-2">Wholesale Stock Pending</p>
-      <p className="font-serif text-lg font-light leading-snug">
+      <p className="text-lg leading-snug text-charcoal/70">
         Be first to know when this style is ready for wholesale sets
         {size ? ` in ${size}` : ""}.
       </p>

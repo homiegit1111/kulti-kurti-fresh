@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildWholesaleCheckoutDraft } from "@/lib/commerce/checkout-draft";
+import { getCommerceAdapter } from "@/lib/commerce";
 import {
   getRazorpayKeyId,
   getRazorpayKeySecret,
   getRazorpayReadiness,
 } from "@/lib/payments/razorpay-config";
 import { createRazorpayIntentToken } from "@/lib/payments/razorpay-intent";
-import {
-  loadCurrentWholesaleBuyer,
-  mergeCheckoutBodyWithWholesaleBuyer,
-} from "@/lib/server/wholesale-profile";
+import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
+import { verifyCheckoutSessionBinding } from "@/lib/server/checkout-session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,93 +17,93 @@ function json(body: Record<string, unknown>, status = 200) {
 }
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-  const profileBuyer = await loadCurrentWholesaleBuyer();
-  const checkoutBody = mergeCheckoutBodyWithWholesaleBuyer(body, profileBuyer);
-  const result = buildWholesaleCheckoutDraft(checkoutBody, "razorpay");
+  const rl = checkRateLimit(req, "razorpay-order", { limit: 10, windowMs: 60_000 });
+  if (!rl.ok) return tooManyRequests(rl);
 
-  if (!result.ok) {
+  const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+  const adapter = getCommerceAdapter();
+  if (adapter.backend !== "supabase") {
     return json(
-      {
-        error: result.error,
-        code: result.code,
-        moq: result.moq,
-        remainingSets: result.remainingSets,
-        totalSets: result.totalSets,
-        minimumSets: result.minimumSets,
-      },
-      result.status,
+      { configured: false, error: "Online payments are unavailable until the Supabase commerce backend is configured." },
+      503,
     );
   }
-
-  const { amountPaise, notes, receipt, totals } = result.draft;
-  const medusaCartId =
-    typeof body.medusaCartId === "string" ? body.medusaCartId.slice(0, 120) : "";
-  const orderNotes = {
-    ...notes,
-    ...(medusaCartId ? { medusa_cart_id: medusaCartId } : {}),
-  };
-  const keyId = getRazorpayKeyId();
-  const keySecret = getRazorpayKeySecret();
   const readiness = getRazorpayReadiness();
-
   if (!readiness.configured) {
     return json({
       configured: false,
       message: "Razorpay is not configured. Confirm on WhatsApp to receive a payment link.",
       readiness,
-      amount: amountPaise,
-      currency: "INR",
-      receipt,
-      totals,
-      medusaCartId: medusaCartId || undefined,
     });
   }
 
-  const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
-  const response = await fetch("https://api.razorpay.com/v1/orders", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      amount: amountPaise,
-      currency: "INR",
-      receipt,
-      notes: orderNotes,
-    }),
-    cache: "no-store",
-  });
-
-  const razorpay = (await response.json().catch(() => ({}))) as Record<
-    string,
-    unknown
-  >;
-
-  if (!response.ok) {
+  const commerceOrderId =
+    typeof body.commerceOrderId === "string" ? body.commerceOrderId.trim().slice(0, 120) : "";
+  const checkoutToken =
+    typeof body.checkoutToken === "string" ? body.checkoutToken.trim().slice(0, 2400) : "";
+  if (!commerceOrderId || !checkoutToken) {
     return json(
-      {
-        error: "Could not create Razorpay order. Please confirm on WhatsApp.",
-        detail:
-          typeof razorpay.error === "object" && razorpay.error
-            ? (razorpay.error as Record<string, unknown>).description
-            : undefined,
-      },
-      502,
+      { configured: false, error: "A valid Supabase checkout session is required before payment." },
+      400,
     );
   }
+  const paymentIdempotencyKey =
+    typeof body.checkoutIdempotencyKey === "string"
+      ? body.checkoutIdempotencyKey.trim()
+      : "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(paymentIdempotencyKey)) {
+    return json({ configured: false, error: "Restart checkout and try again." }, 400);
+  }
+  const binding = await verifyCheckoutSessionBinding({
+    token: checkoutToken,
+    orderId: commerceOrderId,
+  });
+  if (!binding.ok) return json({ configured: false, error: binding.error, code: binding.code }, binding.status);
 
-  const orderId = typeof razorpay.id === "string" ? razorpay.id : "";
-  const amount = typeof razorpay.amount === "number" ? razorpay.amount : amountPaise;
-  const currency = typeof razorpay.currency === "string" ? razorpay.currency : "INR";
-
+  if (!adapter.beginPaymentAttempt || !adapter.attachPaymentOrder || !adapter.releasePaymentAttempt) {
+    return json({ error: "Secure payment attempts are unavailable for the selected backend." }, 503);
+  }
+  const attempt = await adapter.beginPaymentAttempt(commerceOrderId, paymentIdempotencyKey);
+  if (!attempt.ok) return json({ error: attempt.reason }, 409);
+  const orderNotes = {
+    commerce_order_id: commerceOrderId,
+    commerce_payment_attempt_id: attempt.attemptId,
+  };
+  const keyId = getRazorpayKeyId();
+  const keySecret = getRazorpayKeySecret();
+  let orderId = attempt.providerOrderId ?? "";
+  let amount = attempt.amountPaise;
+  let currency = attempt.currency;
   if (!orderId) {
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const response = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: attempt.amountPaise,
+        currency: attempt.currency,
+        receipt: attempt.receipt,
+        notes: orderNotes,
+      }),
+      cache: "no-store",
+    });
+    const razorpay = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+    if (!response.ok) {
+      await adapter.releasePaymentAttempt(commerceOrderId);
+      return json({ error: "Could not create Razorpay order." }, 502);
+    }
+    orderId = typeof razorpay.id === "string" ? razorpay.id : "";
+    amount = typeof razorpay.amount === "number" ? razorpay.amount : attempt.amountPaise;
+    currency = typeof razorpay.currency === "string" ? razorpay.currency : attempt.currency;
+  }
+
+  if (!orderId || !(await adapter.attachPaymentOrder(attempt.attemptId, orderId))) {
     return json(
       {
-        error: "Razorpay order response is missing an order id. Please confirm on WhatsApp.",
+        error:
+          "Your Razorpay order was created but could not be recorded safely. Do not pay again; contact us for confirmation.",
       },
-      502,
+      503,
     );
   }
 
@@ -114,8 +112,8 @@ export async function POST(req: NextRequest) {
       orderId,
       amount,
       currency,
-      receipt,
-      ...(medusaCartId ? { medusaCartId } : {}),
+      receipt: attempt.receipt,
+      commerceOrderId,
       createdAt: Date.now(),
     },
     keySecret,
@@ -127,9 +125,9 @@ export async function POST(req: NextRequest) {
     orderId,
     amount,
     currency,
-    receipt,
-    totals,
+    receipt: attempt.receipt,
     intentToken,
-    medusaCartId: medusaCartId || undefined,
+    commerceOrderId,
+    checkoutToken,
   });
 }

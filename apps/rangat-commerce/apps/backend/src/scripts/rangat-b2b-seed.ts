@@ -7,6 +7,7 @@ import {
 } from "@medusajs/framework/utils"
 import {
   createApiKeysWorkflow,
+  createCollectionsWorkflow,
   createInventoryLevelsWorkflow,
   createProductsWorkflow,
   createRegionsWorkflow,
@@ -19,6 +20,7 @@ import {
   updateStoresWorkflow,
 } from "@medusajs/medusa/core-flows"
 import {
+  RANGAT_B2B_COLLECTIONS,
   RANGAT_B2B_SEED_PRODUCTS,
   toMedusaCreateProductInput,
   validateRangatB2BSeedCatalog,
@@ -250,7 +252,6 @@ export default async function seedRangatB2B({
     return
   }
 
-  const products = await all(query, "product", ["id", "handle"])
   const catalogErrors = validateRangatB2BSeedCatalog()
   if (catalogErrors.length) {
     throw new MedusaError(
@@ -259,6 +260,39 @@ export default async function seedRangatB2B({
     )
   }
 
+  const existingCollections = await all(query, "product_collection", [
+    "id",
+    "handle",
+  ])
+  const missingCollections = RANGAT_B2B_COLLECTIONS.filter(
+    (collection) => !byHandle(existingCollections, collection.handle)
+  )
+
+  if (missingCollections.length) {
+    await createCollectionsWorkflow(container).run({
+      input: {
+        collections: missingCollections.map((collection) => ({
+          title: collection.title,
+          handle: collection.handle,
+          metadata: {
+            image: collection.image,
+            description: collection.description,
+          },
+        })),
+      },
+    })
+    logger.info(`Created ${missingCollections.length} Rangat collections.`)
+  }
+
+  const collections = await all(query, "product_collection", ["id", "handle"])
+  const collectionIdByHandle = new Map(
+    collections.map((collection) => [
+      collection.handle as string,
+      collection.id as string,
+    ])
+  )
+
+  const products = await all(query, "product", ["id", "handle"])
   const seedProducts = RANGAT_B2B_SEED_PRODUCTS.filter(
     (product) => !byHandle(products, product.handle)
   )
@@ -270,7 +304,8 @@ export default async function seedRangatB2B({
           toMedusaCreateProductInput(
             product,
             shippingProfile.id as string,
-            salesChannel.id as string
+            salesChannel.id as string,
+            collectionIdByHandle.get(product.collectionHandle)
           )
         ),
       },

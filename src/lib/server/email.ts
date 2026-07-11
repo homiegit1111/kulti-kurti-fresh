@@ -121,6 +121,29 @@ export interface SendEmailInput {
 }
 
 /**
+ * Build RFC 2369 / RFC 8058 unsubscribe headers for lifecycle (marketing)
+ * mail. CAN-SPAM requires a working opt-out mechanism; a `mailto:` target is
+ * always compliant. When EMAIL_UNSUBSCRIBE_URL is also set we advertise
+ * one-click (`List-Unsubscribe-Post`) so Gmail/Yahoo show a native
+ * unsubscribe button. Returns {} when nothing is configured (transactional
+ * mail like receipts is exempt and should pass no headers).
+ */
+function unsubscribeHeaders(): Record<string, string> {
+  const mailto = (process.env.EMAIL_UNSUBSCRIBE_MAILTO || "").trim();
+  const url = (process.env.EMAIL_UNSUBSCRIBE_URL || "").trim();
+  const targets: string[] = [];
+  if (url) targets.push(`<${url}>`);
+  if (mailto) targets.push(`<mailto:${mailto}>`);
+  if (!targets.length) return {};
+  const headers: Record<string, string> = {
+    "List-Unsubscribe": targets.join(", "),
+  };
+  // One-click only makes sense against an HTTPS POST endpoint.
+  if (url) headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+  return headers;
+}
+
+/**
  * Send via Resend. Degrades gracefully: without RESEND_API_KEY it logs and
  * returns false so callers keep the work queued instead of dropping it.
  * Returns true only when Resend confirms the send.
@@ -148,7 +171,10 @@ export async function sendBrandedEmail(input: SendEmailInput): Promise<boolean> 
       subject: input.email.subject,
       html: input.email.html,
       text: input.email.text,
-      ...(input.refId ? { headers: { "X-Entity-Ref-ID": input.refId } } : {}),
+      headers: {
+        ...(input.refId ? { "X-Entity-Ref-ID": input.refId } : {}),
+        ...unsubscribeHeaders(),
+      },
     });
     if (error) {
       console.error(`[email] Resend error for ${input.to}:`, error);

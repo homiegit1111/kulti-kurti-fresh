@@ -4,6 +4,7 @@ import {
   clientIpFromHeaders,
 } from "@/lib/server/turnstile";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
+import { isValidEmail } from "@/lib/email-validation";
 
 export const runtime = "nodejs";
 
@@ -18,8 +19,6 @@ type ContactPayload = {
   message?: string;
   turnstileToken?: string;
 };
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   // Rate limit: 5 enquiries / minute / IP.
@@ -56,7 +55,7 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  if (!EMAIL_RE.test(email)) {
+  if (!isValidEmail(email)) {
     return NextResponse.json(
       { error: "Please enter a valid email address." },
       { status: 400 },

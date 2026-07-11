@@ -6,6 +6,7 @@ export type RazorpayReadiness = {
   keyIdPresent: boolean;
   publicKeyIdPresent: boolean;
   secretPresent: boolean;
+  webhookSecretPresent: boolean;
   keyIdsMatch: boolean;
   orderCreationReady: boolean;
   verificationReady: boolean;
@@ -28,6 +29,10 @@ export function getRazorpayKeySecret(): string {
   return clean(process.env.RAZORPAY_KEY_SECRET);
 }
 
+export function getRazorpayWebhookSecret(): string {
+  return clean(process.env.RAZORPAY_WEBHOOK_SECRET);
+}
+
 export function getRazorpayMode(keyId = getRazorpayPublicKeyId()): RazorpayMode {
   if (keyId.startsWith("rzp_test_")) return "test";
   if (keyId.startsWith("rzp_live_")) return "live";
@@ -39,12 +44,13 @@ export function getRazorpayReadiness(): RazorpayReadiness {
   const publicKeyId = clean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
   const resolvedKeyId = getRazorpayKeyId();
   const keySecret = getRazorpayKeySecret();
+  const webhookSecret = getRazorpayWebhookSecret();
   const keyIdsMatch = Boolean(
     !serverKeyId || !publicKeyId || serverKeyId === publicKeyId,
   );
   const keyIdPresent = Boolean(resolvedKeyId);
   const secretPresent = Boolean(keySecret);
-  const configured = keyIdPresent && secretPresent && keyIdsMatch;
+  const configured = keyIdPresent && secretPresent && Boolean(webhookSecret) && keyIdsMatch;
 
   return {
     configured,
@@ -52,6 +58,7 @@ export function getRazorpayReadiness(): RazorpayReadiness {
     keyIdPresent,
     publicKeyIdPresent: Boolean(publicKeyId),
     secretPresent,
+    webhookSecretPresent: Boolean(webhookSecret),
     keyIdsMatch,
     orderCreationReady: configured,
     verificationReady: configured,
@@ -61,6 +68,8 @@ export function getRazorpayReadiness(): RazorpayReadiness {
         ? { issue: "Razorpay key id is missing." }
         : !secretPresent
           ? { issue: "Razorpay key secret is missing." }
+          : !webhookSecret
+            ? { issue: "Razorpay webhook secret is missing." }
           : {}),
   };
 }

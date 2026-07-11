@@ -20,23 +20,23 @@ type ImageValue = {
 const components: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p className="font-serif text-[1.0625rem] md:text-lg leading-[1.85] text-charcoal/80 mb-6">
+      <p className="text-[1.0625rem] md:text-lg leading-[1.8] text-charcoal/80 mb-6">
         {children}
       </p>
     ),
     h2: ({ children }) => (
-      <h2 className="font-serif text-2xl md:text-3xl text-charcoal tracking-tight leading-snug mt-14 mb-5">
+      <h2 className="font-black uppercase text-2xl md:text-3xl text-charcoal tracking-[-0.03em] leading-[1.05] mt-14 mb-5">
         {children}
       </h2>
     ),
     h3: ({ children }) => (
-      <h3 className="font-serif text-xl md:text-2xl text-charcoal tracking-tight leading-snug mt-10 mb-4">
+      <h3 className="font-black uppercase text-xl md:text-2xl text-charcoal tracking-[-0.02em] leading-[1.1] mt-10 mb-4">
         {children}
       </h3>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="my-10 pl-6 border-l-2 border-gold/60">
-        <p className="font-serif italic text-xl md:text-2xl text-charcoal/70 leading-relaxed">
+      <blockquote className="my-10 pl-6 border-l-2 border-accent-red">
+        <p className="text-xl md:text-2xl font-medium text-charcoal/80 leading-relaxed">
           {children}
         </p>
       </blockquote>
@@ -80,12 +80,12 @@ const components: PortableTextComponents = {
   },
   listItem: {
     bullet: ({ children }) => (
-      <li className="font-serif text-[1.0625rem] leading-relaxed text-charcoal/80 pl-6 relative before:content-[''] before:absolute before:left-0 before:top-[0.7em] before:w-2 before:h-px before:bg-gold">
+      <li className="text-[1.0625rem] leading-relaxed text-charcoal/80 pl-6 relative before:content-[''] before:absolute before:left-0 before:top-[0.7em] before:w-2 before:h-px before:bg-accent-red">
         {children}
       </li>
     ),
     number: ({ children }) => (
-      <li className="font-serif text-[1.0625rem] leading-relaxed text-charcoal/80 pl-7 relative [counter-increment:item] before:content-[counter(item)'.'] before:absolute before:left-0 before:top-0 before:text-gold before:font-medium before:text-sm">
+      <li className="text-[1.0625rem] leading-relaxed text-charcoal/80 pl-7 relative [counter-increment:item] before:content-[counter(item)'.'] before:absolute before:left-0 before:top-0 before:text-accent-red before:font-bold before:text-sm">
         {children}
       </li>
     ),
@@ -96,7 +96,7 @@ const components: PortableTextComponents = {
       if (!src) return null;
       return (
         <figure className="my-10">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-charcoal/5">
+          <div className="relative aspect-[3/2] overflow-hidden border border-charcoal/20 bg-charcoal/5">
             <Image
               src={src}
               alt={value.alt ?? ""}

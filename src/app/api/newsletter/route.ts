@@ -4,6 +4,7 @@ import {
   clientIpFromHeaders,
 } from "@/lib/server/turnstile";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
+import { isValidEmail } from "@/lib/email-validation";
 
 export const runtime = "nodejs";
 
@@ -19,8 +20,6 @@ type NewsletterPayload = {
   email?: string;
   turnstileToken?: string;
 };
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
   // Rate limit: 5 signups / minute / IP.
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
   }
 
   const email = (body.email || "").trim().toLowerCase();
-  if (!email || !EMAIL_RE.test(email)) {
+  if (!isValidEmail(email)) {
     return NextResponse.json(
       { error: "Please enter a valid email address." },
       { status: 400 },

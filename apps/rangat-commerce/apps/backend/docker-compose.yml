@@ -1,0 +1,91 @@
+# Self-hosted deploy for a single DigitalOcean droplet (Docker Compose).
+# Mirrors the two-service Railway topology in railway.toml — one "web"
+# container (HTTP + admin, runs migrations on boot) and one "worker"
+# container (scheduled jobs/subscribers, no HTTP) — plus Postgres and Redis
+# on the same box instead of managed plugins.
+#
+# Usage on the droplet:
+#   1. Copy this repo (or just apps/rangat-commerce) to the droplet.
+#   2. Create a `.env` file next to this compose file — see
+#      DEPLOY.md / .env.example for the required keys. NEVER commit it.
+#   3. docker compose up -d --build
+#   4. Run the catalog seed once: docker compose exec web pnpm seed
+#
+# HTTP only for the first deploy (no TLS yet) — the web service's port 9000
+# is published directly. Put Caddy/nginx + Let's Encrypt in front before
+# sending real traffic; see DEPLOY.md.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rangat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-rangat}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rangat}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      # Context = apps/rangat-commerce (two levels up from this file) — has
+      # to be the pnpm workspace root, since the Dockerfile copies
+      # pnpm-workspace.yaml/pnpm-lock.yaml/package.json from context root.
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-rangat}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-rangat}
+      REDIS_URL: redis://redis:6379
+      MEDUSA_WORKER_MODE: server
+    # Only the web container runs migrations, so two containers never race
+    # `medusa db:migrate` against the same database on startup.
+    command: ["sh", "-c", "pnpm predeploy && pnpm start"]
+    ports:
+      - "9000:9000"
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: apps/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-rangat}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-rangat}
+      REDIS_URL: redis://redis:6379
+      MEDUSA_WORKER_MODE: worker
+    command: ["pnpm", "start"]
+
+volumes:
+  postgres-data:
+  redis-data:

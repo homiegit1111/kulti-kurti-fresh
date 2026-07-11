@@ -89,10 +89,14 @@ function itemQuantity(cart: CartRecord): number {
   )
 }
 
+// Medusa 2 returns cart/order totals in the MAJOR currency unit (2400 = ₹2400),
+// same convention the storefront adapter relies on. The old `>10000 → /100`
+// heuristic silently divided any legitimate large wholesale total by 100, so it
+// is gone — just round.
 function rupees(amount: number | null | undefined): number {
   const value = Number(amount)
   if (!Number.isFinite(value)) return 0
-  return value > 10000 ? Math.round(value / 100) : Math.round(value)
+  return Math.round(value)
 }
 
 function issue(

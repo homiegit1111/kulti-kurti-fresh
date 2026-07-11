@@ -49,6 +49,9 @@ export function CartDrawer() {
   const handleMouseEnter = () => {
     if (hideTimeout.current) clearTimeout(hideTimeout.current);
     if (suppressReopen) return; // wait for a fresh leave→enter after navigation
+    // On /cart the full order builder is already on screen — the preview would
+    // just float a duplicate over it, so skip it there.
+    if (pathname === "/cart") return;
     // Preview mini-cart is desktop-only; touch users go straight to /cart.
     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
       setHoverOpen(true);
@@ -75,10 +78,10 @@ export function CartDrawer() {
       <Link
         href="/cart"
         onClick={() => setHoverOpen(false)}
-        className="flex items-center gap-1 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-[#171814] transition-colors hover:text-[#cc2f4a] focus:outline-none"
+        className="flex items-center gap-1 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-content transition-colors hover:text-accent-red focus:outline-none"
         aria-label={`Open cart, ${itemCount} sets`}
       >
-        Cart <span className="font-bold text-[#cc2f4a]">[{itemCount}]</span>
+        Cart <span className="font-bold text-accent-red">[{itemCount}]</span>
       </Link>
 
       {/* Desktop hover preview — brutalist editorial glance, not the full cart */}
@@ -89,23 +92,23 @@ export function CartDrawer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.28, ease: EASE }}
-            className="absolute right-0 top-[100%] z-[100] mt-2 hidden w-[360px] flex-col overflow-hidden border-2 border-[#171814] bg-[#ece9df] shadow-[0_28px_56px_-20px_rgba(0,0,0,0.35)] lg:flex"
+            className="absolute right-0 top-[100%] z-[100] mt-2 hidden w-[360px] flex-col overflow-hidden border-2 border-line bg-surface shadow-[0_28px_56px_-20px_rgba(0,0,0,0.35)] lg:flex"
           >
             {/* Editorial header: oversized count numeral + label */}
-            <div className="relative flex items-end justify-between border-b-2 border-[#171814] px-5 pb-3 pt-4">
+            <div className="relative flex items-end justify-between border-b-2 border-line px-5 pb-3 pt-4">
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#cc2f4a]">
+                <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-red">
                   Your selection
                 </p>
-                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#171814]/45">
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">
                   Wholesale bag
                 </p>
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-4xl font-black leading-[0.8] tracking-[-0.05em] text-[#171814] tabular-nums">
+                <span className="text-4xl font-black leading-[0.8] tracking-[-0.05em] text-content tabular-nums">
                   {itemCount}
                 </span>
-                <span className="pb-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-[#171814]/40">
+                <span className="pb-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-content/40">
                   sets
                 </span>
               </div>
@@ -113,16 +116,16 @@ export function CartDrawer() {
 
             {items.length === 0 ? (
               <div className="relative flex flex-col items-center overflow-hidden px-5 py-12 text-center">
-                <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[9rem] font-black uppercase leading-none tracking-[-0.08em] text-[#171814]/[0.04]">
+                <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[9rem] font-black uppercase leading-none tracking-[-0.08em] text-content/[0.04]">
                   Bag
                 </span>
-                <p className="relative text-sm font-black uppercase tracking-[-0.01em] text-[#171814]">
+                <p className="relative text-sm font-black uppercase tracking-[-0.01em] text-content">
                   Your bag is empty.
                 </p>
                 <Link
                   href="/bulk-order"
                   onClick={() => setHoverOpen(false)}
-                  className="relative mt-4 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-[#cc2f4a]"
+                  className="relative mt-4 inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-accent-red"
                 >
                   Start bulk deals
                   <ArrowRight className="h-3 w-3" strokeWidth={2} />
@@ -137,9 +140,9 @@ export function CartDrawer() {
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, ease: EASE, delay: 0.04 + i * 0.05 }}
-                      className="group flex items-stretch gap-3 border-b border-[#171814]/15 px-5 py-3 last:border-b-0"
+                      className="group flex items-stretch gap-3 border-b border-line/15 px-5 py-3 last:border-b-0"
                     >
-                      <div className="relative h-[68px] w-[52px] shrink-0 overflow-hidden bg-[#d8d4c8]">
+                      <div className="relative h-[68px] w-[52px] shrink-0 overflow-hidden bg-surface-hover">
                         <Image
                           src={item.image}
                           alt={item.title}
@@ -150,18 +153,18 @@ export function CartDrawer() {
                       </div>
                       <div className="flex flex-1 flex-col justify-between overflow-hidden py-0.5">
                         <div>
-                          <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#cc2f4a]">
+                          <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-accent-red">
                             {getStyleCode(item)}
                           </p>
-                          <p className="mt-0.5 truncate text-[13px] font-black uppercase leading-[0.95] tracking-[-0.02em] text-[#171814]">
+                          <p className="mt-0.5 truncate text-[13px] font-black uppercase leading-[0.95] tracking-[-0.02em] text-content">
                             {item.title}
                           </p>
                         </div>
                         <div className="flex items-end justify-between">
-                          <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#171814]/45">
+                          <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-content/45">
                             {item.quantity} × {formatPrice(item.salePrice ?? item.price)}
                           </span>
-                          <span className="text-[12px] font-black tabular-nums tracking-[-0.02em] text-[#171814]">
+                          <span className="text-[12px] font-black tabular-nums tracking-[-0.02em] text-content">
                             {formatPrice((item.salePrice ?? item.price) * item.quantity)}
                           </span>
                         </div>
@@ -170,8 +173,8 @@ export function CartDrawer() {
                   ))}
 
                   {items.length > 3 && (
-                    <div className="border-b border-[#171814]/15 px-5 py-2.5">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#171814]/40">
+                    <div className="border-b border-line/15 px-5 py-2.5">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/40">
                         + {items.length - 3} more{" "}
                         {items.length - 3 === 1 ? "style" : "styles"} in bag
                       </p>
@@ -180,7 +183,7 @@ export function CartDrawer() {
                 </div>
 
                 {/* Money ladder + CTA */}
-                <div className="border-t-2 border-[#171814] bg-[#f2efe6] px-5 py-4">
+                <div className="border-t-2 border-line bg-surface-2 px-5 py-4">
                   <div className="space-y-1.5">
                     <PreviewRow
                       label="Subtotal"
@@ -199,11 +202,11 @@ export function CartDrawer() {
                     />
                   </div>
 
-                  <div className="mt-3 flex items-end justify-between border-t-2 border-[#171814] pt-3">
-                    <span className="pb-1 text-[9px] font-bold uppercase tracking-[0.24em] text-[#171814]/60">
+                  <div className="mt-3 flex items-end justify-between border-t-2 border-line pt-3">
+                    <span className="pb-1 text-[9px] font-bold uppercase tracking-[0.24em] text-content/60">
                       Total
                     </span>
-                    <span className="text-2xl font-black tabular-nums tracking-[-0.04em] text-[#171814]">
+                    <span className="text-2xl font-black tabular-nums tracking-[-0.04em] text-content">
                       {formatPrice(gst.grandTotal)}
                     </span>
                   </div>
@@ -211,7 +214,7 @@ export function CartDrawer() {
                   <Link
                     href="/cart"
                     onClick={() => setHoverOpen(false)}
-                    className="group mt-4 flex h-11 w-full items-center justify-center gap-2 border-2 border-[#171814] bg-[#171814] text-[9px] font-bold uppercase tracking-[0.25em] text-[#f1eee5] transition-colors duration-300 hover:bg-[#cc2f4a] hover:border-[#cc2f4a]"
+                    className="group mt-4 flex h-11 w-full items-center justify-center gap-2 border-2 border-line bg-surface-inverse text-[9px] font-bold uppercase tracking-[0.25em] text-content-inverse transition-colors duration-300 hover:bg-accent-red hover:border-accent-red"
                   >
                     Open order builder
                     <ArrowRight
@@ -240,12 +243,12 @@ function PreviewRow({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#171814]/50">
+      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/50">
         {label}
       </span>
       <span
         className={`text-[12px] font-bold tabular-nums tracking-[-0.01em] ${
-          accent ? "text-[#cc2f4a]" : "text-[#171814]"
+          accent ? "text-accent-red" : "text-content"
         }`}
       >
         {value}

@@ -45,7 +45,7 @@ export async function registerStockAlert(input: {
       clerk_user_id: input.clerkUserId ?? null,
       notified_at: null,
     },
-    { onConflict: "email,product_handle,size" },
+    { onConflict: "email,product_handle,size_key" },
   );
 
   if (error) {
@@ -105,12 +105,15 @@ export interface StockAlertSweepResult {
   pendingProducts: number;
   backInStock: number;
   emailed: number;
+  /** Retained for response-shape stability; always 0 now. */
+  skippedUnconfirmed: number;
 }
 
 /** Orchestrate one fulfilment sweep — called by /api/cron/stock-alerts. */
 export async function runStockAlertSweep(): Promise<StockAlertSweepResult> {
   const supabase = createServiceRoleClient();
-  if (!supabase) return { pendingProducts: 0, backInStock: 0, emailed: 0 };
+  if (!supabase)
+    return { pendingProducts: 0, backInStock: 0, emailed: 0, skippedUnconfirmed: 0 };
 
   const { data: pending, error } = await supabase
     .from("stock_alerts")
@@ -119,7 +122,7 @@ export async function runStockAlertSweep(): Promise<StockAlertSweepResult> {
     .limit(500);
   if (error || !pending?.length) {
     if (error) console.error("[stock-alerts] query failed:", error.message);
-    return { pendingProducts: 0, backInStock: 0, emailed: 0 };
+    return { pendingProducts: 0, backInStock: 0, emailed: 0, skippedUnconfirmed: 0 };
   }
 
   const byHandle = new Map<string, StockAlertRow[]>();
@@ -129,6 +132,10 @@ export async function runStockAlertSweep(): Promise<StockAlertSweepResult> {
     byHandle.set(row.product_handle, list);
   }
 
+  // The Supabase commerce adapter computes availableForSale directly from live
+  // variant inventory (manage_inventory / inventory_quantity / allow_backorder),
+  // so getProductByHandle IS the source of truth for whether a piece is
+  // purchasable again — no separate inventory status pull is needed.
   let backInStock = 0;
   let emailed = 0;
   for (const [handle, alerts] of byHandle) {
@@ -137,6 +144,16 @@ export async function runStockAlertSweep(): Promise<StockAlertSweepResult> {
     backInStock += 1;
 
     for (const alert of alerts) {
+      // Claim before sending: stamp notified_at only if still null, so a failed
+      // stamp write can't leave a sent alert un-stamped and re-sendable.
+      const { data: claimed, error: claimError } = await supabase
+        .from("stock_alerts")
+        .update({ notified_at: new Date().toISOString() })
+        .eq("id", alert.id)
+        .is("notified_at", null)
+        .select("id");
+      if (claimError || !claimed?.length) continue;
+
       const ok = await sendBrandedEmail({
         to: alert.email,
         email: renderBackInStockEmail(product, alert.size),
@@ -144,14 +161,16 @@ export async function runStockAlertSweep(): Promise<StockAlertSweepResult> {
         fromEnvVar: "STOCK_ALERT_FROM",
       });
       if (ok) {
+        emailed += 1;
+      } else {
+        // Release the claim so a later sweep retries.
         await supabase
           .from("stock_alerts")
-          .update({ notified_at: new Date().toISOString() })
+          .update({ notified_at: null })
           .eq("id", alert.id);
-        emailed += 1;
       }
     }
   }
 
-  return { pendingProducts: byHandle.size, backInStock, emailed };
+  return { pendingProducts: byHandle.size, backInStock, emailed, skippedUnconfirmed: 0 };
 }

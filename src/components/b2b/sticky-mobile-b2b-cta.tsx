@@ -15,18 +15,18 @@ export function StickyMobileB2BCta() {
   if (hiddenPrefixes.some((prefix) => pathname?.startsWith(prefix))) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-charcoal/10 bg-white/95 p-3 backdrop-blur-xl lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line/20 bg-surface p-3 lg:hidden">
       <div className="grid grid-cols-2 gap-2">
         <Link
           href="/bulk-order"
-          className="flex h-12 items-center justify-center gap-2 bg-charcoal text-[10px] font-bold uppercase tracking-[0.18em] text-white"
+          className="flex h-12 items-center justify-center gap-2 bg-surface-inverse text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse"
         >
           <Table2 className="h-3.5 w-3.5" />
           Bulk Deals{itemCount ? ` (${itemCount})` : ""}
         </Link>
         <a
           href={buildCatalogRequestUrl()}
-          className="flex h-12 items-center justify-center gap-2 border border-charcoal/15 text-[10px] font-bold uppercase tracking-[0.18em] text-charcoal"
+          className="flex h-12 items-center justify-center gap-2 border border-line/20 text-[10px] font-bold uppercase tracking-[0.2em] text-content transition-colors hover:bg-surface-inverse hover:text-content-inverse"
         >
           <MessageCircle className="h-3.5 w-3.5" />
           WhatsApp

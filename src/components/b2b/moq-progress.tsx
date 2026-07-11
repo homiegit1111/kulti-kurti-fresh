@@ -17,10 +17,10 @@ export function MoqProgress({
     Math.round((totals.totalSets / B2B_CONFIG.minimumOrderSets) * 100),
   );
   const dark = tone === "dark";
-  const track = dark ? "bg-[#f1eee5]/15" : "bg-[#171814]/15";
-  const copy = dark ? "text-[#f1eee5]/55" : "text-[#171814]/55";
-  const label = dark ? "text-[#f1eee5]/45" : "text-[#171814]/45";
-  const fill = dark ? "bg-[#d8ff4f]" : "bg-[#121310]";
+  const track = dark ? "bg-[#f1eee5]/15" : "bg-line/15";
+  const copy = dark ? "text-content-inverse/55" : "text-content/55";
+  const label = dark ? "text-content-inverse/45" : "text-content/45";
+  const fill = dark ? "bg-accent-lime" : "bg-surface-inverse";
 
   return (
     <div>
