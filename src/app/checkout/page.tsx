@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Loader2,
@@ -125,7 +126,8 @@ export default function CheckoutPage() {
 
     fetch("/api/wholesale-profile", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { buyer?: WholesaleProfileBuyer | null } | null) => {
+      .then((raw) => {
+        const data = raw as { buyer?: WholesaleProfileBuyer | null } | null;
         const profileBuyer = data?.buyer;
         if (!profileBuyer) return;
 
@@ -308,7 +310,7 @@ export default function CheckoutPage() {
           total_sets: String(totals.totalSets),
           ...(medusaCartId ? { medusa_cart_id: medusaCartId } : {}),
         },
-        theme: { color: "#C9A96E" },
+        theme: { color: "#121310" },
         handler: async (response) => {
           setLoadingPayment(true);
           setStatus("Payment received by Razorpay. Verifying signature...");
@@ -408,81 +410,93 @@ export default function CheckoutPage() {
   const medusaBackend = process.env.NEXT_PUBLIC_COMMERCE_BACKEND === "medusa";
 
   return (
-    <div className="flex min-h-screen flex-col bg-warm-white text-charcoal font-sans">
+    <div className="flex min-h-screen flex-col bg-[#ece9df] font-sans text-[#171814]">
       <Navbar />
-      <main className="flex-1 pt-28 lg:pt-36 pb-24">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-12">
-          <header className="mb-10 border-b border-charcoal/10 pb-8">
-            <p className="eyebrow mb-3">Wholesale Checkout</p>
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <main className="flex-1 pt-28 pb-24 lg:pt-36">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
+          <motion.header
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            className="mb-10 border-b-2 border-[#171814] pb-8"
+          >
+            <p className="eyebrow mb-4">Wholesale checkout</p>
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h1 className="font-serif text-4xl font-light tracking-tight sm:text-5xl lg:text-6xl">
-                  Confirm order, then pay securely.
+                <h1 className="text-[clamp(3rem,9vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
+                  Checkout
                 </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-relaxed text-charcoal/55">
+                <p className="mt-6 max-w-2xl text-sm leading-6 text-[#171814]/60">
                   WhatsApp confirmation is always available. Razorpay checkout
                   works when payment keys are configured, while mock/keyless
                   mode falls back cleanly to a payment-link request.
                 </p>
               </div>
               <a href={buildPaymentHelpUrl()} className="btn-luxe-outline w-fit">
-                Payment Help <MessageCircle className="h-3.5 w-3.5" />
+                Payment help <MessageCircle className="h-3.5 w-3.5" />
               </a>
             </div>
-          </header>
+          </motion.header>
 
           <WholesaleTrustBar className="mb-10" />
 
           {items.length === 0 ? (
-            <section className="mx-auto max-w-2xl border border-charcoal/10 bg-white px-6 py-20 text-center frame-luxe">
-              <ShoppingBag className="mx-auto mb-6 h-10 w-10 text-charcoal/25" strokeWidth={1} />
-              <p className="eyebrow eyebrow--bare mb-3">No Sets Yet</p>
-              <h2 className="font-serif text-4xl font-light">
-                Build a wholesale cart before checkout.
+            <section className="mx-auto max-w-2xl border border-[#171814]/20 bg-[#f2efe6] px-6 py-20 text-center">
+              <ShoppingBag className="mx-auto mb-6 h-10 w-10 text-[#171814]/30" strokeWidth={1} />
+              <p className="eyebrow eyebrow--bare mb-4 justify-center">No sets yet</p>
+              <h2 className="text-[clamp(2rem,6vw,3.5rem)] font-black uppercase leading-[0.85] tracking-[-0.05em]">
+                Build a cart
+                <br />
+                before checkout
               </h2>
-              <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-charcoal/55">
+              <p className="mx-auto mt-6 max-w-md text-sm leading-6 text-[#171814]/60">
                 MOQ starts at {B2B_CONFIG.minimumOrderSets} sets. Add styles
                 from the catalog or use the bulk linesheet for faster entry.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link href="/shop" className="btn-luxe">Open Catalog</Link>
-                <Link href="/bulk-order" className="btn-luxe-outline">Bulk Order</Link>
+                <Link href="/shop" className="btn-luxe">Open catalog</Link>
+                <Link href="/bulk-order" className="btn-luxe-outline">Bulk order</Link>
               </div>
             </section>
           ) : (
             <div className="grid gap-10 lg:grid-cols-12">
               <section className="lg:col-span-7">
-                <div className="border border-charcoal/10 bg-white">
-                  <div className="border-b border-charcoal/10 p-6">
-                    <p className="eyebrow eyebrow--bare mb-2">Order Summary</p>
-                    <h2 className="font-serif text-3xl font-light">
-                      {totals.totalSets} sets / {totals.totalPieces} pieces
-                    </h2>
+                <div className="border border-[#171814]/20 bg-[#f2efe6]">
+                  <div className="flex items-baseline justify-between gap-4 border-b border-[#171814]/20 p-6">
+                    <div>
+                      <p className="eyebrow eyebrow--bare mb-3">Order summary</p>
+                      <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.03em] sm:text-4xl">
+                        {totals.totalSets} sets
+                      </h2>
+                    </div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#171814]/45">
+                      {totals.totalPieces} pieces
+                    </p>
                   </div>
-                  <div className="divide-y divide-charcoal/10">
+                  <div className="divide-y divide-[#171814]/15">
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-4 p-4 sm:p-6">
-                        <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-warm-gray">
+                        <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-[#d4d0c5]">
                           <Image src={item.image} alt={item.title} fill className="object-cover" sizes="80px" />
                         </div>
                         <div className="flex flex-1 flex-col gap-2">
                           <div className="flex justify-between gap-4">
                             <div>
-                              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold-dark">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#cc2f4a]">
                                 {getStyleCode(item)}
                               </p>
-                              <h3 className="font-serif text-xl text-charcoal">
+                              <h3 className="mt-1 text-lg font-bold leading-tight tracking-[-0.02em] text-[#171814]">
                                 {item.title}
                               </h3>
                             </div>
-                            <p className="font-serif text-lg text-charcoal">
+                            <p className="text-lg font-black tracking-[-0.02em] text-[#171814]">
                               {formatPrice(calculateLineTotal(item, totals.totalSets))}
                             </p>
                           </div>
-                          <p className="text-[10px] uppercase tracking-[0.16em] text-charcoal/45">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#171814]/45">
                             {item.quantity} sets - {item.quantity * B2B_CONFIG.setSize} pcs - {SIZE_RATIO_LABEL}
                           </p>
-                          <p className="text-xs text-charcoal/50">
+                          <p className="text-xs text-[#171814]/55">
                             {formatPrice(item.salePrice ?? item.price)}/set
                           </p>
                         </div>
@@ -494,23 +508,23 @@ export default function CheckoutPage() {
 
               <aside className="lg:col-span-5">
                 <form onSubmit={beginRazorpayPayment} className="sticky top-32 space-y-6">
-                  <div className="border border-charcoal/10 bg-charcoal p-6 text-warm-white sm:p-8 frame-luxe">
-                    <p className="eyebrow eyebrow--bare mb-2">MOQ & Tier</p>
-                    <h2 className="font-serif text-3xl font-light">
-                      {totals.appliedTier?.label || "MOQ pending"}
+                  <div className="border border-[#171814]/20 bg-[#121310] p-6 text-[#f1eee5] sm:p-8">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-[#d8ff4f]">
+                      Order status
+                    </p>
+                    <h2 className="mt-3 text-3xl font-black uppercase leading-[0.9] tracking-[-0.03em]">
+                      {moq.ok ? "Ready to order" : "MOQ pending"}
                     </h2>
                     <div className="mt-6">
                       <MoqProgress totals={totals} tone="dark" />
                     </div>
-                    <div className="mt-8 space-y-3 border-t border-white/10 pt-6">
-                      <Summary label="Base subtotal" value={formatPrice(totals.baseSubtotal)} />
-                      <Summary label="Savings" value={`${totals.discountPercent}% / ${formatPrice(totals.discountAmount)}`} />
+                    <div className="mt-8 space-y-3 border-t border-[#f1eee5]/20 pt-6">
                       <Summary label="Final total" value={formatPrice(totals.subtotal)} strong />
                     </div>
                   </div>
 
-                  <div className="border border-charcoal/10 bg-white p-6 sm:p-8">
-                    <p className="eyebrow mb-4">Buyer Details</p>
+                  <div className="border border-[#171814]/20 bg-[#f2efe6] p-6 sm:p-8">
+                    <p className="eyebrow mb-6">Buyer details</p>
                     <div className="grid gap-5">
                       <Field label="Buyer name" value={buyer.buyerName} onChange={(value) => updateBuyer("buyerName", value)} />
                       <Field label="Business name" value={buyer.businessName} onChange={(value) => updateBuyer("businessName", value)} />
@@ -518,19 +532,19 @@ export default function CheckoutPage() {
                       <Field label="WhatsApp phone" value={buyer.whatsappPhone} onChange={(value) => updateBuyer("whatsappPhone", value)} />
                       <Field label="Email" type="email" value={buyer.email} onChange={(value) => updateBuyer("email", value)} />
                       <Field label="GSTIN optional" value={buyer.gstin} onChange={(value) => updateBuyer("gstin", value)} />
-                      <label className="flex items-center gap-3 text-xs text-charcoal/60">
+                      <label className="flex items-center gap-3 text-xs text-[#171814]/60">
                         <input
                           type="checkbox"
                           checked={buyer.wantsGstInvoice}
                           onChange={(event) => updateBuyer("wantsGstInvoice", event.target.checked)}
-                          className="h-4 w-4 accent-charcoal"
+                          className="h-4 w-4 accent-[#121310]"
                         />
                         GST invoice required
                       </label>
                     </div>
 
                     {status && (
-                      <p className="mt-6 border border-gold/30 border-l-2 border-l-gold bg-warm-white px-4 py-3 text-xs leading-relaxed text-charcoal/65">
+                      <p className="mt-6 border border-[#171814]/20 border-l-2 border-l-[#cc2f4a] bg-[#ece9df] px-4 py-3 text-xs leading-6 text-[#171814]/65">
                         {status}
                       </p>
                     )}
@@ -615,10 +629,16 @@ function Summary({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f1eee5]/45">
         {label}
       </span>
-      <span className={strong ? "font-serif text-3xl text-white" : "font-serif text-lg text-white/80"}>
+      <span
+        className={
+          strong
+            ? "text-3xl font-black tracking-[-0.03em] text-[#d8ff4f]"
+            : "text-lg font-bold tracking-[-0.02em] text-[#f1eee5]/80"
+        }
+      >
         {value}
       </span>
     </div>
