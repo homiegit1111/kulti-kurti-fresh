@@ -844,6 +844,16 @@ a,
   opacity: 1;
 }
 
+/* On hover the row fills with fixed-bright lime, but --content is light ink in
+   dark mode → light-on-lime washout. Rebind --content to the always-dark
+   on-accent ink within the hovered row so the title, the muted code/size/price
+   variants (color-mix on --content) all recompute to readable dark ink. Correct
+   in both themes since --on-accent never flips. */
+.inventory-row:hover,
+.inventory-row:focus-visible {
+  --content: var(--on-accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .inventory-row::before {
     transition: opacity 0.4s ease;
