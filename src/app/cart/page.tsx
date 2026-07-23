@@ -180,7 +180,7 @@ export default function CartPage() {
                                   updateQuantity(item.id, item.quantity - 1)
                                 }
                                 aria-label="Decrease sets"
-                                className="flex h-9 w-9 items-center justify-center text-content/50 transition-colors hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+                                className="flex h-9 w-9 items-center justify-center text-content/70 transition-colors hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
                               >
                                 <Minus className="h-3 w-3" strokeWidth={1.5} />
                               </button>
@@ -192,7 +192,7 @@ export default function CartPage() {
                                   updateQuantity(item.id, item.quantity + 1)
                                 }
                                 aria-label="Increase sets"
-                                className="flex h-9 w-9 items-center justify-center text-content/50 transition-colors hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+                                className="flex h-9 w-9 items-center justify-center text-content/70 transition-colors hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
                               >
                                 <Plus className="h-3 w-3" strokeWidth={1.5} />
                               </button>
@@ -230,7 +230,7 @@ export default function CartPage() {
                   </Link>
                   <button
                     onClick={clearCart}
-                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/35 transition-colors hover:text-accent-red"
+                    className="border border-line/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-red/70 transition-colors hover:border-accent-red hover:text-accent-red focus-visible:outline-none focus-visible:border-accent-red"
                   >
                     Clear cart
                   </button>
@@ -266,9 +266,12 @@ export default function CartPage() {
                         />
                       </div>
 
-                      <div className="mb-6 flex items-end justify-between border-t-2 border-accent-lime/40 pt-5">
+                      {/* Labeled as an estimate: the online charge is the
+                          ex-GST subtotal (see checkout); GST lands on the
+                          dispatch invoice per GST_CONFIG.note below. */}
+                      <div className="mb-6 flex items-end justify-between border-t-2 border-accent-lime/70 pt-5">
                         <span className="pb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-content-inverse/70">
-                          Grand total
+                          Est. invoice total
                         </span>
                         <span className="text-4xl font-black tracking-[-0.03em]">
                           {formatPrice(gst.grandTotal)}

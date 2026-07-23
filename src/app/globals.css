@@ -1065,27 +1065,29 @@ a,
     width: 100%;
     background: transparent;
     border: 0;
-    border-bottom: 1px solid rgb(23 24 20 / 0.25);
+    /* Token-driven (was hardcoded ink): fields must stay readable when the
+       .dark role palette flips — dark-on-dark inputs were invisible. */
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 25%, transparent);
     border-radius: 0;
     padding: 0.875rem 0;
     font-size: 0.875rem;
-    color: #171814;
+    color: var(--content);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
     outline: none;
     appearance: none;
 }
 
 .field-luxe::placeholder {
-    color: rgb(23 24 20 / 0.35);
+    color: color-mix(in srgb, var(--content) 35%, transparent);
 }
 
 .field-luxe:focus {
-    border-bottom-color: #cc2f4a;
-    box-shadow: 0 2px 0 0 #cc2f4a;
+    border-bottom-color: var(--accent-red);
+    box-shadow: 0 2px 0 0 var(--accent-red);
 }
 
 .field-luxe:disabled {
-    color: rgb(23 24 20 / 0.45);
+    color: color-mix(in srgb, var(--content) 45%, transparent);
     cursor: not-allowed;
 }
 

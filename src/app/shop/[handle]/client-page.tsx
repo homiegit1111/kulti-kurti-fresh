@@ -316,10 +316,10 @@ function TradePlateDetail({ product }: { product: MockProduct }) {
           <div className="flex flex-col justify-center px-4 py-2.5 flex-1 min-w-0">
             <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-content-inverse/55">
               {selectedSets} set{selectedSets > 1 ? "s" : ""} ·{" "}
-              {economics.totalPieces} pcs · incl GST
+              {economics.totalPieces} pcs · + GST at invoice
             </span>
             <span className="text-lg font-black tracking-[-0.02em] tabular-nums leading-tight">
-              <AnimatedRupees value={economics.gst.grandTotal} />
+              <AnimatedRupees value={economics.subtotal} />
             </span>
           </div>
           <button
@@ -813,12 +813,14 @@ function BuyConsole({
           >
             Review cart →
           </button>
+          {/* Charge-adjacent number = the exact payable (ex-GST subtotal);
+              GST is estimated on the invoice at dispatch (GST_CONFIG.note). */}
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-content/50 tabular-nums">
             {economics.totalPieces} pcs · total{" "}
             <span className="text-content">
-              <AnimatedRupees value={economics.gst.grandTotal} />
+              <AnimatedRupees value={economics.subtotal} />
             </span>{" "}
-            incl GST
+            + GST at invoice
           </p>
         </div>
 
@@ -1048,7 +1050,7 @@ function DetailTabs({
                   <div className="h-px bg-line/15 my-2.5" />
                   <div className="flex items-end justify-between">
                     <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-content/60">
-                      Grand total
+                      Est. invoice total
                     </span>
                     <span className="text-xl font-black tracking-[-0.03em] tabular-nums">
                       <AnimatedRupees value={economics.gst.grandTotal} />

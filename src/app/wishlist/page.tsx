@@ -107,12 +107,24 @@ export default function WishlistPage() {
 function EmptyState() {
   return (
     <div className="relative flex flex-col items-center justify-center overflow-hidden border border-line/20 bg-surface-2 py-24 text-center lg:py-32">
+      {/* Inner lime frame — ledger framing device */}
+      <div className="pointer-events-none absolute inset-3 border border-accent-lime/20" />
+
+      {/* Giant faded background word */}
       <p className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[30vw] font-black uppercase leading-none tracking-[-0.08em] text-content/[0.04] sm:text-[16rem]">
         Saved
       </p>
-      <p className="eyebrow eyebrow--bare relative text-accent-red">
-        Linesheet
-      </p>
+
+      {/* Numbered index chip + eyebrow */}
+      <div className="relative mb-2 inline-flex items-center gap-3">
+        <span className="flex h-6 w-8 items-center justify-center bg-accent-red text-[9px] font-black uppercase tracking-[0.18em] text-content-inverse">
+          00
+        </span>
+        <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-red">
+          Linesheet — no entries
+        </span>
+      </div>
+
       <h2 className="relative mt-4 max-w-[16ch] text-4xl font-black uppercase leading-[0.85] tracking-[-0.05em] sm:text-5xl">
         No wholesale styles saved yet.
       </h2>

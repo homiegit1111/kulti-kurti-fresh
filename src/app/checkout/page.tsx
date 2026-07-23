@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useId, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -27,6 +27,39 @@ import {
   trackEvent,
   trackMoqBlockedCheckout,
 } from "@/lib/analytics";
+
+// ── Validation regexes ──────────────────────────────────────────────────────
+//
+// WhatsApp phone: optional +91 / 91 / 0 prefix (with optional spaces/dashes),
+// followed by exactly 10 digits where the first digit is 6-9.
+const PHONE_RE = /^(?:\+91[-\s]?|91[-\s]?|0)?[6-9]\d{9}$/;
+
+// GSTIN: 2-digit state code (01-38) + 5 uppercase letters + 4 digits + 1
+// uppercase letter (PAN pattern) + 1 alphanumeric + literal "Z" + 1
+// alphanumeric. Total: 15 characters, always uppercase.
+// State code digits: first digit 0-3, second digit 0-9 (covers 01-38).
+const GSTIN_RE = /^[0-3]\d[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$/;
+
+// Email: RFC-friendly permissive pattern — local@domain.tld.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// ── Validator helpers ────────────────────────────────────────────────────────
+function validatePhone(v: string): string {
+  if (!v) return "";
+  return PHONE_RE.test(v.replace(/[\s\-]/g, ""))
+    ? ""
+    : "Enter a 10-digit mobile number";
+}
+
+function validateGstin(v: string): string {
+  if (!v) return "";
+  return GSTIN_RE.test(v) ? "" : "GSTIN looks off — expected 15 characters like 29ABCDE1234F1Z5";
+}
+
+function validateEmail(v: string): string {
+  if (!v) return "";
+  return EMAIL_RE.test(v) ? "" : "Check the email format";
+}
 
 type BuyerForm = {
   buyerName: string;
@@ -540,9 +573,29 @@ export default function CheckoutPage() {
                       <Field label="Buyer name" value={buyer.buyerName} onChange={(value) => updateBuyer("buyerName", value)} />
                       <Field label="Business name" value={buyer.businessName} onChange={(value) => updateBuyer("businessName", value)} />
                       <Field label="City" value={buyer.city} onChange={(value) => updateBuyer("city", value)} />
-                      <Field label="WhatsApp phone" value={buyer.whatsappPhone} onChange={(value) => updateBuyer("whatsappPhone", value)} />
-                      <Field label="Email" type="email" value={buyer.email} onChange={(value) => updateBuyer("email", value)} />
-                      <Field label="GSTIN optional" value={buyer.gstin} onChange={(value) => updateBuyer("gstin", value)} />
+                      <Field
+                        label="WhatsApp phone"
+                        value={buyer.whatsappPhone}
+                        onChange={(value) => updateBuyer("whatsappPhone", value)}
+                        validate={validatePhone}
+                      />
+                      <Field
+                        label="Email"
+                        type="email"
+                        value={buyer.email}
+                        onChange={(value) => updateBuyer("email", value)}
+                        validate={validateEmail}
+                      />
+                      <Field
+                        label="GSTIN optional"
+                        value={buyer.gstin}
+                        onChange={(value) => {
+                          const upped = value.toUpperCase();
+                          updateBuyer("gstin", upped);
+                          return upped;
+                        }}
+                        validate={validateGstin}
+                      />
                       <label className="flex items-center gap-3 text-xs text-content/60">
                         <input
                           type="checkbox"
@@ -604,26 +657,92 @@ export default function CheckoutPage() {
   );
 }
 
+// ── Field component ──────────────────────────────────────────────────────────
+//
+// Backward-compatible: all existing call sites (label/type/value/onChange only)
+// continue to work unchanged. Optional `validate` prop enables the touched-field
+// inline validation pattern:
+//   - Validates on blur (first touch).
+//   - Re-validates on every subsequent change once the field has been touched.
+//   - Never validates on the very first keystroke.
+//   - onChange may return a transformed string (e.g. uppercased) so the
+//     controlled input stays in sync without a double-setState cycle.
 function Field({
   label,
   type = "text",
   value,
   onChange,
+  validate,
 }: {
   label: string;
   type?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string) => string | void;
+  validate?: (value: string) => string;
 }) {
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState("");
+  const msgId = useId();
+
+  // Derive what to actually display in the input. When onChange returns a
+  // transformed string (e.g. uppercased GSTIN) we want the input to show that
+  // transformed value, not the raw keystroke. The parent state holds it; we
+  // just read `value` from props on the next render.
+  const handleChange = (raw: string) => {
+    const next = onChange(raw) ?? raw;
+    if (touched && validate) {
+      setError(validate(next));
+    }
+  };
+
+  const handleBlur = () => {
+    if (!touched) setTouched(true);
+    if (validate) {
+      setError(validate(value));
+    }
+  };
+
+  const isValid = touched && validate !== undefined && error === "" && value !== "";
+
   return (
     <div>
       <label className="field-label">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="field-luxe"
-      />
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => handleChange(event.target.value)}
+          onBlur={handleBlur}
+          className={[
+            "field-luxe pr-6",
+            touched && error
+              ? "border-b-accent-red focus:border-b-accent-red focus:shadow-[0_2px_0_0_var(--color-accent-red)]"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          aria-invalid={touched && !!error ? "true" : undefined}
+          aria-describedby={touched && error ? msgId : undefined}
+        />
+        {/* Lime valid tick — only shown when touched, non-empty, and passes validation */}
+        {isValid && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 h-1 w-1 rounded-none bg-accent-lime"
+            title="Valid"
+          />
+        )}
+      </div>
+      {/* Error message — visually 11px, micro-label voice, red */}
+      {touched && error && (
+        <p
+          id={msgId}
+          role="alert"
+          className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-red"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }
