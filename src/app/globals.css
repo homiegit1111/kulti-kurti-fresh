@@ -2176,3 +2176,39 @@ a,
         animation: none;
     }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   VIEW TRANSITIONS — one continuous catalogue (appended block)
+   Route navigations run through the browser View Transitions API:
+   experimental.viewTransition (next.config.ts) + the <ViewTransition>
+   boundary in src/app/template.tsx.
+   Layer 1 — quick quiet root crossfade: a page turning, not a site loading.
+   Layer 2 — shared-element plate morph: the shop card image wrapper and the
+   PDP hero plate share a per-product view-transition-name
+   (`product-plate-<id>`), so the garment travels between pages.
+   All timing uses the house ease; every animation is gated on
+   prefers-reduced-motion. Browsers without the API navigate normally.
+   ════════════════════════════════════════════════════════════════════════ */
+@media not (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 0.24s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    /* Shared-element groups (product plate morphs + template boundary pairs)
+       ride the same ease, a touch longer so travel reads as one motion. */
+    ::view-transition-group(*) {
+        animation-duration: 0.3s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    /* Reduced motion: suppress every view-transition animation — the swap
+       becomes an instant cut, matching the rest of the motion system. */
+    ::view-transition-group(*),
+    ::view-transition-image-pair(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+        animation: none !important;
+    }
+}

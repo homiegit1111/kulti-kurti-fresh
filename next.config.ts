@@ -15,6 +15,14 @@ const lanDevOrigins = (
   .filter(Boolean);
 
 const nextConfig: NextConfig = {
+  // React <ViewTransition> integration for the App Router. Client navigations
+  // are React Transitions; with the boundary in `src/app/template.tsx` each
+  // page turn runs through document.startViewTransition (quiet crossfade +
+  // per-product plate morph). Timing lives in globals.css and is fully gated
+  // on prefers-reduced-motion; browsers without the API navigate normally.
+  experimental: {
+    viewTransition: true,
+  },
   // Allow phone browsers on the local network to load Turbopack assets.
   allowedDevOrigins: lanDevOrigins,
   images: {

@@ -26,6 +26,10 @@ export const LivingProductCard = memo(function LivingProductCard({
   heightClass = "",
 }: LivingProductCardProps) {
   const { addItem } = useCart();
+  // View Transitions morph source: the PDP hero plate carries the same name,
+  // so the garment visually travels from this card into the product page.
+  // Ids are sanitized to a valid CSS custom-ident (alphanumeric/dash only).
+  const plateName = `product-plate-${product.id.replace(/[^a-zA-Z0-9-]/g, "-")}`;
   const soldOut = product.availableForSale === false;
   const setPrice = product.salePrice ?? product.price;
   const perPiece = getPerPiecePrice(setPrice);
@@ -38,7 +42,11 @@ export const LivingProductCard = memo(function LivingProductCard({
   return (
     <article className={`group flex h-full flex-col border border-line/15 bg-surface ${heightClass}`}>
       <div className="relative overflow-hidden bg-surface-hover">
-        <Link href={`/shop/${product.handle}`} className="relative block aspect-square overflow-hidden">
+        <Link
+          href={`/shop/${product.handle}`}
+          className="relative block aspect-square overflow-hidden"
+          style={{ viewTransitionName: plateName }}
+        >
           <Image
             src={product.image}
             alt={product.title}

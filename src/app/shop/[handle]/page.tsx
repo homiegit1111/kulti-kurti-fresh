@@ -22,24 +22,20 @@ export async function generateMetadata(
     alternates: {
       canonical: `/shop/${product.handle}`,
     },
+    // og:image / twitter:image intentionally NOT set here: the file-based
+    // sibling `opengraph-image.tsx` renders the branded per-product line-sheet
+    // card, and Next skips file-based images whenever config metadata
+    // specifies an `images` key (see mergeStaticMetadata in
+    // next/dist/lib/metadata/resolve-metadata.js).
     openGraph: {
       title: `${product.title} | Rangat Pehnawa`,
       description: product.description,
-      images: [
-        {
-          url: product.images[0],
-          width: 800,
-          height: 1000,
-          alt: product.title,
-        },
-      ],
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title: product.title,
       description: product.description,
-      images: [product.images[0]],
     },
   };
 }

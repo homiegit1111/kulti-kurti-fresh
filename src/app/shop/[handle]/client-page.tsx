@@ -520,7 +520,10 @@ function ImageStage({
             {/* Soft studio glow keyed warm — gallery matting, not empty space */}
             <div className="product-stage-glow absolute inset-0" aria-hidden />
 
-            <AnimatePresence mode="wait">
+            {/* initial={false}: the first mount renders opaque so the shared-
+                element view transition (card → plate morph) lands seamlessly;
+                subsequent plate switches keep their crossfade. */}
+            <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={activeImageIndex}
                 initial={{ opacity: 0, scale: reduce ? 1 : 1.02 }}
@@ -528,7 +531,14 @@ function ImageStage({
                 exit={{ opacity: 0 }}
                 transition={{ duration: reduce ? 0 : 0.5, ease: EASE }}
                 className="absolute inset-0"
-                style={{ willChange: "transform", backfaceVisibility: "hidden" }}
+                style={{
+                  willChange: "transform",
+                  backfaceVisibility: "hidden",
+                  // View Transitions morph target — pairs with the shop card's
+                  // image wrapper (same per-product name, CSS-ident-sanitized),
+                  // so the plate travels across the navigation.
+                  viewTransitionName: `product-plate-${product.id.replace(/[^a-zA-Z0-9-]/g, "-")}`,
+                }}
               >
                 <Image
                   src={product.images[activeImageIndex]}
