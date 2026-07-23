@@ -11,6 +11,7 @@ import { getStyleCode } from "@/lib/b2b/style-code";
 import { formatPrice, getProducts } from "@/lib/commerce/catalog";
 import { B2BHero } from "@/components/sections/b2b-hero";
 import BuyerLanes from "@/components/sections/buyer-lanes";
+import { DeskMath, type DeskLane } from "@/components/sections/desk-math";
 import { FilmShowcase } from "@/components/sections/film-showcase";
 import { CollectionTriptych } from "@/components/sections/collection-triptych";
 import { InstagramGallery } from "@/components/sections/instagram-gallery";
@@ -24,6 +25,29 @@ export default async function HomePage() {
   const itemListLd = buildProductItemListLd(products, {
     name: "Featured Wholesale Kurtis",
     path: "/",
+  });
+
+  // Desk-math cost lanes: entry / core / premium picked from the live line so
+  // the margin planner always quotes real per-piece pricing.
+  const byPrice = [...products].sort(
+    (a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price),
+  );
+  const lanePicks = [
+    byPrice[0],
+    byPrice[Math.floor(byPrice.length / 2)],
+    byPrice[byPrice.length - 1],
+  ].filter(Boolean);
+  const laneNames = ["Entry lane", "Core lane", "Premium lane"];
+  const deskLanes: DeskLane[] = [
+    ...new Map(lanePicks.map((p) => [p.id, p])).values(),
+  ].map((p, i) => {
+    const setPrice = p.salePrice ?? p.price;
+    return {
+      label: laneNames[i] ?? "Lane",
+      code: getStyleCode(p),
+      setPrice,
+      perPiece: getPerPiecePrice(setPrice),
+    };
   });
 
   const buyingProducts = products.slice(0, 5);
@@ -171,6 +195,8 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <DeskMath lanes={deskLanes} />
 
         <FilmShowcase />
 

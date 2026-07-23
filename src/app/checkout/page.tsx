@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   Loader2,
   MessageCircle,
   ShieldCheck,
@@ -171,7 +170,7 @@ export default function CheckoutPage() {
       value: totals.subtotal,
       source: "checkout_page",
     });
-    window.location.href = buildWholesaleWhatsAppUrl(items, buyerInfo);
+    window.location.assign(buildWholesaleWhatsAppUrl(items, buyerInfo));
   };
 
   async function loadRazorpayScript(): Promise<boolean> {
@@ -519,6 +518,18 @@ export default function CheckoutPage() {
                       <MoqProgress totals={totals} tone="dark" />
                     </div>
                     <div className="mt-8 space-y-3 border-t border-content-inverse/20 pt-6">
+                      {totals.discountAmount > 0 && (
+                        <>
+                          <Summary
+                            label="Gross"
+                            value={formatPrice(totals.baseSubtotal)}
+                          />
+                          <Summary
+                            label={`Tier discount ${totals.discountPercent}%`}
+                            value={`−${formatPrice(totals.discountAmount)}`}
+                          />
+                        </>
+                      )}
                       <Summary label="Final total" value={formatPrice(totals.subtotal)} strong />
                     </div>
                   </div>

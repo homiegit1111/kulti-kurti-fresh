@@ -47,7 +47,7 @@ export default function CartPage() {
       value: totals.subtotal,
       discount_percent: totals.discountPercent,
     });
-    window.location.href = buildWholesaleWhatsAppUrl(items);
+    window.location.assign(buildWholesaleWhatsAppUrl(items));
   };
 
   return (

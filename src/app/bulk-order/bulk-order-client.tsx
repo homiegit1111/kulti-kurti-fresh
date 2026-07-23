@@ -219,7 +219,9 @@ export default function BulkOrderClient() {
                         </p>
                       </td>
                       <td className="px-4 py-4">
-                        <div className="flex w-28 items-center border border-line/20 bg-white">
+                        {/* bg-surface-2 (not bg-white): in dark mode a white
+                            well made the near-white input text unreadable. */}
+                        <div className="flex w-28 items-center border border-line/20 bg-surface-2">
                           <button
                             type="button"
                             onClick={() =>
@@ -285,15 +287,18 @@ export default function BulkOrderClient() {
               </p>
             </div>
             <div className="flex flex-col gap-3">
+              {/* Primary = solid lime (on-accent ink is pinned dark in both
+                  themes) — the previous bg-surface-2 went near-black on the
+                  dark slate panel and the CTA disappeared. */}
               <button
                 type="button"
                 onClick={addSelected}
                 disabled={selectedRows.length === 0}
-                className="btn-luxe border-content-inverse bg-surface-2 text-content hover:bg-accent-lime hover:text-on-accent disabled:opacity-45"
+                className="btn-luxe border-accent-lime bg-accent-lime text-on-accent hover:bg-white hover:border-white disabled:opacity-45"
               >
                 Add to cart <Plus className="h-3.5 w-3.5" />
               </button>
-              <Link href="/checkout" className="btn-luxe-outline border-content-inverse/40 text-content-inverse hover:bg-surface-2 hover:text-content">
+              <Link href="/checkout" className="btn-luxe-outline border-content-inverse/50 text-content-inverse hover:bg-surface-2 hover:text-content">
                 Checkout <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>

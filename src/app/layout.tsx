@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
@@ -133,8 +134,17 @@ export default function RootLayout({
           is on <html> before anything renders — no light-mode flash, no
           hydration mismatch. Mirrors theme-provider's storage key + DOM
           contract (data-theme + .dark + color-scheme). Kept inline + tiny.
+
+          Rendered via next/script (beforeInteractive, in the root layout —
+          the sanctioned location) so Next stamps the per-request CSP nonce
+          onto it on strict-dynamic routes (/shop, /login, /sign-up,
+          /collections/[slug]). A bare <script> tag has no nonce there and
+          gets CSP-blocked → dark-theme users see a light flash. Static
+          routes keep working through the CSP2 unsafe-inline fallback.
         */}
-        <script
+        <Script
+          id="theme-boot"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem('rangat-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}var r=document.documentElement;r.setAttribute('data-theme',t);r.classList.toggle('dark',t==='dark');r.style.colorScheme=t;}catch(e){}})();`,
           }}

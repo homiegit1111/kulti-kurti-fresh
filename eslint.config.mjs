@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     // Sanity Studio schema lives here and is compiled by the separate Studio
     // project (it imports `sanity`, not a storefront dependency).
     "sanity/**",
+    // Medusa commerce workspace is a separate project with its own eslint
+    // config (apps/rangat-commerce/apps/backend/eslint.config.ts) and its own
+    // module conventions — the storefront config must not lint into it.
+    "apps/**",
   ]),
 ]);
 

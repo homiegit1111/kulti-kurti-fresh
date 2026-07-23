@@ -10,15 +10,7 @@ import {
   INSTAGRAM_PROFILE,
   type InstagramFeedItem,
 } from "@/lib/instagram/posts";
-import {
-  DURATION,
-  EASE_OUT_EXPO,
-  EASE_OUT_QUINT,
-  VIEWPORT_EARLY,
-  tween,
-  fadeUp,
-  staggerContainer,
-} from "@/lib/motion";
+import { VIEWPORT_EARLY, fadeUp, staggerContainer } from "@/lib/motion";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -68,6 +60,9 @@ function FeedTile({
   reduceMotion: boolean | null;
 }) {
   const reel = isReel(post);
+  // Instagram media URLs are signed and expire; when one dies, degrade to a
+  // branded catalogue plate instead of an empty dark well.
+  const [imgFailed, setImgFailed] = useState(false);
   const alt = post.caption
     ? `${post.caption} — @${INSTAGRAM_HANDLE}`
     : `Post from @${INSTAGRAM_HANDLE}`;
@@ -92,29 +87,53 @@ function FeedTile({
     >
       {/* image well — 4/5 portrait */}
       <div className="relative aspect-[4/5] overflow-hidden bg-[#1c1d18]">
-        <Image
-          src={post.mediaUrl}
-          alt={alt}
-          fill
-          unoptimized
-          priority={index < 3}
-          sizes="(max-width: 640px) 44vw, (max-width: 768px) 11rem, (max-width: 1024px) 12rem, 13rem"
-          className={[
-            "object-cover",
-            reduceMotion
-              ? ""
-              : "transition-transform duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]",
-          ].join(" ")}
-        />
+        {imgFailed ? (
+          /* branded fallback plate — same footprint, no broken-image well */
+          <div className="absolute inset-0 flex flex-col items-start justify-between p-3">
+            <InstagramMark
+              className="h-4 w-4 text-content-inverse/25"
+              aria-hidden="true"
+            />
+            <div>
+              {post.caption && (
+                <p className="line-clamp-3 text-[9px] font-bold uppercase leading-snug tracking-[0.18em] text-content-inverse/55">
+                  {post.caption}
+                </p>
+              )}
+              <span className="mt-1.5 inline-flex items-center gap-1 text-[8px] font-bold uppercase tracking-[0.22em] text-accent-lime/80">
+                View on Instagram
+                <ArrowUpRight className="h-2.5 w-2.5" aria-hidden="true" />
+              </span>
+            </div>
+          </div>
+        ) : (
+          <Image
+            src={post.mediaUrl}
+            alt={alt}
+            fill
+            unoptimized
+            priority={index < 3}
+            sizes="(max-width: 640px) 44vw, (max-width: 768px) 11rem, (max-width: 1024px) 12rem, 13rem"
+            className={[
+              "object-cover",
+              reduceMotion
+                ? ""
+                : "transition-transform duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]",
+            ].join(" ")}
+            onError={() => setImgFailed(true)}
+          />
+        )}
 
         {/* permanent bottom gradient — readable on mobile without hover */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[#0e0f0c]/80 via-[#0e0f0c]/25 to-transparent"
-        />
+        {!imgFailed && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[#0e0f0c]/80 via-[#0e0f0c]/25 to-transparent"
+          />
+        )}
 
         {/* mobile permanent caption (hidden on md+ where hover takes over) */}
-        <div className="absolute inset-x-0 bottom-0 p-2.5 md:hidden">
+        <div className={imgFailed ? "hidden" : "absolute inset-x-0 bottom-0 p-2.5 md:hidden"}>
           {post.caption && (
             <p className="line-clamp-1 text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-content-inverse/80">
               {post.caption}
@@ -128,7 +147,11 @@ function FeedTile({
         {/* desktop hover overlay: caption + lime rule + arrow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 hidden flex-col justify-end md:flex"
+          className={
+            imgFailed
+              ? "hidden"
+              : "pointer-events-none absolute inset-0 hidden flex-col justify-end md:flex"
+          }
         >
           {/* lime rule at very bottom — slides in from left */}
           <span
@@ -362,7 +385,7 @@ export function InstagramGallery() {
           {/* desktop-only fade + arrow nudge hints on the right edge */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 right-0 hidden w-20 bg-gradient-to-l from-[#ece9df] to-transparent lg:block"
+            className="pointer-events-none absolute inset-y-0 right-0 hidden w-20 bg-gradient-to-l from-surface to-transparent lg:block"
           />
 
           {/* desktop prev/next micro-arrows */}

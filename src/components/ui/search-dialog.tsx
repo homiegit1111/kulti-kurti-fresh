@@ -450,7 +450,7 @@ export function SearchDialog({
                           animate="visible"
                           className="grid grid-cols-4 gap-4"
                         >
-                          {PREVIEW_PRODUCTS.map((product, i) => (
+                          {PREVIEW_PRODUCTS.map((product) => (
                             <motion.div
                               key={product.id}
                               variants={reduced ? undefined : staggerChild}

@@ -6,6 +6,7 @@ import { ScrollToTop } from "@/components/providers/scroll-to-top";
 import { ClerkShopifySync } from "@/components/providers/clerk-shopify-sync";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ThemeProgressBar } from "@/components/layout/theme-progress-bar";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { MotionConfig } from "framer-motion";
 import { type ReactNode } from "react";
 
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: ReactNode }) {
             <ScrollToTop />
             {children}
             <ThemeProgressBar />
+            <ScrollProgress />
           </WishlistProvider>
         </CartProvider>
       </ThemeProvider>

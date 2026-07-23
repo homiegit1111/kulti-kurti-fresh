@@ -412,19 +412,28 @@ function TradePlateDetail({ product }: { product: MockProduct }) {
                       {getStyleCode(rp)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-start px-1">
-                    <div className="flex flex-col">
-                      <h3 className="font-sans text-sm lg:text-base font-bold uppercase tracking-[-0.01em] text-content group-hover:text-accent-red transition-colors mb-1 leading-tight">
-                        {rp.title}
-                      </h3>
-                      <p className="text-[9px] lg:text-[10px] font-bold tracking-[0.16em] text-content/45 uppercase">
+                  {/* line-book data block: rule, category label, clamped title,
+                      then set/per-pc on one baseline — no collisions at any
+                      title length. */}
+                  <div className="border-t-2 border-line/70 px-0.5 pt-3">
+                    <p className="mb-1.5 text-[8px] font-bold uppercase tracking-[0.22em] text-content/40">
+                      {rp.category}
+                    </p>
+                    <h3 className="line-clamp-2 min-h-[2.1em] font-sans text-sm lg:text-[15px] font-bold uppercase tracking-[-0.01em] leading-tight text-content group-hover:text-accent-red transition-colors">
+                      {rp.title}
+                    </h3>
+                    <div className="mt-2.5 flex items-baseline justify-between gap-3">
+                      <span className="font-black text-content text-base tracking-[-0.02em] tabular-nums">
+                        {formatPrice(rp.salePrice ?? rp.price)}
+                        <span className="ml-1 text-[8px] font-bold uppercase tracking-[0.14em] text-content/40">
+                          /set
+                        </span>
+                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.16em] tabular-nums text-content/45">
                         {getPerPiecePrice(rp.salePrice ?? rp.price) &&
                           `${formatPrice(getPerPiecePrice(rp.salePrice ?? rp.price))}/pc`}
-                      </p>
+                      </span>
                     </div>
-                    <span className="font-black text-content text-sm lg:text-base tracking-[-0.02em] tabular-nums">
-                      {formatPrice(rp.salePrice ?? rp.price)}
-                    </span>
                   </div>
                 </Link>
               ))}
@@ -503,7 +512,11 @@ function ImageStage({
 
         {/* Hero plate — garment on a warm studio backdrop, shown in full */}
         <div className="frame-luxe flex-1 relative">
-          <div className="relative w-full aspect-[4/5] lg:aspect-[3/4] lg:h-[calc(100vh-13rem)] lg:max-h-[820px] overflow-hidden bg-surface-2">
+          {/* Deterministic sizing: mobile keeps the native 4/5 plate; on lg the
+              conflicting aspect is dropped so the plate fills the full 7-col
+              track at a viewport-capped height (sticky top-28 + 11rem offset
+              leaves 4rem clearance — the plate is always fully in view). */}
+          <div className="relative w-full aspect-[4/5] lg:aspect-auto lg:h-[min(calc(100vh-11rem),840px)] overflow-hidden bg-surface-hover/60">
             {/* Soft studio glow keyed warm — gallery matting, not empty space */}
             <div className="product-stage-glow absolute inset-0" aria-hidden />
 

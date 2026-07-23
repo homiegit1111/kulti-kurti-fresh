@@ -44,6 +44,13 @@ export async function generateMetadata(
   };
 }
 
+/** Google recommends priceValidUntil; default to ~1 year out (per request). */
+function getPriceValidUntil(): string {
+  return new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -58,9 +65,7 @@ export default async function ProductPage({
 
   const inStock = product.availableForSale !== false;
   // Google recommends priceValidUntil; default to ~1 year out.
-  const priceValidUntil = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
+  const priceValidUntil = getPriceValidUntil();
 
   // Customer reviews → star snippets in search results. Only emitted when
   // real reviews exist (Google penalises fabricated aggregateRating data).

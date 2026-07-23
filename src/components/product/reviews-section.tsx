@@ -9,7 +9,7 @@
  * sign in rather than a dead form.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@/lib/auth/client";
@@ -91,23 +91,29 @@ export default function ReviewsSection({ handle }: { handle: string }) {
   const [thanks, setThanks] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/reviews?handle=${encodeURIComponent(handle)}`);
-      if (!res.ok) return;
-      const data = (await res.json()) as { reviews?: Review[]; summary?: Summary };
-      setReviews(data.reviews ?? []);
-      setSummary(data.summary ?? { count: 0, average: 0 });
-    } catch {
-      /* reviews are an enhancement — fail silently */
-    } finally {
-      setLoaded(true);
-    }
-  }, [handle]);
-
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    fetch(`/api/reviews?handle=${encodeURIComponent(handle)}`)
+      .then((res) =>
+        res.ok
+          ? (res.json() as Promise<{ reviews?: Review[]; summary?: Summary }>)
+          : null,
+      )
+      .then((data) => {
+        if (cancelled || !data) return;
+        setReviews(data.reviews ?? []);
+        setSummary(data.summary ?? { count: 0, average: 0 });
+      })
+      .catch(() => {
+        /* reviews are an enhancement — fail silently */
+      })
+      .finally(() => {
+        if (!cancelled) setLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [handle]);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -311,9 +317,20 @@ export default function ReviewsSection({ handle }: { handle: string }) {
       {/* ── Review list ── */}
       {reviews.length === 0 ? (
         !formOpen && (
-          <p className="text-lg text-charcoal/45 mt-10">
-            This style is waiting for its first trade note.
-          </p>
+          /* merchant ledger empty row — framed and factual, not a void */
+          <div className="mt-8 flex flex-col gap-4 border border-line/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <span className="bg-accent-lime px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-on-accent">
+                00
+              </span>
+              <p className="text-sm text-charcoal/60">
+                This style is waiting for its first trade note.
+              </p>
+            </div>
+            <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-charcoal/40">
+              Fabric · customer response · reorder potential
+            </p>
+          </div>
         )
       ) : (
         <ul className="divide-y divide-charcoal/10">

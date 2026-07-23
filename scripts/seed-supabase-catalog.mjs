@@ -244,7 +244,7 @@ function setPriceInr(p) {
 
 async function main() {
   // 1) Collections (upsert on handle) ────────────────────────────────────────
-  const { error: colErr, count: colCount } = await supabase
+  const { error: colErr } = await supabase
     .from("commerce_collections")
     .upsert(
       COLLECTIONS.map((c) => ({

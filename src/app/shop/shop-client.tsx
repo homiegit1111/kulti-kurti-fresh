@@ -12,7 +12,7 @@ import { LivingProductCard } from "@/components/ui/living-product-card";
 import { ChevronDown, MessageCircle, Table2, X } from "lucide-react";
 import { SHOP_FAQS } from "./faqs";
 import { StickyMobileB2BCta } from "@/components/b2b/sticky-mobile-b2b-cta";
-import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
+import { B2B_CONFIG } from "@/lib/b2b/config";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -45,13 +45,17 @@ function ShopContent({
   const [isSortOpen, setIsSortOpen] = useState(false);
   const { isWishlisted, toggleWishlist } = useWishlist();
 
-  const [categories, setCategories] = useState([
-    "All",
-    "Kurtis",
-    "Lehengas",
-    "Co-ords",
-    "Sarees",
-  ]);
+  // Derive categories from SSR products at init so the effect below never has
+  // to set state synchronously (react-hooks/set-state-in-effect).
+  const [categories, setCategories] = useState(() => {
+    const fallback = ["All", "Kurtis", "Lehengas", "Co-ords", "Sarees"];
+    if (!initialProducts?.length) return fallback;
+    const derived = [
+      "All",
+      ...new Set(initialProducts.map((p) => p.category).filter(Boolean)),
+    ];
+    return derived.length > 1 ? derived : fallback;
+  });
   // Server-provided products ship real HTML on first paint (SEO/LCP);
   // the client effect only runs as a fallback when SSR data is absent.
   const [products, setProducts] = useState<MockProduct[]>(
@@ -99,14 +103,8 @@ function ShopContent({
   const clearAll = () => router.replace(pathname, { scroll: false });
 
   useEffect(() => {
-    if (initialProducts?.length) {
-      const dynamicCategories = [
-        "All",
-        ...new Set(initialProducts.map((p) => p.category).filter(Boolean)),
-      ];
-      if (dynamicCategories.length > 1) setCategories(dynamicCategories);
-      return;
-    }
+    // SSR data already hydrated products + categories at init.
+    if (initialProducts?.length) return;
     getProducts().then((data) => {
       setProducts(data);
       const dynamicCategories = [
@@ -119,16 +117,56 @@ function ShopContent({
   }, [initialProducts]);
 
   // Colors available across the catalog (for the swatch facet)
-  const availableColors = useMemo(
-    () => [...new Set(products.flatMap((p) => p.colors).filter(Boolean))],
-    [products],
-  );
+  // Near-identical shades collapse into one swatch (ivory/cream/pearl/white
+  // read as four random dots otherwise). A family filters ANY member — the
+  // URL carries the members as CSV so links stay shareable.
+  const colorFacets = useMemo(() => {
+    const COLOR_GROUPS: { label: string; members: string[] }[] = [
+      { label: "Ivory & cream", members: ["ivory", "cream", "pearl", "white"] },
+    ];
+    const unique = [...new Set(products.flatMap((p) => p.colors).filter(Boolean))];
+    const seen = new Set<string>();
+    const facets: { label: string; value: string; hexes: string[] }[] = [];
+    for (const color of unique) {
+      if (seen.has(color)) continue;
+      const group = COLOR_GROUPS.find((g) =>
+        g.members.includes(color.toLowerCase()),
+      );
+      if (group) {
+        const members = unique.filter((c) =>
+          group.members.includes(c.toLowerCase()),
+        );
+        members.forEach((m) => seen.add(m));
+        facets.push({
+          label: group.label,
+          value: members.join(","),
+          hexes: members
+            .slice(0, 2)
+            .map((m) => COLOR_MAP[m.toLowerCase()] ?? "#D9D4CC"),
+        });
+      } else {
+        seen.add(color);
+        facets.push({
+          label: color,
+          value: color,
+          hexes: [COLOR_MAP[color.toLowerCase()] ?? "#D9D4CC"],
+        });
+      }
+    }
+    return facets;
+  }, [products]);
+
+  const [hoveredColor, setHoveredColor] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const band = priceBands.find((b) => b.value === activePrice);
     return products
       .filter((p) => activeCategory === "All" || p.category === activeCategory)
-      .filter((p) => !activeColor || p.colors.includes(activeColor))
+      .filter(
+        (p) =>
+          !activeColor ||
+          activeColor.split(",").some((c) => p.colors.includes(c)),
+      )
       .filter((p) => !band || band.test(p.salePrice ?? p.price))
       .sort((a, b) => {
         switch (sortBy) {
@@ -162,50 +200,54 @@ function ShopContent({
                 <p className="eyebrow mb-4">Wholesale line book / Catalogue</p>
                 <h1 className="font-sans font-black uppercase leading-[0.82] tracking-[-0.06em] text-[clamp(3rem,10vw,8.5rem)]">
                   <span className="block">The</span>
-                  <span className="block text-transparent [-webkit-text-stroke:1px_#171814] sm:ml-[6vw]">
+                  {/* stroke uses the content token — a hardcoded ink stroke
+                      made this line invisible in dark mode */}
+                  <span className="block text-transparent [-webkit-text-stroke:1px_var(--content)] sm:ml-[6vw]">
                     Kurti
                   </span>
                   <span className="block">Index</span>
                 </h1>
               </div>
-              <p className="max-w-xs text-sm leading-6 text-content/55 md:pb-2 md:text-right">
-                Price-smart cottons, office fits and color-pop styles for
-                shoppers, boutiques and online resellers. Set pricing, actual
-                availability, direct ordering.
-              </p>
+
+              {/* compact terms + actions — replaces the old paragraph, CTA
+                  row and 4-cell stat band (less text, same facts) */}
+              <div className="flex flex-col gap-5 md:items-end md:pb-2">
+                <p className="max-w-xs text-sm leading-6 text-content/55 md:text-right">
+                  Set pricing, live availability, direct ordering — built for
+                  boutiques and resellers.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <a href={buildCatalogRequestUrl()} className="btn-luxe-outline">
+                    WhatsApp catalog <MessageCircle className="h-3.5 w-3.5" />
+                  </a>
+                  <a href="/bulk-order" className="btn-luxe">
+                    Bulk deals <Table2 className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
             </div>
           </motion.div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a href={buildCatalogRequestUrl()} className="btn-luxe-outline">
-              Get Catalog on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
-            </a>
-            <a href="/bulk-order" className="btn-luxe">
-              Open Bulk Deals <Table2 className="h-3.5 w-3.5" />
-            </a>
-          </div>
-
-          <div className="mt-8 grid gap-3 border-y border-line/20 py-5 sm:grid-cols-4">
+          {/* one-line spec strip — the old stat band, compressed */}
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-[0.22em] text-content/45">
             {[
-              ["Low-mid", "to high-mid range"],
-              ["Fresh", "newness first"],
-              [`MOQ ${B2B_CONFIG.minimumOrderSets}`, "bulk friendly"],
-              ["WhatsApp", "stock support"],
-            ].map(([value, label]) => (
-              <div key={value}>
-                <p className="text-2xl font-black uppercase tracking-[-0.03em] text-content">
-                  {value}
-                </p>
-                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-content/45">
-                  {label}
-                </p>
-              </div>
+              "Low–mid range",
+              "Fresh first",
+              `MOQ ${B2B_CONFIG.minimumOrderSets} sets`,
+              "WhatsApp stock support",
+            ].map((spec) => (
+              <span key={spec} className="flex items-center gap-2">
+                <span className="h-1 w-1 bg-accent-lime" aria-hidden="true" />
+                {spec}
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Marquee — ink + lime */}
-        <div className="mb-10 border-y border-line bg-surface-inverse py-3 text-content-inverse">
+        {/* Marquee — ink + lime. overflow-hidden is load-bearing: the w-max
+            rail is wider than the viewport and would otherwise stretch the
+            document sideways (horizontal scroll + dead gutter). */}
+        <div className="mb-10 overflow-hidden border-y border-line bg-surface-inverse py-3 text-content-inverse">
           <div className="flex w-max animate-marquee gap-8 whitespace-nowrap px-4">
             {[
               "Daily cotton kurtis",
@@ -343,27 +385,44 @@ function ShopContent({
               ))}
             </div>
 
-            {availableColors.length > 0 && (
+            {colorFacets.length > 0 && (
               <div className="flex items-center gap-1.5 flex-wrap">
-                {availableColors.map((color) => {
-                  const swatch = COLOR_MAP[color.toLowerCase()] ?? "#D9D4CC";
-                  const isActive = activeColor === color;
+                {colorFacets.map((facet) => {
+                  const isActive = activeColor === facet.value;
+                  const bg =
+                    facet.hexes.length > 1
+                      ? `linear-gradient(135deg, ${facet.hexes[0]} 50%, ${facet.hexes[1]} 50%)`
+                      : facet.hexes[0];
                   return (
                     <button
-                      key={color}
-                      onClick={() => toggleParam("color", color)}
-                      title={color}
-                      aria-label={`Filter by ${color}`}
+                      key={facet.value}
+                      onClick={() => toggleParam("color", facet.value)}
+                      onMouseEnter={() => setHoveredColor(facet.label)}
+                      onMouseLeave={() => setHoveredColor(null)}
+                      onFocus={() => setHoveredColor(facet.label)}
+                      onBlur={() => setHoveredColor(null)}
+                      aria-label={`Filter by ${facet.label}`}
                       aria-pressed={isActive}
-                      className={`w-5 h-5 transition-all focus-visible:outline-none ${
+                      className={`h-5 w-5 transition-all duration-200 focus-visible:outline-none ${
                         isActive
-                          ? "ring-2 ring-accent-red ring-offset-2 ring-offset-surface"
-                          : "ring-1 ring-line/15 hover:ring-line/40"
+                          ? "scale-110 ring-2 ring-accent-red ring-offset-2 ring-offset-surface"
+                          : "ring-1 ring-line/15 hover:scale-110 hover:ring-line/40"
                       }`}
-                      style={{ backgroundColor: swatch }}
+                      style={{ background: bg }}
                     />
                   );
                 })}
+                {/* fixed label slot — no floating tooltip to clip inside the
+                    collapsible bar; reads like a desk readout */}
+                <span
+                  aria-live="polite"
+                  className="ml-1 min-w-[7rem] text-[9px] font-bold uppercase tracking-[0.18em] text-content/45"
+                >
+                  {hoveredColor ??
+                    (activeColor
+                      ? colorFacets.find((f) => f.value === activeColor)?.label
+                      : "")}
+                </span>
               </div>
             )}
 
