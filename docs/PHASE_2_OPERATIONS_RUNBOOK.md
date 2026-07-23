@@ -1,16 +1,30 @@
 # Rangat Phase 2 Operations Runbook
 
-This runbook is for the Medusa B2B transition period before live Razorpay payment completion and Medusa order finalization are enabled.
+This runbook covers the period before live Razorpay keys are configured and a
+real test payment has been verified. The commerce runtime is the
+**Supabase-backed adapter** (`src/lib/commerce/supabase-adapter.ts`); the Medusa
+scaffold under `apps/rangat-commerce` is retired from the runtime (the
+`"medusa"` backend value is treated as unset — see `src/lib/commerce/index.ts`)
+and kept for reference only.
 
 ## Current Source Of Truth
 
-- Catalog, variants, base prices, images, and high-stock seed inventory: Medusa.
-- Buyer-facing checkout cart reservation: Medusa cart created by `/api/commerce/checkout`.
-- Buyer identity during checkout: Clerk/Supabase wholesale profile when signed in, otherwise checkout form fields.
-- Payment status: not automated yet. Until Razorpay live keys are configured and verified, use WhatsApp/manual confirmation.
-- Paid order status: do not mark a Medusa cart/order as paid from the storefront yet.
+- Catalog, prices, images, orders, payment ledgers: Supabase (apply
+  `supabase/20260709_commerce_backend.sql` and related migrations; seed with
+  `node scripts/seed-supabase-catalog.mjs`).
+- Buyer-facing checkout reservation: a commerce order draft created by
+  `/api/commerce/checkout` (Supabase `commerce_orders`).
+- Buyer identity during checkout: Clerk/Supabase wholesale profile when signed
+  in, otherwise checkout form fields.
+- Payment status: automated once real Razorpay keys are configured and
+  verified. Until then, use WhatsApp/manual confirmation.
+- Order inspection: the `/admin` dashboard (orders + products) for allowlisted
+  Clerk users (`ADMIN_CLERK_USER_IDS`), or the Supabase tables directly.
 
-## Daily Checks
+## Daily Checks (LEGACY — Medusa scaffold only)
+
+The commands below target the retired Medusa scaffold and are kept for
+reference. They are not part of the live Supabase runtime.
 
 From `apps/rangat-commerce/apps/backend`:
 
@@ -32,17 +46,17 @@ $env:RANGAT_OPS_REPORT_STRICT='true'
 
 ## Handling A Buyer Inquiry
 
-Use the Medusa cart ID from checkout diagnostics, Razorpay keyless fallback response, or WhatsApp message if present.
+Use the commerce order id from checkout diagnostics, the Razorpay keyless
+fallback response, or the WhatsApp message if present.
 
-Check these fields:
+Check these fields (in `/admin/orders` or Supabase `commerce_orders`):
 
-- `cart.id`: the reserved Medusa cart.
-- `cart.items.quantity`: wholesale set count, not pieces.
-- `cart.metadata.expected_total_sets`: expected checkout set count.
-- `cart.metadata.buyer_reference`: stable operational buyer reference.
-- `cart.customer.id`: Medusa customer created/found from checkout email.
-- `cart.customer.groups`: should include `Rangat Wholesale Buyers` when the buyer supplied email and the internal customer-link route succeeded.
-- `cart.customer.metadata`: buyer reference, account source, business type, GSTIN/city when supplied.
+- order id: the reserved commerce order draft.
+- line quantities: wholesale set counts, not pieces.
+- expected total sets: from the checkout intent notes.
+- buyer reference: stable operational buyer reference.
+- buyer fields: name, business, city, WhatsApp phone, email, GSTIN when
+  supplied (from the checkout form or wholesale profile).
 
 If `customer.id` or group linkage is missing, keep handling through WhatsApp and rerun checkout after confirming buyer email. Do not manually invent customer identity.
 
@@ -52,7 +66,7 @@ Until real Razorpay keys are configured:
 
 - Do not treat `/api/razorpay/order` keyless responses as paid.
 - Do not clear carts as confirmed without a real payment or manual confirmation.
-- Do not create a paid Medusa order from a cart.
+- Do not mark a commerce order as paid without a verified capture.
 - Keep WhatsApp confirmation as the operational fallback.
 
 After Razorpay keys are added, the next engineering cycle must verify:
@@ -61,16 +75,28 @@ After Razorpay keys are added, the next engineering cycle must verify:
 - Razorpay signature is valid.
 - Razorpay payment lookup returns captured status.
 - Razorpay amount and currency match the signed checkout intent.
-- Medusa cart ID matches the checkout intent.
-- Only then can a Medusa order/payment completion path mark the order paid.
+- The commerce order id matches the signed checkout intent.
+- Only then does order completion mark the order paid.
 
-`/api/razorpay/verify` now returns an `orderFinalization` object after a captured payment is reconciled. It is intentionally not an order-completion action yet:
+`/api/razorpay/verify` returns an `orderFinalization` object after a captured
+payment is reconciled (see `src/lib/commerce/order-finalization.ts`):
 
-- `MEDUSA_ORDER_COMPLETION_DEFERRED`: payment is captured and has a Medusa cart, but finalization is waiting for the final payment cycle.
-- `MEDUSA_CART_REQUIRED`: payment verification did not carry a Medusa cart id, so Medusa order completion must not run.
-- `MEDUSA_ORDER_COMPLETION_NOT_IMPLEMENTED`: `MEDUSA_ORDER_COMPLETION_ENABLED=true` was set before the implementation exists; this fails closed.
+- `COMMERCE_ORDER_COMPLETION_READY`: captured payment with a linked commerce
+  order — completion proceeds.
+- `COMMERCE_ORDER_COMPLETION_DEFERRED`: completion is paused by the
+  kill-switch (see below).
+- `COMMERCE_ORDER_REQUIRED`: the payment did not carry a commerce order id, so
+  completion must not run.
+- `PAYMENT_CAPTURE_REQUIRED`: the payment is not captured yet.
+- `COMMERCE_ORDER_INTENT_MISMATCH` (webhook): the order id does not match the
+  signed checkout intent; fails closed.
 
-Keep `MEDUSA_ORDER_COMPLETION_ENABLED` blank until the final implementation is ready.
+Completion is ON by default. Set `COMMERCE_ORDER_COMPLETION_DISABLED=true`
+only to pause automatic completion in production without a redeploy (payments
+still verify and reconcile; completion is deferred until you unset it). The
+legacy `MEDUSA_ORDER_COMPLETION_ENABLED` is still honored as an explicit
+enable for backward compatibility, but should not be used in new
+configuration.
 
 ## Customer Support Language
 
@@ -90,5 +116,5 @@ Avoid saying:
 
 - Cart exists but no payment: contact buyer on WhatsApp and confirm payment link/manual transfer.
 - Cart quantity mismatch: ask buyer to rebuild checkout; do not edit quantities blindly.
-- Missing customer group: rerun checkout with buyer email after confirming `RANGAT_MEDUSA_INTERNAL_SECRET` is configured in both storefront and backend.
+- Missing buyer linkage: rerun checkout after confirming the buyer email. (Legacy Medusa scaffold used `RANGAT_MEDUSA_INTERNAL_SECRET`; not part of the live runtime.)
 - Catalog/price/image/inventory audit fails: fix catalog governance before accepting new orders for the affected style.

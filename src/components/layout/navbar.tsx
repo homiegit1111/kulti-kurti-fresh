@@ -246,7 +246,6 @@ export function Navbar() {
         <div className="flex shrink-0 items-center justify-start lg:justify-center">
           <Link
             href="/"
-            aria-label="Rangat Pehnawa — home"
             className="group relative z-10 inline-flex items-center transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[1px] active:translate-y-0"
           >
             <Wordmark align="left" className="lg:items-center" />
@@ -259,7 +258,6 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            aria-label="Search catalog"
             aria-keyshortcuts="Meta+K Control+K"
             className="group flex h-9 items-center gap-2.5 border border-line/20 bg-transparent pl-3 pr-4 text-left transition-colors duration-300 hover:border-line/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime xl:w-44 xl:pr-2.5"
           >
@@ -268,7 +266,6 @@ export function Navbar() {
               Search
             </span>
             <kbd
-              aria-hidden
               className="ml-auto hidden h-[18px] items-center border border-line/20 px-1 font-sans text-[8px] font-bold tracking-[0.12em] text-content/40 transition-colors group-hover:border-line/40 group-hover:text-content/65 xl:inline-flex"
             >
               ⌘K

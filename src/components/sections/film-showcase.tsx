@@ -131,7 +131,7 @@ export function FilmShowcase() {
               <video
                 ref={videoRef}
                 src="/videos/background.mp4"
-                poster="/images/hero.png"
+                poster="/_next/image?url=%2Fimages%2Fhero.png&w=1280&q=75"
                 muted
                 loop
                 playsInline
@@ -238,7 +238,7 @@ export function FilmShowcase() {
               <video
                 ref={videoRef}
                 src="/videos/background.mp4"
-                poster="/images/hero.png"
+                poster="/_next/image?url=%2Fimages%2Fhero.png&w=1280&q=75"
                 muted
                 loop
                 playsInline

@@ -135,7 +135,9 @@ export const LivingProductCard = memo(function LivingProductCard({
           aria-label={
             soldOut
               ? `${product.title} is sold out`
-              : `Add ${B2B_CONFIG.defaultLineSets} set of ${product.title}`
+              : // Starts with the visible "Add set" text (WCAG 2.5.3 label in
+                // name), then the product for screen-reader context.
+                `Add set — ${product.title} (${B2B_CONFIG.defaultLineSets} set)`
           }
           className="mt-4 flex h-10 w-full items-center justify-center gap-2 border border-line/20 bg-surface text-[10px] font-bold uppercase tracking-[0.18em] text-content transition-colors hover:bg-surface-inverse hover:text-content-inverse disabled:cursor-not-allowed disabled:opacity-45"
         >

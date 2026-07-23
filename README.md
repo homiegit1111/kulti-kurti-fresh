@@ -1,13 +1,15 @@
 # Rangat Pehnawa
 
-B2B wholesale storefront built with Next.js, Clerk, Supabase, Razorpay, and a
-Medusa 2 commerce backend scaffold.
+B2B wholesale storefront built with Next.js, Clerk, Supabase (database and
+primary commerce backend), and Razorpay. A Medusa 2 scaffold is retained under
+`apps/` for reference but is retired from the runtime.
 
 ## Current State
 
-The Phase 1 wholesale storefront is complete and the Medusa Phase 2 runtime work
-is ready up to the Razorpay key/test boundary. Razorpay is key-paste ready, but
-real payment testing and Medusa order completion still need to be finished.
+The Phase 1 wholesale storefront is complete and the Supabase-backed commerce
+runtime is ready up to the Razorpay key/test boundary. Razorpay is key-paste
+ready, but the first real test payment and end-to-end order completion still
+need to be verified.
 
 Useful docs:
 
@@ -31,7 +33,9 @@ Run a production build:
 bun run build
 ```
 
-The Medusa backend lives in `apps/rangat-commerce/apps/backend`.
+The legacy Medusa scaffold lives in `apps/rangat-commerce/apps/backend`
+(retired from the runtime — the storefront's commerce adapter is
+Supabase-backed; see `src/lib/commerce/index.ts`).
 
 ## Environment
 
@@ -41,7 +45,7 @@ Copy `.env.example` to `.env.local` and fill in your values:
 cp .env.example .env.local
 ```
 
-Tomorrow's Razorpay keys:
+Razorpay keys (server + public):
 
 ```env
 RAZORPAY_KEY_ID=
@@ -55,5 +59,7 @@ After adding keys and restarting, check:
 /api/razorpay/readiness
 ```
 
-Do not set `MEDUSA_ORDER_COMPLETION_ENABLED=true` until the real Medusa order
-completion path is implemented and verified.
+Order completion is ON by default — a verified + captured payment with a
+linked commerce order completes it automatically. Set
+`COMMERCE_ORDER_COMPLETION_DISABLED=true` only to pause completion temporarily
+(see `docs/PHASE_2_OPERATIONS_RUNBOOK.md`).

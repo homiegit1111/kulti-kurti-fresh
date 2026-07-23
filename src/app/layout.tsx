@@ -25,7 +25,8 @@ import { isAuthEnabled } from "@/lib/auth/config";
 export const viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale cap: pinch-zoom must stay available (a11y — buyers zoom
+  // fabric detail; axe meta-viewport flags any zoom restriction).
   themeColor: "#1a1a1a",
 };
 

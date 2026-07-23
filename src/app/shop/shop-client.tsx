@@ -442,6 +442,9 @@ function ShopContent({
           </div>
         </div>
 
+        {/* Product grid — sr-only h2 keeps heading order intact (card titles
+            are h3; without this the page jumps h1 → h3). */}
+        <h2 className="sr-only">Catalog styles</h2>
         {/* Product grid */}
         <div className="max-w-[1600px] mx-auto px-4 lg:px-10">
           <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-6 md:gap-y-12">
