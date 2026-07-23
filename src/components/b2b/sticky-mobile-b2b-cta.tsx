@@ -19,16 +19,22 @@ export function StickyMobileB2BCta() {
       <div className="grid grid-cols-2 gap-2">
         <Link
           href="/bulk-order"
+          aria-label={`Bulk deals${
+            itemCount
+              ? `, ${itemCount} ${itemCount === 1 ? "item" : "items"} in cart`
+              : ""
+          }`}
           className="flex h-12 items-center justify-center gap-2 bg-surface-inverse text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse"
         >
-          <Table2 className="h-3.5 w-3.5" />
+          <Table2 aria-hidden="true" className="h-3.5 w-3.5" />
           Bulk Deals{itemCount ? ` (${itemCount})` : ""}
         </Link>
         <a
           href={buildCatalogRequestUrl()}
+          aria-label="Get the kurti catalog on WhatsApp"
           className="flex h-12 items-center justify-center gap-2 border border-line/20 text-[10px] font-bold uppercase tracking-[0.2em] text-content transition-colors hover:bg-surface-inverse hover:text-content-inverse"
         >
-          <MessageCircle className="h-3.5 w-3.5" />
+          <MessageCircle aria-hidden="true" className="h-3.5 w-3.5" />
           WhatsApp
         </a>
       </div>

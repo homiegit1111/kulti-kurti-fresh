@@ -9,7 +9,8 @@ import { getProducts, type MockProduct, COLOR_MAP } from "@/lib/commerce/catalog
 import ShopLoading from "@/app/shop/loading";
 import { useWishlist } from "@/lib/wishlist-context";
 import { LivingProductCard } from "@/components/ui/living-product-card";
-import { ChevronDown, MessageCircle, Table2, X } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, MessageCircle, Printer, Table2, X } from "lucide-react";
 import { SHOP_FAQS } from "./faqs";
 import { StickyMobileB2BCta } from "@/components/b2b/sticky-mobile-b2b-cta";
 import { B2B_CONFIG } from "@/lib/b2b/config";
@@ -220,6 +221,9 @@ function ShopContent({
                   <a href={buildCatalogRequestUrl()} className="btn-luxe-outline">
                     WhatsApp catalog <MessageCircle className="h-3.5 w-3.5" />
                   </a>
+                  <Link href="/line-sheet" className="btn-luxe-outline">
+                    Line sheet <Printer className="h-3.5 w-3.5" />
+                  </Link>
                   <a href="/bulk-order" className="btn-luxe">
                     Bulk deals <Table2 className="h-3.5 w-3.5" />
                   </a>

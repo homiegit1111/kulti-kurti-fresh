@@ -151,13 +151,34 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans bg-warm-white text-charcoal relative">
+        {/*
+          Skip link: first focusable element on every page. Visually hidden
+          until keyboard focus, then a square lime chip pinned top-left (house
+          focus pattern). Targets the #main-content wrapper below — pages own
+          their <main> elements and carry no id, so the layout provides the
+          anchor point.
+        */}
+        <a
+          href="#main-content"
+          className="sr-only text-[10px] font-bold uppercase tracking-[0.2em] focus:not-sr-only focus:fixed focus:left-0 focus:top-0 focus:z-[100] focus:bg-accent-lime focus:px-4 focus:py-2 focus:text-on-accent"
+        >
+          Skip to content
+        </a>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <GoogleAnalytics />
         <WebVitals />
-        <Providers>{children}</Providers>
+        <Providers>
+          {/*
+            Skip-link target. display: contents — generates no box, so the
+            flex-col body layout and every page's DOM render exactly as before.
+          */}
+          <div id="main-content" className="contents">
+            {children}
+          </div>
+        </Providers>
         <ConsentBanner />
       </body>
     </html>

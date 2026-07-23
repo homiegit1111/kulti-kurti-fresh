@@ -171,6 +171,23 @@ export function Navbar() {
     };
   }, []);
 
+  /* ⌘K / Ctrl+K — open the search command desk from anywhere */
+  useEffect(() => {
+    const handleShortcut = (e: KeyboardEvent) => {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        !e.altKey &&
+        !e.shiftKey &&
+        (e.key === "k" || e.key === "K")
+      ) {
+        e.preventDefault();
+        setIsSearchOpen((open) => !open);
+      }
+    };
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, []);
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 will-change-transform">
       {/* ── Promotional Banner (line-book: ink bar, lime accents) ── */}
@@ -243,12 +260,19 @@ export function Navbar() {
             type="button"
             onClick={() => setIsSearchOpen(true)}
             aria-label="Search catalog"
-            className="group flex h-9 items-center gap-2.5 border border-line/20 bg-transparent pl-3 pr-4 text-left transition-colors duration-300 hover:border-line/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime xl:w-44"
+            aria-keyshortcuts="Meta+K Control+K"
+            className="group flex h-9 items-center gap-2.5 border border-line/20 bg-transparent pl-3 pr-4 text-left transition-colors duration-300 hover:border-line/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime xl:w-44 xl:pr-2.5"
           >
             <Search className="h-3.5 w-3.5 shrink-0 text-content/55 transition-colors group-hover:text-accent-red" strokeWidth={2} />
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-content/45 transition-colors group-hover:text-content/70">
               Search
             </span>
+            <kbd
+              aria-hidden
+              className="ml-auto hidden h-[18px] items-center border border-line/20 px-1 font-sans text-[8px] font-bold tracking-[0.12em] text-content/40 transition-colors group-hover:border-line/40 group-hover:text-content/65 xl:inline-flex"
+            >
+              ⌘K
+            </kbd>
           </button>
 
           {isLoaded &&

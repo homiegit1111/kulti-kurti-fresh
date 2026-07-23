@@ -7,9 +7,10 @@ import {
 } from "@portabletext/react";
 import { sanityImageUrl } from "@/lib/sanity/client";
 
-// Premium serializers for editorial Portable Text — bold, italics, links,
-// headings, blockquotes, lists and embedded images, all in the Rangat house
-// style. Renders inside an RSC (no client JS needed).
+// Line-book serializers for editorial Portable Text — bold, italics, links,
+// headings, blockquotes, lists and embedded images, all on the semantic
+// surface/content tokens (never hardcoded ink — dark mode depends on it).
+// Renders inside an RSC (no client JS needed).
 
 type ImageValue = {
   asset?: { _ref?: string };
@@ -20,23 +21,23 @@ type ImageValue = {
 const components: PortableTextComponents = {
   block: {
     normal: ({ children }) => (
-      <p className="text-[1.0625rem] md:text-lg leading-[1.8] text-charcoal/80 mb-6">
+      <p className="mb-6 text-base leading-[1.85] text-content/75 md:text-[1.0625rem]">
         {children}
       </p>
     ),
     h2: ({ children }) => (
-      <h2 className="font-black uppercase text-2xl md:text-3xl text-charcoal tracking-[-0.03em] leading-[1.05] mt-14 mb-5">
+      <h2 className="mt-14 mb-5 text-2xl font-black uppercase leading-[1.02] tracking-[-0.03em] text-content md:text-3xl">
         {children}
       </h2>
     ),
     h3: ({ children }) => (
-      <h3 className="font-black uppercase text-xl md:text-2xl text-charcoal tracking-[-0.02em] leading-[1.1] mt-10 mb-4">
+      <h3 className="mt-10 mb-4 text-xl font-black uppercase leading-[1.08] tracking-[-0.02em] text-content md:text-2xl">
         {children}
       </h3>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="my-10 pl-6 border-l-2 border-accent-red">
-        <p className="text-xl md:text-2xl font-medium text-charcoal/80 leading-relaxed">
+      <blockquote className="my-10 border-l-2 border-accent-red pl-6">
+        <p className="max-w-[26ch] text-xl font-black uppercase leading-[1.08] tracking-[-0.02em] text-content md:text-2xl">
           {children}
         </p>
       </blockquote>
@@ -44,11 +45,11 @@ const components: PortableTextComponents = {
   },
   marks: {
     strong: ({ children }) => (
-      <strong className="font-semibold text-charcoal">{children}</strong>
+      <strong className="font-bold text-content">{children}</strong>
     ),
     em: ({ children }) => <em className="italic">{children}</em>,
     underline: ({ children }) => (
-      <span className="underline decoration-gold/50 underline-offset-4">
+      <span className="underline decoration-accent-lime decoration-2 underline-offset-4">
         {children}
       </span>
     ),
@@ -56,7 +57,7 @@ const components: PortableTextComponents = {
       const href: string = value?.href ?? "#";
       const external = /^https?:\/\//.test(href);
       const cls =
-        "text-charcoal underline decoration-gold/60 underline-offset-4 hover:decoration-gold transition-colors";
+        "text-content underline decoration-accent-lime decoration-2 underline-offset-4 transition-colors hover:decoration-accent-red";
       return external ? (
         <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
           {children}
@@ -80,12 +81,12 @@ const components: PortableTextComponents = {
   },
   listItem: {
     bullet: ({ children }) => (
-      <li className="text-[1.0625rem] leading-relaxed text-charcoal/80 pl-6 relative before:content-[''] before:absolute before:left-0 before:top-[0.7em] before:w-2 before:h-px before:bg-accent-red">
+      <li className="relative pl-6 text-base leading-relaxed text-content/75 md:text-[1.0625rem] before:absolute before:left-0 before:top-[0.7em] before:h-px before:w-2 before:bg-accent-red before:content-['']">
         {children}
       </li>
     ),
     number: ({ children }) => (
-      <li className="text-[1.0625rem] leading-relaxed text-charcoal/80 pl-7 relative [counter-increment:item] before:content-[counter(item)'.'] before:absolute before:left-0 before:top-0 before:text-accent-red before:font-bold before:text-sm">
+      <li className="relative pl-7 text-base leading-relaxed text-content/75 md:text-[1.0625rem] [counter-increment:item] before:absolute before:left-0 before:top-0 before:text-sm before:font-bold before:text-accent-red before:content-[counter(item)'.']">
         {children}
       </li>
     ),
@@ -96,7 +97,7 @@ const components: PortableTextComponents = {
       if (!src) return null;
       return (
         <figure className="my-10">
-          <div className="relative aspect-[3/2] overflow-hidden border border-charcoal/20 bg-charcoal/5">
+          <div className="relative aspect-[3/2] overflow-hidden border border-line/20 bg-surface-hover">
             <Image
               src={src}
               alt={value.alt ?? ""}
@@ -106,7 +107,7 @@ const components: PortableTextComponents = {
             />
           </div>
           {value.caption && (
-            <figcaption className="mt-3 text-center text-xs uppercase tracking-[0.18em] text-charcoal/45">
+            <figcaption className="mt-3 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-content/45">
               {value.caption}
             </figcaption>
           )}

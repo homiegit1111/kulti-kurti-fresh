@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, X, ArrowUpRight } from "lucide-react";
 import {
   motion,
@@ -12,6 +13,7 @@ import {
 } from "framer-motion";
 import { MOCK_PRODUCTS, formatPrice } from "@/lib/commerce/catalog";
 import { getPerPiecePrice } from "@/lib/b2b/pricing";
+import { getStyleCode } from "@/lib/b2b/style-code";
 import type { CommerceProduct } from "@/lib/commerce/catalog";
 
 /* ─── motion tokens ──────────────────────────────────────────────────────── */
@@ -50,6 +52,50 @@ const TRENDING = [
 
 const PREVIEW_PRODUCTS = MOCK_PRODUCTS.slice(0, 4);
 
+const LISTBOX_ID = "rangat-search-listbox";
+const MAX_VISIBLE = 8;
+
+/* ─── code-literate search index ─────────────────────────────────────────────
+   Repeat buyers reorder by style code (RP-KURTI-941), not by browsing.
+   Each product is indexed with its canonical code plus a compact form
+   ("rpkurti941") so "941", "kurti-941" and "rp kurti 941" all resolve. */
+type IndexEntry = {
+  product: CommerceProduct;
+  code: string;
+  compactCode: string;
+};
+
+const SEARCH_INDEX: IndexEntry[] = MOCK_PRODUCTS.map((product) => {
+  const code = getStyleCode(product);
+  return { product, code, compactCode: code.replace(/-/g, "").toLowerCase() };
+});
+
+type Hit = IndexEntry & { score: number };
+
+function searchCatalogue(rawQuery: string): Hit[] {
+  const q = rawQuery.trim().toLowerCase();
+  if (!q) return [];
+  const compactQ = q.replace(/[\s-]/g, "");
+
+  const hits: Hit[] = [];
+  for (const entry of SEARCH_INDEX) {
+    const { product, compactCode } = entry;
+    let score = -1;
+    if (compactQ && compactCode === compactQ) score = 0;
+    else if (compactQ && compactCode.startsWith(compactQ)) score = 1;
+    else if (compactQ && compactCode.includes(compactQ)) score = 2;
+    else if (product.title.toLowerCase().includes(q)) score = 3;
+    else if (product.category.toLowerCase().includes(q)) score = 4;
+    else if ((product.description ?? "").toLowerCase().includes(q)) score = 5;
+    if (score >= 0) hits.push({ ...entry, score });
+  }
+  return hits.sort((a, b) => a.score - b.score);
+}
+
+function optionDomId(productId: string): string {
+  return `rangat-search-option-${productId}`;
+}
+
 /* ─── sub-components ─────────────────────────────────────────────────────── */
 
 /** A chip button — category or trending term */
@@ -77,82 +123,46 @@ function Chip({
   );
 }
 
-/** Catalogue-plate result tile */
-function ProductTile({
-  product,
-  index,
-  onClose,
-  reduced,
+/** Style code with the query-matched fragment marked in lime */
+function CodeLabel({
+  code,
+  compactQuery,
 }: {
-  product: CommerceProduct;
-  index: number;
-  onClose: () => void;
-  reduced: boolean;
+  code: string;
+  compactQuery: string;
 }) {
-  const setPrice = product.salePrice ?? product.price;
+  const compact = code.replace(/-/g, "").toLowerCase();
+  const start = compactQuery ? compact.indexOf(compactQuery) : -1;
+  if (start === -1) return <>{code}</>;
+  const end = start + compactQuery.length;
 
+  const nodes: React.ReactNode[] = [];
+  let compactPos = 0;
+  for (let i = 0; i < code.length; i += 1) {
+    const ch = code[i];
+    const isDash = ch === "-";
+    const pos = compactPos;
+    if (!isDash) compactPos += 1;
+    const hit = isDash ? pos > start && pos < end : pos >= start && pos < end;
+    nodes.push(
+      hit ? (
+        <mark key={i} className="bg-accent-lime text-on-accent">
+          {ch}
+        </mark>
+      ) : (
+        <span key={i}>{ch}</span>
+      ),
+    );
+  }
+  return <>{nodes}</>;
+}
+
+/** Footer key hint */
+function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div
-      initial={reduced ? false : { opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: EASE }}
-    >
-      <Link
-        href={`/shop/${product.handle}`}
-        onClick={onClose}
-        className="group relative flex flex-col bg-surface-2 border border-line/15 hover:border-line/35 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-red"
-      >
-        {/* Image well */}
-        <div className="relative aspect-[4/5] w-full bg-surface-hover overflow-hidden">
-          <Image
-            src={product.image}
-            alt={product.title}
-            fill
-            className={`object-cover ${reduced ? "" : "transition-transform duration-700 group-hover:scale-[1.06]"}`}
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          />
-          {/* Hover scrim */}
-          <div
-            className="absolute inset-0 bg-line/0 group-hover:bg-line/08 transition-colors duration-500"
-            aria-hidden
-          />
-          {/* Badges */}
-          <div className="absolute top-2 left-2 flex gap-1.5">
-            {product.isNew && (
-              <span className="bg-accent-lime text-on-accent text-[8px] font-bold uppercase tracking-[0.2em] px-2 py-0.5">
-                New
-              </span>
-            )}
-          </div>
-          {/* Arrow affordance */}
-          <div className="absolute bottom-2 right-2 w-7 h-7 bg-surface-inverse/0 group-hover:bg-surface-inverse flex items-center justify-center transition-colors duration-300">
-            <ArrowUpRight
-              className="h-3.5 w-3.5 text-content-inverse opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              aria-hidden
-            />
-          </div>
-        </div>
-
-        {/* Info */}
-        <div className="p-3 flex flex-col gap-1">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-content/45">
-            {product.category}
-          </p>
-          <h4 className="text-sm font-black uppercase tracking-[-0.02em] text-content line-clamp-2 leading-tight group-hover:text-accent-red transition-colors duration-200">
-            {product.title}
-          </h4>
-          <div className="mt-1.5 pt-1.5 border-t border-line/10">
-            <p className="text-[11px] font-bold text-content">
-              From {formatPrice(setPrice)}
-              <span className="text-content/50 font-semibold"> / set</span>
-            </p>
-            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-content/45">
-              {formatPrice(getPerPiecePrice(setPrice))} / pc
-            </p>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center border border-line/25 bg-surface-2 px-1.5 font-sans text-[9px] font-bold text-content/60">
+      {children}
+    </kbd>
   );
 }
 
@@ -176,9 +186,12 @@ export function SearchDialog({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const deferredQuery = useDeferredValue(query);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion() ?? false;
+  const router = useRouter();
 
   /* scroll-lock + query reset */
   useEffect(() => {
@@ -189,7 +202,10 @@ export function SearchDialog({
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = prev;
-      timer = setTimeout(() => setQuery(""), 300);
+      timer = setTimeout(() => {
+        setQuery("");
+        setActiveIndex(0);
+      }, 300);
     }
     return () => {
       if (timer) clearTimeout(timer);
@@ -197,17 +213,16 @@ export function SearchDialog({
     };
   }, [isOpen]);
 
-  /* Escape key */
+  /* focus capture on open → restore to trigger on close */
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const previouslyFocused = document.activeElement;
+    return () => {
+      if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
-  /* autofocus */
+  /* autofocus the input */
   useEffect(() => {
     if (isOpen) {
       const t = setTimeout(() => inputRef.current?.focus(), 80);
@@ -215,27 +230,105 @@ export function SearchDialog({
     }
   }, [isOpen]);
 
-  /* filtered results */
-  const results = useMemo<CommerceProduct[]>(() => {
-    const q = deferredQuery.trim().toLowerCase();
-    if (!q) return [];
-    return MOCK_PRODUCTS.filter(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        (p.description ?? "").toLowerCase().includes(q),
-    );
-  }, [deferredQuery]);
+  /* filtered + ranked results */
+  const results = useMemo<Hit[]>(
+    () => searchCatalogue(deferredQuery),
+    [deferredQuery],
+  );
+  const visible = useMemo(() => results.slice(0, MAX_VISIBLE), [results]);
 
+  const compactQuery = deferredQuery.trim().toLowerCase().replace(/[\s-]/g, "");
   const hasQuery = query.trim().length > 0;
   const hasResults = hasQuery && results.length > 0;
   const noResults = hasQuery && results.length === 0;
+
+  /* active row, clamped against the current result set (pure derivation) */
+  const activeRow = visible.length
+    ? Math.min(activeIndex, visible.length - 1)
+    : -1;
+  const activeDescendant =
+    activeRow >= 0 ? optionDomId(visible[activeRow].product.id) : undefined;
+
+  /* command-desk keyboard contract: Esc close, Tab trap, arrows, Enter */
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handler = (e: KeyboardEvent) => {
+      if (e.isComposing) return;
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const root = dialogRef.current;
+        if (!root) return;
+        const focusables = Array.from(
+          root.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), input, select, textarea, [tabindex]',
+          ),
+        ).filter((el) => el.tabIndex >= 0 && el.offsetParent !== null);
+        if (focusables.length === 0) {
+          e.preventDefault();
+          return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const current = document.activeElement;
+        if (!(current instanceof HTMLElement) || !root.contains(current)) {
+          e.preventDefault();
+          (inputRef.current ?? first).focus();
+          return;
+        }
+        if (e.shiftKey && current === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && current === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+
+      if (
+        (e.key === "ArrowDown" || e.key === "ArrowUp") &&
+        visible.length > 0
+      ) {
+        e.preventDefault();
+        const delta = e.key === "ArrowDown" ? 1 : -1;
+        const next =
+          (Math.max(activeRow, 0) + delta + visible.length) % visible.length;
+        setActiveIndex(next);
+        const id = optionDomId(visible[next].product.id);
+        requestAnimationFrame(() => {
+          document.getElementById(id)?.scrollIntoView({ block: "nearest" });
+        });
+        return;
+      }
+
+      if (
+        e.key === "Enter" &&
+        document.activeElement === inputRef.current &&
+        activeRow >= 0
+      ) {
+        e.preventDefault();
+        router.push(`/shop/${visible[activeRow].product.handle}`);
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, onClose, visible, activeRow, router]);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
           key="search-overlay"
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-label="Search the catalogue"
@@ -285,6 +378,13 @@ export function SearchDialog({
               <path d="M1 20 L1 1 L20 1" stroke="currentColor" strokeWidth="0.8" />
             </svg>
           </div>
+
+          {/* screen-reader result announcements */}
+          <span role="status" aria-live="polite" className="sr-only">
+            {hasQuery
+              ? `${results.length} ${results.length === 1 ? "style" : "styles"} found`
+              : ""}
+          </span>
 
           {/* ── top bar ────────────────────────────────────────────────── */}
           <div className="relative z-20 flex items-center justify-between px-5 md:px-10 lg:px-14 h-14 border-b border-line/15 shrink-0">
@@ -344,7 +444,7 @@ export function SearchDialog({
               {/* ── search input ──────────────────────────────────────── */}
               <div className="relative mt-8 md:mt-12 group">
                 <label htmlFor="search-input" className="sr-only">
-                  Search styles, fabric, category
+                  Search styles by name, fabric, category, or style code
                 </label>
                 {/* Search icon */}
                 <Search
@@ -355,12 +455,20 @@ export function SearchDialog({
                   id="search-input"
                   ref={inputRef}
                   type="text"
+                  role="combobox"
+                  aria-expanded={hasResults}
+                  aria-controls={hasResults ? LISTBOX_ID : undefined}
+                  aria-activedescendant={activeDescendant}
+                  aria-autocomplete="list"
                   autoComplete="off"
                   autoCorrect="off"
                   spellCheck={false}
-                  placeholder="Search the line — style, fabric, category"
+                  placeholder="Search style, fabric, or code"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setActiveIndex(0);
+                  }}
                   className="
                     w-full bg-transparent
                     pl-9 md:pl-12
@@ -415,7 +523,10 @@ export function SearchDialog({
                             <Chip
                               key={cat}
                               label={cat}
-                              onClick={() => setQuery(cat)}
+                              onClick={() => {
+                                setQuery(cat);
+                                setActiveIndex(0);
+                              }}
                               accent
                             />
                           ))}
@@ -435,7 +546,10 @@ export function SearchDialog({
                             <Chip
                               key={term}
                               label={term}
-                              onClick={() => setQuery(term)}
+                              onClick={() => {
+                                setQuery(term);
+                                setActiveIndex(0);
+                              }}
                             />
                           ))}
                         </motion.div>
@@ -475,7 +589,7 @@ export function SearchDialog({
                                   )}
                                 </div>
                                 <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/40 mb-0.5">
-                                  {product.category}
+                                  {getStyleCode(product)}
                                 </p>
                                 <p className="text-xs font-black uppercase tracking-[-0.02em] text-content line-clamp-1 group-hover:text-accent-red transition-colors">
                                   {product.title}
@@ -488,7 +602,7 @@ export function SearchDialog({
                     </motion.div>
                   )}
 
-                  {/* ── state B: results ──────────────────────────────── */}
+                  {/* ── state B: results — command-desk ledger rows ────── */}
                   {hasResults && (
                     <motion.div
                       key="results"
@@ -516,17 +630,93 @@ export function SearchDialog({
                         </Link>
                       </div>
 
-                      {/* Grid */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
-                        {results.slice(0, 8).map((product, i) => (
-                          <ProductTile
-                            key={product.id}
-                            product={product}
-                            index={i}
-                            onClose={onClose}
-                            reduced={reduced}
-                          />
-                        ))}
+                      {/* Ledger rows — arrows move the lime rule, Enter opens */}
+                      <div
+                        role="listbox"
+                        id={LISTBOX_ID}
+                        aria-label="Matching styles"
+                        className="border border-line/15 divide-y divide-line/12"
+                      >
+                        {visible.map((hit, i) => {
+                          const { product, code } = hit;
+                          const active = i === activeRow;
+                          const setPrice = product.salePrice ?? product.price;
+                          return (
+                            <Link
+                              key={product.id}
+                              id={optionDomId(product.id)}
+                              role="option"
+                              aria-selected={active}
+                              tabIndex={-1}
+                              href={`/shop/${product.handle}`}
+                              onClick={onClose}
+                              onMouseEnter={() => setActiveIndex(i)}
+                              className={`relative flex items-center gap-3 md:gap-5 px-3 md:px-5 py-3 transition-colors duration-150 ${
+                                active ? "bg-accent-lime/12" : "bg-transparent"
+                              }`}
+                            >
+                              {/* lime left-rule — the active mark */}
+                              <span
+                                aria-hidden
+                                className={`absolute left-0 top-0 bottom-0 w-[3px] bg-accent-lime transition-opacity duration-150 ${
+                                  active ? "opacity-100" : "opacity-0"
+                                }`}
+                              />
+                              {/* ledger index */}
+                              <span
+                                className="hidden sm:block w-6 shrink-0 text-[9px] font-bold tabular-nums text-content/30"
+                                aria-hidden
+                              >
+                                {String(i + 1).padStart(2, "0")}
+                              </span>
+                              {/* thumb */}
+                              <span className="relative block h-14 w-11 shrink-0 overflow-hidden bg-surface-hover">
+                                <Image
+                                  src={product.image}
+                                  alt=""
+                                  fill
+                                  className="object-cover"
+                                  sizes="44px"
+                                />
+                              </span>
+                              {/* code + title */}
+                              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                                <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] text-content/55">
+                                  <CodeLabel code={code} compactQuery={compactQuery} />
+                                  {product.isNew && (
+                                    <span className="ml-2 bg-accent-lime px-1 py-px text-[8px] tracking-[0.18em] text-on-accent">
+                                      New
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="truncate text-sm md:text-base font-black uppercase leading-tight tracking-[-0.02em] text-content">
+                                  {product.title}
+                                </span>
+                              </span>
+                              {/* category */}
+                              <span className="hidden md:block w-20 shrink-0 text-[9px] font-bold uppercase tracking-[0.2em] text-content/40">
+                                {product.category}
+                              </span>
+                              {/* price */}
+                              <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
+                                <span className="text-[11px] font-bold text-content">
+                                  {formatPrice(setPrice)}
+                                  <span className="font-semibold text-content/50"> / set</span>
+                                </span>
+                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-content/45">
+                                  {formatPrice(getPerPiecePrice(setPrice))} / pc
+                                </span>
+                              </span>
+                              {/* open affordance */}
+                              <ArrowUpRight
+                                className={`hidden sm:block h-3.5 w-3.5 shrink-0 transition-opacity duration-150 ${
+                                  active ? "text-content opacity-100" : "text-content/40 opacity-40"
+                                }`}
+                                aria-hidden
+                              />
+                            </Link>
+                          );
+                        })}
                       </div>
                     </motion.div>
                   )}
@@ -551,31 +741,57 @@ export function SearchDialog({
                       <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-content/35 mb-3">
                         No results
                       </p>
-                      <p className="text-xl md:text-2xl font-black uppercase tracking-[-0.03em] text-content mb-2 max-w-xs">
-                        Nothing for{" "}
+                      <p className="text-xl md:text-2xl font-black uppercase tracking-[-0.03em] text-content mb-2 max-w-sm">
+                        No style matches{" "}
                         <span className="text-accent-red">
                           &ldquo;{query}&rdquo;
                         </span>
                       </p>
-                      <p className="text-sm text-content/50 max-w-[30ch] leading-relaxed mb-8">
-                        Try a different term, or browse a category below.
+                      <p className="text-sm text-content/50 max-w-[36ch] leading-relaxed mb-8">
+                        Try a code like RP-KURTI-941, or browse a category below.
                       </p>
 
-                      <div className="flex flex-wrap gap-2 justify-center">
+                      <motion.div
+                        variants={reduced ? undefined : staggerParent}
+                        initial="hidden"
+                        animate="visible"
+                        className="flex flex-wrap gap-2 justify-center"
+                      >
                         {CATEGORIES.map((cat) => (
                           <Chip
                             key={cat}
                             label={cat}
-                            onClick={() => setQuery(cat)}
+                            onClick={() => {
+                              setQuery(cat);
+                              setActiveIndex(0);
+                            }}
                             accent
                           />
                         ))}
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             </div>
+          </div>
+
+          {/* ── command-desk footer: key contract + code hint ──────────── */}
+          <div className="relative z-20 hidden md:flex h-10 shrink-0 items-center justify-between border-t border-line/15 bg-surface px-5 md:px-10 lg:px-14">
+            <div className="flex items-center gap-5">
+              <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.2em] text-content/40">
+                <Kbd>&uarr;&darr;</Kbd> Navigate
+              </span>
+              <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.2em] text-content/40">
+                <Kbd>&crarr;</Kbd> Open style
+              </span>
+              <span className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[0.2em] text-content/40">
+                <Kbd>Esc</Kbd> Close
+              </span>
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-[0.24em] text-content/30">
+              Reorder by code — RP-KURTI-941
+            </span>
           </div>
         </motion.div>
       )}

@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Turnstile } from "@/components/ui/turnstile";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
 
-/* Brand icons removed from lucide-react v1.x. */
+/* Brand icons removed from lucide-react v1.x.
+   All four are decorative (the wrapping <a> carries the accessible name via
+   aria-label), so each svg is aria-hidden. */
 function InstagramIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -17,6 +19,7 @@ function InstagramIcon({ className }: { className?: string }) {
       strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       className={className}
     >
       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
@@ -36,6 +39,7 @@ function FacebookIcon({ className }: { className?: string }) {
       strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       className={className}
     >
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -53,6 +57,7 @@ function TwitterIcon({ className }: { className?: string }) {
       strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       className={className}
     >
       <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.7 5.5 4.4 9 4.5-.9-4.2 4-6.5 7-3.8 1.1 0 3-1.2 3-1.2z" />
@@ -70,6 +75,7 @@ function PinterestIcon({ className }: { className?: string }) {
       strokeWidth={1.5}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
       className={className}
     >
       <path d="M8 20l4-9" />
@@ -201,6 +207,15 @@ function NewsletterForm() {
 
   return (
     <div className="space-y-3">
+      {/*
+        Always-mounted live region: a role="status" node that only mounts with
+        the message is unreliably announced. sr-only (position: absolute) and
+        first-child placement keep it out of the space-y flow — zero layout
+        shift. The visible message below stays presentational.
+      */}
+      <p className="sr-only" role="status">
+        {message}
+      </p>
       <form
         onSubmit={handleSubmit}
         className="group relative flex items-center border-b border-[#f1eee5]/25 pb-3 pt-4"
@@ -211,6 +226,8 @@ function NewsletterForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Your email address"
+          aria-label="Email address"
+          autoComplete="email"
           className="w-full rounded-none border-none bg-transparent px-0 text-base text-content-inverse outline-none placeholder:text-content-inverse/35 focus-visible:ring-0"
           required
           disabled={status === "loading"}
@@ -234,7 +251,6 @@ function NewsletterForm() {
           className={`text-xs font-semibold ${
             status === "error" ? "text-accent-red" : "text-accent-lime"
           }`}
-          role="status"
         >
           {message}
         </p>

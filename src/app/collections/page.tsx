@@ -1,7 +1,7 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import Collections from "@/components/sections/collections";
+import CollectionsIndex from "./collections-index";
 import { absoluteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -39,15 +39,15 @@ export default function CollectionsPage() {
   };
 
   return (
-    <div className="bg-warm-white min-h-screen text-charcoal flex flex-col font-sans selection:bg-gold selection:text-white">
+    <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <Navbar />
 
-      <main className="flex-1 relative z-10 pt-24 lg:pt-32">
-        <Collections />
+      <main className="relative z-10 flex-1">
+        <CollectionsIndex />
       </main>
 
       <Footer />

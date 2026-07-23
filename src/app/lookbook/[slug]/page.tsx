@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/lib/sanity/queries";
 import { sanityImageUrl, isSanityConfigured } from "@/lib/sanity/client";
 import { LookbookPortableText } from "@/components/lookbook/portable-text";
+import { LbReveal } from "@/components/lookbook/motion";
 import type { PortableTextBlock } from "@portabletext/react";
 
 // Tiny helpers to author the built-in fallback bodies as valid Portable Text
@@ -122,6 +123,37 @@ export async function generateMetadata({
   };
 }
 
+const formatDate = (iso?: string) => {
+  if (!iso) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+/** Rough read-time from portable-text spans — presentational only. */
+const readingMinutes = (body: PortableTextBlock[]) => {
+  const words = body.reduce((acc, blk) => {
+    const children = (blk as { children?: { text?: string }[] }).children;
+    if (!Array.isArray(children)) return acc;
+    return (
+      acc +
+      children.reduce(
+        (sum, child) =>
+          sum +
+          (typeof child.text === "string"
+            ? child.text.trim().split(/\s+/).filter(Boolean).length
+            : 0),
+        0,
+      )
+    );
+  }, 0);
+  return Math.max(1, Math.round(words / 200));
+};
+
 export default async function EditorialDetailPage({
   params,
 }: {
@@ -135,59 +167,128 @@ export default async function EditorialDetailPage({
   const body = Array.isArray(entry.body)
     ? (entry.body as PortableTextBlock[])
     : [];
+  const published = formatDate(entry.publishedAt);
+  const initial = entry.title.trim().charAt(0).toUpperCase() || "R";
 
   return (
     <>
       <Navbar />
 
-      <main className="flex-1 bg-warm-white relative pt-28 pb-24 min-h-screen">
-        <article className="max-w-3xl mx-auto px-6 w-full">
-          <Link
-            href="/lookbook"
-            className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-charcoal/50 hover:text-gold transition-colors mb-10"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> The Lookbook
-          </Link>
+      <main className="relative flex-1 bg-surface pt-28 pb-24 text-content lg:pt-36 min-h-screen">
+        <article className="w-full">
+          {/* ── Editorial masthead ─────────────────────────────────────── */}
+          <header className="relative overflow-hidden">
+            {/* giant faded backdrop letter — line-book editorial device */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-6 -top-14 select-none text-[42vw] font-black uppercase leading-none text-content/5 lg:text-[26vw]"
+            >
+              {initial}
+            </span>
 
-          {entry.category && (
-            <div className="inline-flex items-center gap-2 mb-4">
-              <span className="w-6 h-[2px] bg-gold" />
-              <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold">
-                {entry.category}
-              </span>
+            <div className="relative mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10">
+              <LbReveal>
+                <Link
+                  href="/lookbook"
+                  className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-content/50 transition-colors hover:text-accent-red"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+                  The Lookbook
+                </Link>
+
+                <div className="mt-8 border-b-2 border-line pb-6">
+                  <p className="eyebrow">
+                    {entry.category ?? "journal"} / Journal entry
+                  </p>
+                  <h1 className="mt-4 max-w-[14ch] text-[clamp(2.8rem,7.5vw,6.75rem)] font-black uppercase leading-[0.84] tracking-[-0.06em]">
+                    {entry.title}
+                  </h1>
+                  {entry.excerpt && (
+                    <p className="mt-6 max-w-[52ch] border-l-2 border-accent-lime pl-5 text-sm leading-6 text-content/65 sm:text-base sm:leading-7">
+                      {entry.excerpt}
+                    </p>
+                  )}
+                </div>
+
+                {/* meta rail — table-like, micro-label columns */}
+                <dl className="grid grid-cols-2 gap-px bg-line/15 border-b border-line/20 sm:grid-cols-4">
+                  {[
+                    ["Filed under", entry.category ?? "Journal"],
+                    ["Published", published ?? "Studio archive"],
+                    [
+                      "Reading time",
+                      body.length > 0 ? `${readingMinutes(body)} min` : "—",
+                    ],
+                    ["Series", "The Lookbook"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="bg-surface px-1 py-4 sm:px-3">
+                      <dt className="text-[9px] font-bold uppercase tracking-[0.24em] text-content/40">
+                        {label}
+                      </dt>
+                      <dd className="mt-1.5 text-xs font-bold uppercase tracking-[0.08em] text-content">
+                        {value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </LbReveal>
             </div>
-          )}
-          <h1 className="text-[clamp(2.5rem,7vw,4.5rem)] font-black uppercase text-charcoal leading-[0.86] tracking-[-0.05em]">
-            {entry.title}
-          </h1>
-          {entry.excerpt && (
-            <p className="text-base text-charcoal/60 mt-5 leading-relaxed">
-              {entry.excerpt}
-            </p>
-          )}
+          </header>
 
-          <div className="relative aspect-[16/10] overflow-hidden bg-charcoal/5 mt-10 border border-charcoal/10">
-            <Image
-              src={cover}
-              alt={entry.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover"
-              priority
-            />
+          {/* ── Cover plate ────────────────────────────────────────────── */}
+          <div className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6 lg:px-10">
+            <LbReveal scaleFrom={1.035} y={0} duration={0.48}>
+              <div className="relative aspect-[16/9] overflow-hidden border border-line/20 bg-surface-hover">
+                <Image
+                  src={cover}
+                  alt={entry.title}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 1024px"
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
+                <span className="absolute left-0 top-0 bg-accent-lime px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-on-accent">
+                  {entry.category ?? "journal"}
+                </span>
+              </div>
+            </LbReveal>
           </div>
 
-          {body.length > 0 ? (
-            <div className="mt-12">
-              <LookbookPortableText value={body} />
-            </div>
-          ) : (
-            <p className="text-sm text-charcoal/40 mt-10">
-              {isSanityConfigured()
-                ? "This story is being written."
-                : "Connect Sanity to publish the full editorial."}
-            </p>
-          )}
+          {/* ── Body ───────────────────────────────────────────────────── */}
+          <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-10">
+            {body.length > 0 ? (
+              <LbReveal className="mt-12" delay={0.05}>
+                <LookbookPortableText value={body} />
+              </LbReveal>
+            ) : (
+              <p className="mt-10 text-[10px] font-bold uppercase tracking-[0.2em] text-content/40">
+                {isSanityConfigured()
+                  ? "This story is being written."
+                  : "Connect Sanity to publish the full editorial."}
+              </p>
+            )}
+
+            {/* ── End matter — back to the journal, on to the rail ─────── */}
+            <LbReveal className="mt-16">
+              <div className="flex flex-col gap-4 border-t-2 border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <Link
+                  href="/lookbook"
+                  className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-content/55 transition-colors hover:text-accent-red"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+                  All stories
+                </Link>
+                <Link
+                  href="/shop"
+                  className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-content underline decoration-accent-lime decoration-2 underline-offset-4 transition-colors hover:decoration-accent-red"
+                >
+                  Stock the line behind this story
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            </LbReveal>
+          </div>
         </article>
       </main>
 
