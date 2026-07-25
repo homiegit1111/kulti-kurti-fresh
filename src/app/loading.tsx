@@ -10,7 +10,7 @@ export default function GlobalLoading() {
         Loading
       </p>
       <div className="relative flex flex-col items-center gap-4">
-        <span className="w-10 h-[2px] bg-gold animate-pulse" />
+        <span className="w-10 h-[2px] bg-accent-red animate-pulse" />
         <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-charcoal/50">
           Loading
         </p>

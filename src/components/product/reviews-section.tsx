@@ -3,8 +3,8 @@
 /**
  * PDP buyer notes and trade feedback with photos.
  *
- * Reads/writes /api/reviews. Strictly on the luxe design system: eyebrow
- * label, serif-light headings, gold stars, hairline dividers, field-luxe
+ * Reads/writes /api/reviews. Strictly on the line-book design system: eyebrow
+ * label, black uppercase headings, accent stars, hairline dividers, field-luxe
  * inputs and btn-luxe CTAs. Signed-out visitors get a quiet invitation to
  * sign in rather than a dead form.
  */

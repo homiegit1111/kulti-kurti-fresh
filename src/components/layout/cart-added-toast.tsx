@@ -33,10 +33,10 @@ export function CartAddedToast() {
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 z-[320] w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2 sm:bottom-8 sm:left-auto sm:right-6 sm:translate-x-0"
         >
-          <div className="overflow-hidden rounded-2xl border border-charcoal/10 bg-[#faf7f2] shadow-[0_20px_50px_-18px_rgba(35,25,20,0.4)] dark:border-white/12 dark:bg-[var(--surface-raised)] dark:shadow-[0_20px_50px_-16px_rgba(0,0,0,0.65)]">
-            <div className="h-0.5 w-full bg-[var(--gold)]" />
+          <div className="overflow-hidden border border-line/20 bg-surface-2 shadow-[0_20px_50px_-18px_rgba(18,19,16,0.4)] dark:border-white/12 dark:bg-[var(--surface-raised)] dark:shadow-[0_20px_50px_-16px_rgba(0,0,0,0.65)]">
+            <div className="h-0.5 w-full bg-accent-lime" />
             <div className="flex gap-3 p-3.5">
-              <div className="relative h-14 w-11 shrink-0 overflow-hidden rounded-lg bg-charcoal/5 dark:bg-white/5">
+              <div className="relative h-14 w-11 shrink-0 overflow-hidden bg-surface-hover dark:bg-white/5">
                 <Image
                   src={addedNotice.image}
                   alt=""
@@ -46,7 +46,7 @@ export function CartAddedToast() {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold text-[var(--gold)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-red">
                   {addedNotice.setsAdded === 1
                     ? "1 set added"
                     : `${addedNotice.setsAdded} sets added`}

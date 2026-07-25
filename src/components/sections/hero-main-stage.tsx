@@ -296,7 +296,7 @@ export function MainHeroStage({
             "inline-flex items-center px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em]",
             current.kind === "offer"
               ? "bg-madder font-mono text-white"
-              : "border border-white/35 bg-black/35 text-white backdrop-blur-sm",
+              : "border border-white/35 bg-surface-inverse text-white",
           )}
         >
           {current.kind === "offer"
@@ -314,7 +314,7 @@ export function MainHeroStage({
             type="button"
             aria-label="Previous slide"
             onClick={goPrev}
-            className="flex h-10 w-10 items-center justify-center border border-white/25 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-charcoal"
+            className="flex h-10 w-10 items-center justify-center border border-white/25 bg-surface-inverse/85 text-white transition-colors hover:bg-white hover:text-charcoal"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
           </button>
@@ -322,7 +322,7 @@ export function MainHeroStage({
             type="button"
             aria-label="Next slide"
             onClick={goNext}
-            className="flex h-10 w-10 items-center justify-center border border-white/25 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-charcoal"
+            className="flex h-10 w-10 items-center justify-center border border-white/25 bg-surface-inverse/85 text-white transition-colors hover:bg-white hover:text-charcoal"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
           </button>
@@ -339,7 +339,7 @@ export function MainHeroStage({
           }
           aria-pressed={isUserPaused}
           onClick={() => setIsUserPaused((value) => !value)}
-          className="absolute top-3 right-3 z-[3] flex h-9 w-9 items-center justify-center border border-white/25 bg-black/30 text-white backdrop-blur-sm transition-colors hover:bg-white hover:text-charcoal sm:top-5 sm:right-5"
+          className="absolute top-3 right-3 z-[3] flex h-9 w-9 items-center justify-center border border-white/25 bg-surface-inverse/85 text-white transition-colors hover:bg-white hover:text-charcoal sm:top-5 sm:right-5"
         >
           {isUserPaused ? (
             <Play className="h-3.5 w-3.5" />
@@ -365,10 +365,10 @@ export function MainHeroStage({
           >
             <p
               className={cn(
-                "font-serif leading-[1.12] tracking-tight text-white drop-shadow-sm",
+                "font-black uppercase leading-[0.95] tracking-[-0.045em] text-white drop-shadow-sm",
                 isMobile
-                  ? "text-[1.35rem] max-w-[18ch]"
-                  : "text-[22px] sm:text-[26px] lg:text-[32px] max-w-[20ch]",
+                  ? "text-[1.45rem] max-w-[18ch]"
+                  : "text-[24px] sm:text-[28px] lg:text-[34px] max-w-[20ch]",
               )}
             >
               {current.title}
@@ -405,7 +405,7 @@ export function MainHeroStage({
                 />
               ))}
             </div>
-            <span className="font-serif text-[11px] tabular-nums tracking-wide text-white/55">
+            <span className="text-[11px] font-bold tabular-nums tracking-[0.14em] text-white/55">
               {String(index + 1).padStart(2, "0")}
               <span className="text-white/30"> / </span>
               {String(count).padStart(2, "0")}

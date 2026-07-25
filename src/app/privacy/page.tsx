@@ -114,7 +114,7 @@ export default function PrivacyPage() {
           <p>
             Questions or requests about this policy? Reach our grievance contact
             via our{" "}
-            <a href="/contact" className="underline hover:text-gold">
+            <a href="/contact" className="underline hover:text-accent-red">
               contact page
             </a>
             .

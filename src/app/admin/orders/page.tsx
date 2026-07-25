@@ -69,8 +69,13 @@ function statusTone(status: string): string {
   switch (status) {
     case "paid":
       return "text-emerald-600";
+    // Fulfilled is the terminal SUCCESS state, so it must not read as red like
+    // `cancelled`. Lime is the brand's positive/active accent, but lime *text*
+    // on the light paper background fails contrast — so it lands as a filled
+    // lime chip with ink text instead. That also gives the terminal state more
+    // visual weight than in-flight `paid`, and keeps the two distinguishable.
     case "fulfilled":
-      return "text-gold";
+      return "bg-accent-lime px-1.5 py-0.5 text-on-accent";
     case "cancelled":
       return "text-destructive";
     default:
@@ -138,7 +143,9 @@ export default function AdminOrdersPage() {
     <div>
       <div className="mb-8 border-b border-charcoal/10 pb-6">
         <p className="eyebrow mb-3">Operations</p>
-        <h2 className="font-serif text-4xl font-light">Orders</h2>
+        <h2 className="text-[clamp(2.25rem,6vw,3rem)] font-black uppercase leading-[0.85] tracking-[-0.07em]">
+          Orders
+        </h2>
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -149,7 +156,7 @@ export default function AdminOrdersPage() {
             className={cn(
               "px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] transition-colors",
               filter === f.value
-                ? "border-b-2 border-gold text-charcoal"
+                ? "border-b-2 border-accent-red text-charcoal"
                 : "border-b-2 border-transparent text-charcoal/40 hover:text-charcoal",
             )}
           >
@@ -166,7 +173,7 @@ export default function AdminOrdersPage() {
 
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-gold" />
+          <Loader2 className="h-6 w-6 animate-spin text-accent-red" />
         </div>
       ) : orders.length === 0 ? (
         <div className="panel-luxe p-12 text-center text-sm text-charcoal/55">
@@ -231,7 +238,7 @@ export default function AdminOrdersPage() {
           {selected && (
             <>
               <SheetHeader>
-                <SheetTitle className="font-serif text-2xl font-light">
+                <SheetTitle className="text-2xl font-black uppercase leading-[0.9] tracking-[-0.055em]">
                   Order #{selected.display_number}
                 </SheetTitle>
               </SheetHeader>
@@ -281,7 +288,7 @@ export default function AdminOrdersPage() {
 
                 <div className="flex items-center justify-between border-t border-charcoal/10 pt-3">
                   <span className="text-sm text-charcoal/55">Total</span>
-                  <span className="font-serif text-xl">
+                  <span className="text-xl font-bold tracking-[0.06em]">
                     ₹{Number(selected.total_inr).toLocaleString("en-IN")}
                   </span>
                 </div>

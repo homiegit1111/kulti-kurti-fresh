@@ -22,7 +22,7 @@ export function AdminNav() {
             className={cn(
               "px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-colors",
               active
-                ? "border-b-2 border-gold text-charcoal"
+                ? "border-b-2 border-accent-red text-charcoal"
                 : "border-b-2 border-transparent text-charcoal/45 hover:text-charcoal",
             )}
           >

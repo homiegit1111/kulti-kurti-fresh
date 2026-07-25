@@ -49,7 +49,7 @@ export function ThemeToggle({
           "theme-toggle relative flex h-10 w-10 shrink-0 items-center justify-center",
           "text-charcoal transition-colors active:scale-95 disabled:pointer-events-none",
           "dark:text-white/80 dark:active:text-white",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-red/50",
           className,
         )}
       >
@@ -82,17 +82,17 @@ export function ThemeToggle({
         "border border-charcoal/12 bg-transparent px-3",
         "text-[10px] font-semibold uppercase tracking-[0.16em] text-charcoal",
         "transition-colors duration-200",
-        "hover:border-gold/40 hover:text-gold",
+        "hover:border-accent-red/40 hover:text-accent-red",
         "active:scale-[0.97] disabled:pointer-events-none",
         "dark:border-white/15 dark:text-white/80",
         "dark:hover:border-white/30 dark:hover:text-white",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-red/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
     >
       <span className="relative flex h-4 w-4 items-center justify-center">
         <Sun
-          className="absolute h-4 w-4 scale-50 -rotate-90 text-gold opacity-0 transition-all duration-300 dark:scale-100 dark:rotate-0 dark:opacity-100"
+          className="absolute h-4 w-4 scale-50 -rotate-90 text-accent-red opacity-0 transition-all duration-300 dark:scale-100 dark:rotate-0 dark:opacity-100"
           strokeWidth={1.7}
           aria-hidden
         />

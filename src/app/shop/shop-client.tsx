@@ -279,7 +279,7 @@ function ShopContent({
         </div>
 
         {/* Sticky filter bar */}
-        <div className="sticky top-[72px] z-40 mb-12 border-y border-line/20 bg-surface/95 backdrop-blur lg:top-[72px]">
+        <div className="sticky top-[72px] z-40 mb-12 border-y border-line/20 bg-surface lg:top-[72px]">
 
           {/* Mobile Toggle Button (Only visible when scrolled down) */}
           <div

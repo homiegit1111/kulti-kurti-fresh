@@ -12,7 +12,7 @@ export default function AboutLoading() {
           
           {/* Header Skeleton */}
           <div className="text-center mb-12 flex flex-col items-center">
-            <div className="w-12 h-[2px] bg-gold mb-4 animate-pulse" />
+            <div className="w-12 h-[2px] bg-accent-red mb-4 animate-pulse" />
             <div className="w-64 md:w-96 h-12 md:h-16 bg-charcoal/5 animate-pulse mb-5" />
             <div className="w-48 h-4 bg-charcoal/5 animate-pulse" />
           </div>

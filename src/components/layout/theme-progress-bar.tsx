@@ -5,7 +5,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 import { cn } from "@/lib/utils";
 
 /**
- * NProgress-style theme switch bar — thin gold rail across the top.
+ * NProgress-style theme switch bar — thin lime rail across the top.
  * GPU transform only; works for both light and dark.
  */
 export function ThemeProgressBar() {

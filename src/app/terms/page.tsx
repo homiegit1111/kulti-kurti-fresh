@@ -111,7 +111,7 @@ export default function TermsPage() {
         <LegalSection title="10. Contact">
           <p>
             Questions about these terms? Reach us via our{" "}
-            <a href="/contact" className="underline hover:text-gold">
+            <a href="/contact" className="underline hover:text-accent-red">
               contact page
             </a>
             .

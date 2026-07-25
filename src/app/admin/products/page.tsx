@@ -214,7 +214,9 @@ export default function AdminProductsPage() {
       <div className="mb-8 flex items-end justify-between border-b border-charcoal/10 pb-6">
         <div>
           <p className="eyebrow mb-3">Catalog</p>
-          <h2 className="font-serif text-4xl font-light">Products</h2>
+          <h2 className="text-[clamp(2.25rem,6vw,3rem)] font-black uppercase leading-[0.85] tracking-[-0.07em]">
+            Products
+          </h2>
         </div>
         <Button onClick={openCreate} size="lg">
           <Plus /> New product
@@ -229,7 +231,7 @@ export default function AdminProductsPage() {
 
       {loading ? (
         <div className="flex min-h-[40vh] items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-gold" />
+          <Loader2 className="h-6 w-6 animate-spin text-accent-red" />
         </div>
       ) : products.length === 0 ? (
         <div className="panel-luxe p-12 text-center text-sm text-charcoal/55">
@@ -340,7 +342,7 @@ export default function AdminProductsPage() {
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-xl">
           <SheetHeader>
-            <SheetTitle className="font-serif text-2xl font-light">
+            <SheetTitle className="text-2xl font-black uppercase leading-[0.9] tracking-[-0.055em]">
               {form.id ? "Edit product" : "New product"}
             </SheetTitle>
           </SheetHeader>
@@ -428,7 +430,7 @@ export default function AdminProductsPage() {
                     </button>
                   </div>
                 ))}
-                <label className="flex h-20 w-16 cursor-pointer items-center justify-center border border-dashed border-charcoal/25 text-charcoal/40 hover:border-gold hover:text-gold">
+                <label className="flex h-20 w-16 cursor-pointer items-center justify-center border border-dashed border-charcoal/25 text-charcoal/40 hover:border-accent-red hover:text-accent-red">
                   {uploading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

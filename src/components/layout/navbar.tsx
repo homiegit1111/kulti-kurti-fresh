@@ -212,7 +212,7 @@ export function Navbar() {
       {/* ── Main Navigation ── */}
       <nav
         className={cn(
-          "relative flex h-16 w-full items-center border-b bg-surface/95 px-4 backdrop-blur-[2px] transition-[box-shadow,border-color,background-color] duration-300 ease-out lg:h-[74px] lg:px-8 xl:px-10",
+          "relative flex h-16 w-full items-center border-b bg-surface px-4 transition-[box-shadow,border-color,background-color] duration-300 ease-out lg:h-[74px] lg:px-8 xl:px-10",
           scrolled
             ? "border-line/20 shadow-[0_20px_50px_-44px_rgba(18,19,16,0.6)]"
             : "border-line/12",

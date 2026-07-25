@@ -123,7 +123,7 @@ export default function BulkOrderClient() {
 
           <WholesaleTrustBar className="mb-8" />
 
-          <section className="sticky top-20 z-30 mb-6 border-y border-line/20 bg-surface/95 py-4 backdrop-blur-sm">
+          <section className="sticky top-20 z-30 mb-6 border-y border-line/20 bg-surface py-4">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                 <div className="flex flex-wrap gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-content/50">

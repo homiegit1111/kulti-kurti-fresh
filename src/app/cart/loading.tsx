@@ -11,7 +11,7 @@ export default function CartLoading() {
         <div className="px-6 lg:px-20">
           {/* Header Skeleton */}
           <div className="mb-12 flex flex-col">
-            <div className="w-12 h-[2px] bg-gold mb-4 animate-pulse" />
+            <div className="w-12 h-[2px] bg-accent-red mb-4 animate-pulse" />
             <div className="w-64 h-12 md:h-16 bg-charcoal/5 animate-pulse" />
           </div>
 

@@ -222,7 +222,7 @@ export function B2BHero({
 
             {/* price — bottom-right */}
             {primarySetPrice !== null && (
-              <div className="absolute bottom-0 right-0 z-10 bg-surface-inverse/70 px-3 py-2 text-right backdrop-blur-sm">
+              <div className="absolute bottom-0 right-0 z-10 bg-surface-inverse px-3 py-2 text-right">
                 <p className="text-[7px] font-semibold uppercase tracking-[0.2em] text-content-inverse/55">
                   {sizeRunLabel} · set of {B2B_CONFIG.setSize}
                 </p>
@@ -365,7 +365,7 @@ export function B2BHero({
             </div>
 
             {primarySetPrice !== null && (
-              <div className="absolute bottom-0 right-0 z-10 bg-surface-inverse/70 px-3 py-2 text-right backdrop-blur-sm sm:px-4 sm:py-2.5">
+              <div className="absolute bottom-0 right-0 z-10 bg-surface-inverse px-3 py-2 text-right sm:px-4 sm:py-2.5">
                 <p className="text-[7px] font-semibold uppercase tracking-[0.2em] text-content-inverse/55">
                   {sizeRunLabel} · set of {B2B_CONFIG.setSize}
                 </p>
@@ -511,8 +511,8 @@ export function B2BHero({
  * One-time exposure settle for the plate photography: the slide comes in a
  * touch hot (brightness 1.14) and eases to true over ~1.15s — a projector
  * bulb reaching temperature. Runs once, never loops. Wraps only the image
- * stack so the price chip's backdrop-blur (a sibling) is unaffected. Under
- * reduced motion it completes instantly.
+ * stack so the price chip (a sibling) is unaffected by the brightness filter.
+ * Under reduced motion it completes instantly.
  */
 function PlateExposure({
   children,

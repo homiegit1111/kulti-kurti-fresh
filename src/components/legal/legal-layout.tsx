@@ -20,8 +20,8 @@ export function LegalLayout({
       <div className="max-w-3xl mx-auto px-6 w-full">
         <div className="mb-12">
           <div className="inline-flex items-center gap-2 mb-4">
-            <span className="w-4 h-[1px] bg-gold" />
-            <span className="text-[9px] uppercase tracking-[0.3em] text-gold font-bold">
+            <span className="w-4 h-[1px] bg-accent-red" />
+            <span className="text-[9px] uppercase tracking-[0.3em] text-accent-red font-bold">
               {eyebrow}
             </span>
           </div>

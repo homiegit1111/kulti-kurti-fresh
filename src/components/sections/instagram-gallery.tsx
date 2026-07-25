@@ -187,7 +187,7 @@ function FeedTile({
         {reel && (
           <span
             aria-label="Reel"
-            className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#0e0f0c]/60 ring-1 ring-white/20 backdrop-blur-sm"
+            className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#0e0f0c]/85 ring-1 ring-white/20"
           >
             <Play
               className="ml-px h-2.5 w-2.5 fill-content-inverse text-content-inverse"

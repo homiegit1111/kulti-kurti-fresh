@@ -205,24 +205,24 @@ export default function RootLayout({
           card: "bg-transparent shadow-none w-full max-w-none p-0 border-none",
           headerTitle: "font-black uppercase text-4xl tracking-[-0.04em] text-charcoal mb-1 leading-[0.9]",
           headerSubtitle: "text-charcoal/60 text-sm mb-6",
-          socialButtonsBlockButton: "bg-white border border-charcoal/20 hover:border-gold hover:bg-gold/10 transition-all h-14 rounded-none",
+          socialButtonsBlockButton: "bg-white border border-charcoal/20 hover:border-accent-red hover:bg-accent-red/10 transition-all h-14 rounded-none",
           socialButtonsBlockButtonText: "text-[10px] font-bold uppercase tracking-widest text-charcoal",
           socialButtonsProviderIcon: "w-4 h-4 grayscale",
           dividerRow: "my-8",
           dividerText: "text-[10px] uppercase tracking-widest text-charcoal/40 font-bold",
           dividerLine: "bg-charcoal/10",
           formFieldLabel: "text-[10px] uppercase tracking-[0.2em] text-charcoal/40 font-bold mb-2",
-          formFieldInput: "border-b border-charcoal/20 rounded-none bg-transparent px-0 py-3 text-lg font-sans text-charcoal focus:border-gold focus:ring-0 transition-colors placeholder:text-charcoal/20 placeholder:font-sans placeholder:text-sm",
+          formFieldInput: "border-b border-charcoal/20 rounded-none bg-transparent px-0 py-3 text-lg font-sans text-charcoal focus:border-accent-red focus:ring-0 transition-colors placeholder:text-charcoal/20 placeholder:font-sans placeholder:text-sm",
           formButtonPrimary: "bg-charcoal hover:bg-black text-white text-[10px] font-bold uppercase tracking-[0.2em] h-14 rounded-none transition-all w-full mt-6",
           footerActionText: "text-charcoal/60 text-xs",
-          footerActionLink: "text-gold hover:text-charcoal font-bold uppercase tracking-wider text-[10px] ml-2 font-sans",
+          footerActionLink: "text-accent-red hover:text-charcoal font-bold uppercase tracking-wider text-[10px] ml-2 font-sans",
           identityPreviewText: "text-charcoal font-medium text-sm",
-          identityPreviewEditButtonIcon: "text-gold w-4 h-4",
-          formFieldAction: "text-[9px] uppercase tracking-wider text-gold font-bold hover:text-charcoal",
+          identityPreviewEditButtonIcon: "text-accent-red w-4 h-4",
+          formFieldAction: "text-[9px] uppercase tracking-wider text-accent-red font-bold hover:text-charcoal",
           alertText: "text-xs font-medium text-red-600",
           alert: "bg-red-50 border border-red-100 rounded-none p-3 mt-4",
-          verificationLink: "text-gold underline hover:text-charcoal transition-colors",
-          otpCodeFieldInput: "border-b border-charcoal/20 rounded-none text-2xl font-mono text-center focus:border-gold focus:ring-0 text-charcoal px-0"
+          verificationLink: "text-accent-red underline hover:text-charcoal transition-colors",
+          otpCodeFieldInput: "border-b border-charcoal/20 rounded-none text-2xl font-mono text-center focus:border-accent-red focus:ring-0 text-charcoal px-0"
         }
       }}
     >

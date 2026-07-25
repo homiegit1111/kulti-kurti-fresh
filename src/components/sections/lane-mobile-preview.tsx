@@ -148,7 +148,7 @@ export function LaneMobilePreview({
                 </div>
 
                 {/* ── bottom: price anchored in the image ── */}
-                <div className="absolute bottom-0 right-0 bg-surface-inverse/75 px-3 py-2 text-right backdrop-blur-[2px]">
+                <div className="absolute bottom-0 right-0 bg-surface-inverse px-3 py-2 text-right">
                   <p className="text-base font-black leading-none tracking-[-0.02em] text-accent-lime">
                     {lane.price}
                   </p>

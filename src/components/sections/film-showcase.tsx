@@ -237,7 +237,7 @@ export function FilmShowcase() {
                   aria-label="Play collection film"
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/20"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full border border-[#f1eee5]/40 bg-surface-inverse/60 backdrop-blur-sm">
+                  <span className="flex h-12 w-12 items-center justify-center border border-[#f1eee5]/40 bg-surface-inverse">
                     <Play className="h-4 w-4 fill-content-inverse text-content-inverse" />
                   </span>
                 </button>
@@ -344,7 +344,7 @@ export function FilmShowcase() {
                   aria-label="Play collection film"
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/20"
                 >
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#f1eee5]/40 bg-surface-inverse/60 backdrop-blur-sm">
+                  <span className="flex h-14 w-14 items-center justify-center border border-[#f1eee5]/40 bg-surface-inverse">
                     <Play className="h-5 w-5 fill-content-inverse text-content-inverse" />
                   </span>
                 </button>
@@ -365,7 +365,7 @@ export function FilmShowcase() {
               </div>
 
               {/* timecode chip — driven by the clip's own currentTime */}
-              <div className="absolute right-4 top-4 bg-surface-inverse/55 px-2 py-1 backdrop-blur-sm" aria-hidden>
+              <div className="absolute right-4 top-4 bg-surface-inverse px-2 py-1" aria-hidden>
                 <Timecode
                   videoRef={desktopVideoRef}
                   className="font-mono text-[7px] font-bold tracking-[0.14em] text-content-inverse/45"

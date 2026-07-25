@@ -28,7 +28,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="flex min-h-screen items-center justify-center bg-warm-white px-6 text-charcoal">
         <div className="panel-luxe max-w-md p-10 text-center">
           <p className="eyebrow mb-3">Restricted</p>
-          <h1 className="font-serif text-3xl font-light">Admin access only</h1>
+          <h1 className="text-[clamp(1.75rem,6vw,2.25rem)] font-black uppercase leading-[0.9] tracking-[-0.055em]">
+            Admin access only
+          </h1>
           <p className="mt-4 text-sm leading-relaxed text-charcoal/55">
             {configured
               ? "Your account is not authorised to manage the catalog. If this is unexpected, ask the store owner to add your Clerk user id to the admin allowlist."
@@ -44,12 +46,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="flex min-h-screen flex-col bg-warm-white text-charcoal font-sans">
-      <header className="border-b border-charcoal/10 bg-white/60 backdrop-blur-sm">
+      {/* Not sticky — it scrolls away — so no blur is needed; paper-alt reads as
+          an honestly opaque band against the page's paper background. */}
+      <header className="border-b border-charcoal/10 bg-surface-2">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-5 sm:px-6 lg:px-12">
           <div>
             <p className="eyebrow">Rangat Pehnawa</p>
-            <h1 className="font-serif text-2xl font-light tracking-tight">
-              Admin <span className="italic">Studio</span>
+            <h1 className="text-2xl font-black uppercase leading-[0.9] tracking-[-0.055em]">
+              Admin <span className="text-content/45">Studio</span>
             </h1>
           </div>
           <AdminNav />
