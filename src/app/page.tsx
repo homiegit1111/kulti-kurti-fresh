@@ -11,7 +11,6 @@ import { getStyleCode } from "@/lib/b2b/style-code";
 import { formatPrice, getProducts } from "@/lib/commerce/catalog";
 import { B2BHero } from "@/components/sections/b2b-hero";
 import BuyerLanes from "@/components/sections/buyer-lanes";
-import { DeskMath, type DeskLane } from "@/components/sections/desk-math";
 import { FilmShowcase } from "@/components/sections/film-showcase";
 import { CollectionTriptych } from "@/components/sections/collection-triptych";
 import { InstagramGallery } from "@/components/sections/instagram-gallery";
@@ -25,29 +24,6 @@ export default async function HomePage() {
   const itemListLd = buildProductItemListLd(products, {
     name: "Featured Wholesale Kurtis",
     path: "/",
-  });
-
-  // Desk-math cost lanes: entry / core / premium picked from the live line so
-  // the margin planner always quotes real per-piece pricing.
-  const byPrice = [...products].sort(
-    (a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price),
-  );
-  const lanePicks = [
-    byPrice[0],
-    byPrice[Math.floor(byPrice.length / 2)],
-    byPrice[byPrice.length - 1],
-  ].filter(Boolean);
-  const laneNames = ["Entry lane", "Core lane", "Premium lane"];
-  const deskLanes: DeskLane[] = [
-    ...new Map(lanePicks.map((p) => [p.id, p])).values(),
-  ].map((p, i) => {
-    const setPrice = p.salePrice ?? p.price;
-    return {
-      label: laneNames[i] ?? "Lane",
-      code: getStyleCode(p),
-      setPrice,
-      perPiece: getPerPiecePrice(setPrice),
-    };
   });
 
   const buyingProducts = products.slice(0, 5);
@@ -90,7 +66,7 @@ export default async function HomePage() {
               <div>
                 <Reveal y={24}>
                   <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-red">
-                    How the desk works / 03
+                    How the desk works / 02
                   </p>
                   <h2 className="mt-4 max-w-[15ch] text-4xl font-black uppercase leading-[0.85] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
                     Four sets opens the account.
@@ -196,8 +172,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <DeskMath lanes={deskLanes} />
-
         <FilmShowcase />
 
         <CollectionTriptych />
@@ -207,7 +181,7 @@ export default async function HomePage() {
             <div className="grid gap-8 border-b-2 border-line pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
                 <Reveal y={24}>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-red">Current inventory / 02</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-red">Current inventory / 03</p>
                   <h2 className="mt-4 max-w-[11ch] text-5xl font-black uppercase leading-[0.82] tracking-[-0.065em] sm:text-7xl lg:text-8xl">
                     The line, without the theatre.
                   </h2>
