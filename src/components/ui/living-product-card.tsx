@@ -14,8 +14,6 @@ interface LivingProductCardProps {
   product: MockProduct;
   isWishlisted: boolean;
   onToggleWishlist: () => void;
-  videoUrl?: string;
-  isLiving?: boolean;
   heightClass?: string;
 }
 

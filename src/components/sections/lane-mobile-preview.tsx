@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, ArrowRight, MoveRight } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -27,6 +28,37 @@ export function LaneMobilePreview({
   inventoryHref: string;
 }) {
   const reduceMotion = useReducedMotion();
+
+  // ── Carousel position ──────────────────────────────────────────────────────
+  // The dots previously hardcoded `i === 0`, so the first one stayed lit no
+  // matter where the rail was scrolled — decoration that actively misreported
+  // position. Deriving the index from real scroll offset makes them an
+  // instrument. Measured off the first card's actual offsetWidth + the computed
+  // flex gap rather than a hardcoded card width, so it survives a change to
+  // `w-[78%]` or `gap-4`. rAF-throttled: scroll fires far more often than the
+  // dots can meaningfully change.
+  const railRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const rafRef = useRef(0);
+
+  const measure = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const first = rail.firstElementChild as HTMLElement | null;
+    if (!first) return;
+    const gap = parseFloat(getComputedStyle(rail).columnGap || "0") || 0;
+    const stride = first.offsetWidth + gap;
+    if (stride <= 0) return;
+    const raw = Math.round(rail.scrollLeft / stride);
+    setActiveIndex(Math.max(0, Math.min(lanes.length - 1, raw)));
+  }, [lanes.length]);
+
+  const handleScroll = useCallback(() => {
+    cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(measure);
+  }, [measure]);
+
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
   if (!lanes.length) return null;
 
@@ -58,6 +90,8 @@ export function LaneMobilePreview({
 
       {/* ── Snap carousel ── */}
       <div
+        ref={railRef}
+        onScroll={handleScroll}
         className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-4"
         role="list"
         aria-label="Collection cards"
@@ -158,7 +192,7 @@ export function LaneMobilePreview({
           <span
             key={lane.code}
             className={`block h-[3px] rounded-full transition-all duration-300 ${
-              i === 0
+              i === activeIndex
                 ? "w-5 bg-accent-red"
                 : "w-1.5 bg-line/20"
             }`}

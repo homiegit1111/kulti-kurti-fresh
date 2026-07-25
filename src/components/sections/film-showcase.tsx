@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState, type RefObject } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowUpRight, Play } from "lucide-react";
 import {
@@ -45,14 +45,26 @@ const captionItem: Variants = {
   },
 };
 
-// ─── component ───────────────────────────────────────────────────────────────
+// ─── playback ────────────────────────────────────────────────────────────────
 
-export function FilmShowcase() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const prefersReduced = useReducedMotion();
-
+/**
+ * Per-video play-in-view controller.
+ *
+ * The mobile and desktop layouts each render their own <video>; both are always
+ * in the DOM and only one is displayed (`lg:hidden` / `hidden lg:block`). A
+ * single shared ref would therefore be claimed by whichever node mounted last —
+ * the desktop one — leaving the observer watching a `display: none` element at
+ * mobile widths. `display: none` never intersects, so the mobile clip never
+ * received play() and sat on its poster forever. One controller per video keeps
+ * each observer pointed at the node it actually belongs to; the hidden branch's
+ * observer simply never fires, which is the desired behaviour.
+ */
+function useFilmPlayback(
+  ref: RefObject<HTMLVideoElement | null>,
+  prefersReduced: boolean | null,
+) {
   const handlePlay = useCallback(() => {
-    const el = videoRef.current;
+    const el = ref.current;
     if (!el) return;
     const p = el.play();
     if (p !== undefined) {
@@ -60,10 +72,10 @@ export function FilmShowcase() {
         // autoplay blocked — poster stays, no throw
       });
     }
-  }, []);
+  }, [ref]);
 
   useEffect(() => {
-    const el = videoRef.current;
+    const el = ref.current;
     if (!el || prefersReduced) return;
 
     const observer = new IntersectionObserver(
@@ -81,7 +93,84 @@ export function FilmShowcase() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [prefersReduced, handlePlay]);
+  }, [ref, prefersReduced, handlePlay]);
+
+  return handlePlay;
+}
+
+// ─── component ───────────────────────────────────────────────────────────────
+
+/**
+ * Live SMPTE-style timecode read off the clip itself (HH:MM:SS:FF at 25 fps).
+ *
+ * Replaces a hardcoded `00:00:00:00`, which was the one fake instrument in an
+ * interface that otherwise quotes only live catalog data. Sampled from
+ * requestAnimationFrame while playing rather than `timeupdate` (which fires at
+ * an irregular ~4Hz and would make the frame field stutter visibly), and the
+ * loop is torn down on pause so an off-screen clip costs nothing. Decorative:
+ * the parent chip is aria-hidden, so no live region is announced.
+ */
+function Timecode({
+  videoRef,
+  className,
+}: {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  className?: string;
+}) {
+  const [stamp, setStamp] = useState("00:00:00:00");
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    let raf = 0;
+    const FPS = 25;
+
+    const format = (t: number) => {
+      const whole = Math.floor(t);
+      const hh = String(Math.floor(whole / 3600)).padStart(2, "0");
+      const mm = String(Math.floor((whole % 3600) / 60)).padStart(2, "0");
+      const ss = String(whole % 60).padStart(2, "0");
+      const ff = String(Math.floor((t - whole) * FPS)).padStart(2, "0");
+      return `${hh}:${mm}:${ss}:${ff}`;
+    };
+
+    const tick = () => {
+      setStamp(format(el.currentTime));
+      raf = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      cancelAnimationFrame(raf);
+      setStamp(format(el.currentTime));
+    };
+
+    el.addEventListener("play", start);
+    el.addEventListener("pause", stop);
+    el.addEventListener("seeked", stop);
+    if (!el.paused) start();
+
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener("play", start);
+      el.removeEventListener("pause", stop);
+      el.removeEventListener("seeked", stop);
+    };
+  }, [videoRef]);
+
+  return <span className={className}>{stamp}</span>;
+}
+
+export function FilmShowcase() {
+  const prefersReduced = useReducedMotion();
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
+  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const playMobile = useFilmPlayback(mobileVideoRef, prefersReduced);
+  const playDesktop = useFilmPlayback(desktopVideoRef, prefersReduced);
 
   return (
     <section
@@ -129,9 +218,9 @@ export function FilmShowcase() {
 
             <div className="relative aspect-video w-full overflow-hidden bg-[#1c1d18]">
               <video
-                ref={videoRef}
+                ref={mobileVideoRef}
                 src="/videos/background.mp4"
-                poster="/_next/image?url=%2Fimages%2Fhero.png&w=1280&q=75"
+                poster="/images/hero.png"
                 muted
                 loop
                 playsInline
@@ -144,7 +233,7 @@ export function FilmShowcase() {
               {prefersReduced && (
                 <button
                   type="button"
-                  onClick={handlePlay}
+                  onClick={playMobile}
                   aria-label="Play collection film"
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/20"
                 >
@@ -236,9 +325,9 @@ export function FilmShowcase() {
             {/* left — video well, letterbox 21/9, max 420px tall */}
             <div className="relative w-[62%] shrink-0 overflow-hidden bg-[#1c1d18]" style={{ aspectRatio: "21/9", maxHeight: "420px" }}>
               <video
-                ref={videoRef}
+                ref={desktopVideoRef}
                 src="/videos/background.mp4"
-                poster="/_next/image?url=%2Fimages%2Fhero.png&w=1280&q=75"
+                poster="/images/hero.png"
                 muted
                 loop
                 playsInline
@@ -251,7 +340,7 @@ export function FilmShowcase() {
               {prefersReduced && (
                 <button
                   type="button"
-                  onClick={handlePlay}
+                  onClick={playDesktop}
                   aria-label="Play collection film"
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/20"
                 >
@@ -275,11 +364,12 @@ export function FilmShowcase() {
                 </span>
               </div>
 
-              {/* timecode chip */}
+              {/* timecode chip — driven by the clip's own currentTime */}
               <div className="absolute right-4 top-4 bg-surface-inverse/55 px-2 py-1 backdrop-blur-sm" aria-hidden>
-                <span className="font-mono text-[7px] font-bold tracking-[0.14em] text-content-inverse/45">
-                  00:00:00:00
-                </span>
+                <Timecode
+                  videoRef={desktopVideoRef}
+                  className="font-mono text-[7px] font-bold tracking-[0.14em] text-content-inverse/45"
+                />
               </div>
             </div>
 

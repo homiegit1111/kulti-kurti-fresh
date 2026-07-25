@@ -83,8 +83,18 @@ export default function BuyerLanes({ lanes }: BuyerLanesProps) {
                   href={lane.href}
                   onMouseEnter={() => setActiveIndex(index)}
                   onFocus={() => setActiveIndex(index)}
+                  // Preview-then-navigate used to be gated on `activeIndex !== index`,
+                  // which swallowed the first click. With a mouse that branch is
+                  // unreachable (hover already set the index), but a touchscreen
+                  // laptop at lg width fires no hover, so every row needed two
+                  // taps. Gate on the pointer type instead: a coarse pointer with
+                  // no preview yet gets one tap to inspect and a second to open;
+                  // a mouse always navigates immediately.
                   onClick={(event) => {
-                    if (activeIndex !== index) {
+                    const coarse =
+                      event.nativeEvent instanceof PointerEvent &&
+                      event.nativeEvent.pointerType !== "mouse";
+                    if (coarse && activeIndex !== index) {
                       event.preventDefault();
                       setActiveIndex(index);
                     }
