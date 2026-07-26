@@ -49,6 +49,14 @@ export function HeroCinematic({
   const typeY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 140]);
   const plateY = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -180]);
   const fade = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+  // Scroll-scrubbed exit: the whole stage clips upward and scales down so the
+  // manifesto beneath is revealed through a wipe, not a scroll jump.
+  const stageClip = useTransform(
+    scrollYProgress,
+    [0.6, 1],
+    ["inset(0% 0% 0% 0%)", "inset(0% 0% 100% 0%)"],
+  );
+  const stageScale = useTransform(scrollYProgress, [0.6, 1], [1, 0.96]);
 
   const featured = heroProduct ?? products[0] ?? null;
   const setPrice = featured ? featured.salePrice ?? featured.price : null;
@@ -125,7 +133,11 @@ export function HeroCinematic({
 
       {/* ── Stage ── */}
       <motion.div
-        style={{ opacity: fade }}
+        style={{
+          opacity: fade,
+          clipPath: reduce ? undefined : stageClip,
+          scale: reduce ? 1 : stageScale,
+        }}
         className="relative z-10 mx-auto flex min-h-[100svh] max-w-[1700px] flex-col justify-between px-5 pb-0 pt-28 sm:px-8 lg:px-12 lg:pt-36"
       >
         {/* eyebrow row */}
