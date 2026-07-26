@@ -21,10 +21,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "Rangat Pehnawa — new Indian wholesale line book";
 
-const INK = "#121310";
-const PAPER = "#ece9df";
-const LIME = "#d8ff4f";
-const RED = "#cc2f4a";
+const INK = "#0a0a0f";
+const PAPER = "#ffffff";
+const LIME = "#e9a319";
+const RED = "#c03a2b";
 const HAIR = "rgba(236, 233, 223, 0.3)";
 const MUTED = "rgba(236, 233, 223, 0.55)";
 

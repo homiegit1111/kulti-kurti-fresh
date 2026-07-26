@@ -37,10 +37,10 @@ export const size = { width: px(1200), height: px(630) };
 export const contentType = "image/png";
 export const alt = "Rangat Pehnawa wholesale line sheet";
 
-const INK = "#121310";
-const PAPER = "#ece9df";
-const LIME = "#d8ff4f";
-const RED = "#cc2f4a";
+const INK = "#0a0a0f";
+const PAPER = "#ffffff";
+const LIME = "#e9a319";
+const RED = "#c03a2b";
 const HAIR = "rgba(236, 233, 223, 0.3)";
 const HAIR_SOFT = "rgba(236, 233, 223, 0.14)";
 const MUTED = "rgba(236, 233, 223, 0.55)";
@@ -286,7 +286,7 @@ export default async function Image({
               style={{
                 display: "flex",
                 flex: 1,
-                background: "#292a24",
+                background: "#1a1a24",
                 border: `1px solid ${HAIR}`,
                 padding: px(16),
               }}
@@ -295,7 +295,7 @@ export default async function Image({
                 style={{
                   display: "flex",
                   flex: 1,
-                  background: "#1c1d18",
+                  background: "#111118",
                   overflow: "hidden",
                   position: "relative",
                 }}
