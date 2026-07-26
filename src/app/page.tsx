@@ -91,7 +91,7 @@ export default async function HomePage() {
         </section>
 
         {/* ── INDEX: the catalogue as a readable ledger ───────────────── */}
-        <section className="bg-surface px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
+        <section id="the-line" className="scroll-mt-20 bg-surface px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
           <div className="mx-auto max-w-[1600px]">
             <div className="grid gap-8 border-b-2 border-line pb-6 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>
