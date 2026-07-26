@@ -43,7 +43,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
       />
       <Navbar />
-      <main className="overflow-hidden bg-surface text-content">
+      <main className="overflow-hidden bg-surface text-content max-lg:pb-[76px]">
         <HeroCinematic
           products={products}
           heroProduct={heroProduct}

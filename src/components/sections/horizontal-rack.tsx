@@ -155,8 +155,15 @@ function RackCard({
 }) {
   const setPrice = product.salePrice ?? product.price;
   const perPiece = getPerPiecePrice(setPrice);
+  const reduce = useReducedMotion();
 
   return (
+    <motion.div
+      initial={reduce ? false : { clipPath: "inset(0 100% 0 0)", opacity: 0.4 }}
+      whileInView={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
+      viewport={{ once: true, margin: "-8%" }}
+      transition={{ duration: 0.9, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+    >
     <Link
       href={`/shop/${product.handle}`}
       className={`group relative block shrink-0 ${
@@ -202,5 +209,6 @@ function RackCard({
         </div>
       </div>
     </Link>
+    </motion.div>
   );
 }

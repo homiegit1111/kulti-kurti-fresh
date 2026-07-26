@@ -15,7 +15,7 @@ export function StickyMobileB2BCta() {
   if (hiddenPrefixes.some((prefix) => pathname?.startsWith(prefix))) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line/20 bg-surface p-3 lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line/20 bg-surface/95 p-3 backdrop-blur-md lg:hidden">
       <div className="grid grid-cols-2 gap-2">
         <Link
           href="/bulk-order"

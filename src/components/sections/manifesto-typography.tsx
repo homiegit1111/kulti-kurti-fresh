@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
+import type { ReactNode } from "react";
 import { B2B_CONFIG } from "@/lib/b2b/config";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -11,17 +12,15 @@ function InlineImage({
   src,
   alt,
   rotate = 0,
-  className = "",
 }: {
   src: string;
   alt: string;
   rotate?: number;
-  className?: string;
 }) {
   return (
     <span
-      className={`relative mx-[0.15em] inline-block h-[0.82em] w-[1.7em] translate-y-[0.1em] overflow-hidden align-baseline ${className}`}
-      style={{ transform: `translateY(0.1em) rotate(${rotate}deg)` }}
+      className="manifesto-word-img relative mx-[0.12em] inline-block h-[0.8em] w-[1.75em] overflow-hidden align-baseline"
+      style={{ transform: `translateY(0.12em) rotate(${rotate}deg)` }}
     >
       <Image src={src} alt={alt} fill className="object-cover" sizes="12vw" />
     </span>
@@ -31,28 +30,44 @@ function InlineImage({
 /**
  * MANIFESTO — typography with the cloth inside it.
  *
- * One oversized sentence about the brand, with product photography embedded
- * inline so the words and the garments share the same line box. Line-by-line
- * masked reveal on scroll. This is the section that says "fashion house",
- * not "template": no cards, no grid, just language and cloth.
+ * One oversized sentence about the brand, product photography embedded
+ * inline so words and garments share the same line box. Each word rises out
+ * of its own overflow mask in sequence — a kinetic reveal, not a fade.
  */
 export function ManifestoTypography() {
   const reduce = useReducedMotion();
 
-  const lines = [
-    // line 1: "We cut for" + [image] + "the women"
-    <span key="l1" className="block">
-      We cut for
-      <InlineImage src="/images/premium_dupatta.png" alt="Premium dupatta fabric" rotate={-2} />
-      the women
-    </span>,
-    // line 2: "who sell India" + [image] + "its colour."
-    <span key="l2" className="block">
-      who sell
-      <InlineImage src="/images/collection-ethnic.png" alt="Ethnic collection" rotate={1.5} />
-      India its colour.
-    </span>,
+  // Words and images interleaved per line; the cascade counter continues
+  // across the break so the second line keeps the rhythm.
+  const line1: ReactNode[] = [
+    "We", "cut", "for",
+    <InlineImage key="img1" src="/images/premium_dupatta.png" alt="Premium dupatta fabric" rotate={-2} />,
+    "the", "women",
   ];
+  const line2: ReactNode[] = [
+    "who", "sell",
+    <InlineImage key="img2" src="/images/collection-ethnic.png" alt="Ethnic collection" rotate={1.5} />,
+    "India", "its", "colour.",
+  ];
+
+  const renderLine = (nodes: ReactNode[], offset: number) =>
+    nodes.map((node, i) => (
+      <span key={i} className="inline-block overflow-hidden pb-[0.08em]">
+        <motion.span
+          initial={{ y: reduce ? "0%" : "115%" }}
+          whileInView={{ y: "0%" }}
+          viewport={{ once: true, margin: "-15%" }}
+          transition={{
+            duration: reduce ? 0.35 : 0.8,
+            delay: reduce ? 0 : 0.1 + (offset + i) * 0.055,
+            ease: EASE,
+          }}
+          className="inline-block will-change-transform"
+        >
+          {node}
+        </motion.span>
+      </span>
+    ));
 
   return (
     <section className="relative overflow-hidden bg-surface px-5 py-24 text-content sm:px-8 lg:px-12 lg:py-36">
@@ -68,31 +83,35 @@ export function ManifestoTypography() {
           The studio
         </motion.p>
 
-        <h2 className="select-none font-sans text-[clamp(2.4rem,7vw,6.5rem)] font-black uppercase leading-[1.02] tracking-[-0.045em]">
-          {lines.map((line, i) => (
-            <span key={i} className="block overflow-hidden pb-[0.08em]">
-              <motion.span
-                initial={{ y: reduce ? "0%" : "110%" }}
-                whileInView={{ y: "0%" }}
-                viewport={{ once: true, margin: "-15%" }}
-                transition={{
-                  duration: reduce ? 0.4 : 0.9,
-                  delay: reduce ? 0 : i * 0.14,
-                  ease: EASE,
-                }}
-                className="block"
-              >
-                {line}
-              </motion.span>
+        <h2
+          aria-label="We cut for the women who sell India its colour."
+          className="select-none font-sans text-[clamp(2.4rem,7vw,6.5rem)] font-black uppercase leading-[1.04] tracking-[-0.045em]"
+        >
+          <span aria-hidden className="block">
+            <span className="flex flex-wrap items-baseline gap-x-[0.28em]">
+              {renderLine(line1, 0)}
             </span>
-          ))}
+            <span className="flex flex-wrap items-baseline gap-x-[0.28em]">
+              {renderLine(line2, line1.length)}
+            </span>
+          </span>
         </h2>
+
+        {/* hover bloom — images inside the sentence swell on hover */}
+        <style>{`
+          .manifesto-word-img {
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          .manifesto-word-img:hover {
+            transform: translateY(0.12em) rotate(0deg) scale(1.12) !important;
+          }
+        `}</style>
 
         <motion.div
           initial={{ opacity: 0, y: reduce ? 0 : 18 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-15%" }}
-          transition={{ duration: 0.7, delay: reduce ? 0 : 0.4, ease: EASE }}
+          transition={{ duration: 0.7, delay: reduce ? 0 : 0.5, ease: EASE }}
           className="mt-14 grid gap-10 border-t border-line/15 pt-10 lg:grid-cols-[1fr_auto]"
         >
           <p className="max-w-[52ch] text-[15px] leading-7 text-content/65">

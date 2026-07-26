@@ -10,7 +10,7 @@ import {
   useReducedMotion,
   type Variants,
 } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { B2B_CONFIG } from "@/lib/b2b/config";
 import { getStyleCode } from "@/lib/b2b/style-code";
 import { getPerPiecePrice } from "@/lib/b2b/pricing";
@@ -54,6 +54,26 @@ export function HeroCinematic({
   const setPrice = featured ? featured.salePrice ?? featured.price : null;
   const perPiece = setPrice !== null ? getPerPiecePrice(setPrice) : null;
   const styleCode = featured ? getStyleCode(featured) : "RP-NEW";
+
+  // Cursor-follow parallax on the floating plate (desktop, fine pointer only)
+  const plateRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    if (reduce) return;
+    const el = plateRef.current;
+    if (!el || !window.matchMedia("(pointer: fine)").matches) return;
+    const onMove = (e: MouseEvent) => {
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      setTilt({
+        x: ((e.clientX - cx) / r.width) * 8,
+        y: ((e.clientY - cy) / r.height) * 8,
+      });
+    };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [reduce]);
 
   const maskVariants: Variants = {
     hidden: { y: reduce ? "0%" : "115%" },
@@ -124,7 +144,7 @@ export function HeroCinematic({
 
         {/* headline — masked line reveals, serif cuts sans */}
         <motion.div style={{ y: typeY }} className="max-w-full">
-          <h1 className="select-none">
+          <h1 className="select-none [text-shadow:0_2px_32px_rgba(0,0,0,0.45)]">
             <span className="block overflow-hidden pb-[0.06em]">
               <motion.span
                 custom={0}
@@ -143,6 +163,7 @@ export function HeroCinematic({
                 initial="hidden"
                 animate="visible"
                 className="block font-serif text-[clamp(3.2rem,10vw,9.5rem)] italic leading-[0.95] tracking-[-0.02em] text-accent-lime"
+                style={{ textShadow: "0 2px 40px rgba(0,0,0,0.55)" }}
               >
                 cut for
               </motion.span>
@@ -195,12 +216,17 @@ export function HeroCinematic({
         {/* ── Floating product plate (desktop) ── */}
         {featured && setPrice !== null && (
           <motion.div
+            ref={plateRef}
             style={{ y: plateY }}
             initial={{ opacity: 0, y: reduce ? 0 : 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.0, delay: reduce ? 0 : 0.9, ease: EASE }}
             className="absolute bottom-28 right-12 z-20 hidden w-[240px] xl:block"
           >
+            <motion.div
+              animate={{ x: tilt.x, y: tilt.y }}
+              transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.6 }}
+            >
             <Link
               href={`/shop/${featured.handle}`}
               className="group block border border-content-inverse/25 bg-surface-inverse/80 p-2 backdrop-blur-sm transition-colors hover:border-accent-lime"
@@ -233,6 +259,7 @@ export function HeroCinematic({
                 </p>
               </div>
             </Link>
+            </motion.div>
           </motion.div>
         )}
 
