@@ -2,6 +2,7 @@
 
 import { CartProvider } from "@/lib/cart-context";
 import { WishlistProvider } from "@/lib/wishlist-context";
+import { TrayProvider } from "@/lib/line/tray-context";
 import { ScrollToTop } from "@/components/providers/scroll-to-top";
 import { ClerkShopifySync } from "@/components/providers/clerk-shopify-sync";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -16,11 +17,13 @@ export function Providers({ children }: { children: ReactNode }) {
       <ThemeProvider>
         <CartProvider>
           <WishlistProvider>
-            <ClerkShopifySync />
-            <ScrollToTop />
-            {children}
-            <ThemeProgressBar />
-            <ScrollProgress />
+            <TrayProvider>
+              <ClerkShopifySync />
+              <ScrollToTop />
+              {children}
+              <ThemeProgressBar />
+              <ScrollProgress />
+            </TrayProvider>
           </WishlistProvider>
         </CartProvider>
       </ThemeProvider>

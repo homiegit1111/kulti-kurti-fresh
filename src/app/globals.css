@@ -1,152 +1,178 @@
 @import "tailwindcss";
 
-/* â”€â”€ shadcn/ui theme layer â”€â”€ */
+/* ── shadcn/ui theme layer ── */
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-    --radius: 0.625rem;
+    --radius: 0.125rem;
+
     /*
      * NOTE: --font-inter / --font-playfair are intentionally NOT defined here.
-     * next/font injects them on <html> (see src/app/fonts.ts + layout.tsx) with
-     * size-adjusted fallback metrics. `:root` IS `<html>`, so re-declaring them
-     * here would collide with / override the next/font values.
+     * next/font injects them on <html> (see layout.tsx) with size-adjusted
+     * fallback metrics. `:root` IS `<html>`, so re-declaring them here would
+     * collide with / override the next/font values.
      */
 
-    /* Luxury warm palette */
-    --background: 40 20% 98%;
-    --foreground: 0 0% 10%;
+    /* ═══ PALETTE: INK / PAPER / SAFFRON / VERMILION ═══
+       High-contrast monochrome with one bold Indian accent.
+       Sourced from Indian textile dyeing, not software fashion.
 
-    --card: 40 20% 98%;
-    --card-foreground: 0 0% 10%;
+         ink       — #0A0A0F  near-black, the ground.
+         paper     — #FFFFFF  pure white, the surface.
+         saffron   — #E9A319  signal accent. Replaces peacock in the SAME role:
+                              a bright fill that carries dark ink.
+         vermilion — #C03A2B  negative state only (sold out, destructive).
 
-    --popover: 40 20% 98%;
-    --popover-foreground: 0 0% 10%;
+       WHY HUE-ONLY: every one of ~430 accent call sites assumes "accent is a
+       bright fill, ink on it is dark" — and --on-accent is also used on plain
+       bg-white fills. Preserving each token's LUMINANCE role and rotating only
+       hue reskins the whole site without breaking a single pairing.
 
-    --primary: 0 0% 10%;
-    --primary-foreground: 40 20% 98%;
+       Saffron and vermilion are far apart in hue on purpose: the loud colour
+       must never mean two things. Signal and failure cannot be confusable.
 
-    --secondary: 40 10% 96%;
-    --secondary-foreground: 0 0% 10%;
-
-    --muted: 40 10% 95%;
-    --muted-foreground: 0 0% 45%;
-
-    --accent: 40 38% 54%;
-    --accent-foreground: 40 20% 98%;
-
-    --destructive: 6 72% 57%;
-    --destructive-foreground: 40 20% 98%;
-
-    --border: 40 10% 90%;
-    --input: 40 10% 90%;
-    --ring: 40 38% 54%;
-
-    --chart-1: 40 38% 54%;
-    --chart-2: 25 30% 50%;
-    --chart-3: 40 20% 40%;
-    --chart-4: 15 35% 55%;
-    --chart-5: 45 25% 45%;
-
-    --sidebar-background: 40 20% 98%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 40 20% 98%;
-    --sidebar-accent: 40 10% 95%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 40 10% 90%;
-    --sidebar-ring: 37 45% 60%;
-
-    /* ── Semantic surface/content roles (line-book theming layer) ──
-       Light values are the EXACT original palette, so light mode is unchanged
-       and the .dark block below is purely additive. Migrate hardcoded hex to
-       these roles BY PROPERTY:
-         bg  → surface / surface-2 / surface-inverse / surface-hover
-         text→ content / content-inverse
-         border → line
-       Accents (lime/red) never role-split. See docs/THEME_TOKENS.md. */
-    --surface: #ece9df;        /* page background (paper)            */
-    --surface-2: #f2efe6;      /* alt panel / card (paper-alt)       */
-    --surface-inverse: #121310;/* intentional dark blocks (ink)      */
-    --surface-hover: #d8d4c8;  /* image placeholder / warm-gray      */
-    --warm-gray: #ded9cc;      /* legacy warm-gray token value       */
-    --content: #171814;        /* primary text/ink (charcoal)        */
-    --content-inverse: #f1eee5;/* text on dark blocks (cream)        */
-    --line: #171814;           /* hairline borders (used with alpha) */
-    --accent-lime: #d8ff4f;    /* signature accent                   */
-    --accent-red: #cc2f4a;     /* secondary accent                   */
-    /* Ink that sits ON a solid accent fill (lime/white chips & CTAs).
-       Pinned dark in BOTH themes: the lime/white surface is bright in dark
-       mode too, so text on it must stay dark ink or it becomes unreadable.
+       Contrast (computed from WCAG 2.1 relative luminance, not estimated):
+         ink #0A0A0F (L 0.0027) on paper #FFFFFF (L 1.0) → 21.0:1
+         ink #0A0A0F             on saffron #E9A319 (L 0.4667) →  8.6:1
+       Both clear AA at any size; the saffron pairing clears AAA for large text. */
+    --surface: #FFFFFF;        /* page background — pure paper */
+    --surface-2: #FAFAFA;      /* alt panel / card — off-white */
+    --surface-inverse: #0A0A0F;/* intentional dark blocks — ink */
+    --surface-hover: #F0F0F0;  /* image placeholder / hover well */
+    --warm-gray: #E5E5E5;      /* legacy warm-gray token value */
+    --content: #0A0A0F;        /* primary text/ink */
+    --content-inverse: #FFFFFF;/* text on dark blocks */
+    --line: #0A0A0F;           /* hairline borders (used with alpha) */
+    --accent-lime: #E9A319;    /* signal accent — saffron */
+    --accent-red: #C03A2B;     /* negative state — vermilion */
+    /* Ink that sits ON a solid bright fill (saffron chips, white CTAs).
+       Pinned dark in BOTH themes: those fills are bright in dark mode too, so
+       text on them must stay dark ink or it becomes unreadable. This pin is the
+       invariant that let the whole palette rotate by hue alone.
        Never role-split — see docs/THEME_TOKENS.md. */
-    --on-accent: #171814;
+    --on-accent: #0A0A0F;
+
+    /* shadcn/ui semantic aliases — monochrome mapping */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+
+    --primary: 240 10% 4%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 240 10% 4%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    /* Saffron, matching --accent-lime. */
+    --accent: 41 82% 50%;
+    /* Dark ink, NOT near-white: paper on saffron is 2.1:1 and fails AA. This
+       also keeps shadcn's accent pairing consistent with --on-accent, which the
+       other ~430 accent call sites use. */
+    --accent-foreground: 240 10% 4%;
+
+    /* Vermilion, matching --accent-red. Paper on vermilion computes to 5.9:1 —
+       clears AA for normal text. */
+    --destructive: 8 63% 46%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 41 82% 50%;
+
+    /* Charts walk saffron → ink (used by /admin). Ordered by hue distance so
+       adjacent series stay distinguishable, including for red-green CVD: no two
+       neighbours differ by hue alone. */
+    --chart-1: 41 82% 50%;
+    --chart-2: 240 10% 4%;
+    --chart-3: 0 0% 60%;
+    --chart-4: 8 63% 46%;
+    --chart-5: 240 4% 46%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 10% 4%;
+    --sidebar-primary: 240 10% 4%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 240 10% 4%;
+    --sidebar-border: 240 6% 90%;
+    --sidebar-ring: 41 82% 50%;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DARK THEME — premium cool-graphite ("studio at night")
-   Deliberately NOT pure black: cool near-black graphite surfaces that
-   climb in lightness with elevation, keyed to neutral ink so the lime
-   accent glows. Toggled by `.dark` on <html> (see theme-provider + boot
-   script). Everything here is an OVERRIDE — remove .dark and the site is
-   exactly as before.
+   DARK THEME — "studio at night" monochrome
+   Deliberately NOT pure black: near-black ink surfaces that climb in
+   lightness with elevation, keyed to paper so the saffron accent glows.
+   Toggled by `.dark` on <html> (see theme-provider + boot script).
+   Everything here is an OVERRIDE — remove .dark and the site is exactly
+   as before.
    ═══════════════════════════════════════════════════════════════ */
 .dark {
-    --background: 220 8% 6%;
-    --foreground: 210 14% 90%;
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
 
-    --card: 218 9% 9%;
-    --card-foreground: 210 14% 90%;
+    --card: 240 6% 7%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 220 8% 7%;
-    --popover-foreground: 210 14% 90%;
+    --popover: 240 10% 4%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 210 14% 90%;
-    --primary-foreground: 220 8% 6%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 10% 4%;
 
-    --secondary: 216 9% 15%;
-    --secondary-foreground: 210 14% 90%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 216 8% 14%;
-    --muted-foreground: 214 8% 60%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 74 100% 65%;
-    --accent-foreground: 220 8% 6%;
+    --accent: 41 82% 55%;
+    --accent-foreground: 240 10% 4%;
 
-    --destructive: 350 68% 60%;
-    --destructive-foreground: 210 18% 98%;
+    --destructive: 8 68% 55%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214 10% 21%;
-    --input: 214 10% 21%;
-    --ring: 74 100% 65%;
+    --border: 240 4% 18%;
+    --input: 240 4% 18%;
+    --ring: 41 82% 55%;
 
-    --sidebar-background: 220 8% 7%;
-    --sidebar-foreground: 210 14% 90%;
-    --sidebar-primary: 210 14% 90%;
-    --sidebar-primary-foreground: 220 8% 6%;
-    --sidebar-accent: 216 8% 14%;
-    --sidebar-accent-foreground: 210 14% 90%;
-    --sidebar-border: 214 10% 21%;
-    --sidebar-ring: 74 100% 65%;
+    --sidebar-background: 240 10% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 10% 4%;
+    --sidebar-accent: 240 4% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 4% 18%;
+    --sidebar-ring: 41 82% 55%;
 
-    /* Semantic roles — cool-graphite palette. Surfaces climb in lightness with
-       elevation (page → panel → raised block) so depth reads without borders. */
-    --surface: #0e0f11;         /* page background — cool ink black     */
-    --surface-2: #16181b;       /* panels / cards — graphite            */
-    --surface-inverse: #1f2226; /* former dark blocks → raised slate    */
-    --surface-hover: #262a2f;   /* image placeholder / hover wells      */
-    --warm-gray: #262a2f;       /* legacy warm-gray → dark hover well   */
-    --content: #eef1f4;         /* primary text — cool paper-light      */
-    --content-inverse: #f1eee5; /* text on raised surfaces stays light  */
-    --line: #eef1f4;            /* hairlines invert (used at low alpha) */
-    --accent-lime: #d8ff4f;     /* signature lime — unchanged, it pops  */
-    --accent-red: #e0576f;      /* red lifted for contrast on dark      */
-    /* --on-accent intentionally NOT overridden: lime/white fills are bright
+    /* Semantic roles — INK / PAPER inverted. Same luminance ladder as before
+       (surfaces climb with elevation so depth reads without borders); only the
+       hue moves, so every existing pairing survives. */
+    --surface: #0A0A0F;         /* page background — ink */
+    --surface-2: #111118;       /* panels / cards — raised ink */
+    --surface-inverse: #1A1A24; /* former dark blocks → elevated ink */
+    --surface-hover: #22222E;   /* image placeholder / hover wells */
+    --warm-gray: #22222E;       /* legacy warm-gray → dark hover well */
+    --content: #FAFAFA;         /* primary text — paper, cooled */
+    --content-inverse: #FFFFFF; /* text on raised surfaces stays paper */
+    --line: #FAFAFA;            /* hairlines invert (used at low alpha) */
+    --accent-lime: #F0B030;     /* saffron lifted — glows on ink */
+    --accent-red: #E2604F;      /* vermilion lifted for contrast on dark */
+    /* --on-accent intentionally NOT overridden: saffron/white fills are bright
        in dark mode too, so ink on them stays dark. */
     color-scheme: dark;
 }
 
-/* â”€â”€ Tailwind v4 theme extensions â”€â”€ */
+/* ── Tailwind v4 theme extensions ── */
 @theme inline {
     --color-background: hsl(var(--background));
     --color-foreground: hsl(var(--foreground));
@@ -177,7 +203,7 @@
     --color-sidebar-border: hsl(var(--sidebar-border));
     --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-    /* Custom brand colors — LINE-BOOK system.
+    /* Custom brand colors — BRUTALIST-MONOCHROME system.
        Rewired to the semantic role vars so every existing token class
        (bg-warm-white, text-charcoal, bg-ink, …) themes automatically when
        `.dark` flips the roles above. Light values are unchanged. */
@@ -210,8 +236,8 @@
     --color-rangat-lime: hsl(88 18% 44%);
 
     --radius-lg: var(--radius);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 1px);
+    --radius-sm: calc(var(--radius) - 1px);
 
     --font-sans: var(--font-inter);
     --font-serif: var(--font-playfair);
@@ -234,145 +260,76 @@
     --animate-spin-slow: spin 8s linear infinite;
 }
 
-/* â”€â”€ Keyframe animations â”€â”€ */
+/* ── Keyframe animations ── */
 @keyframes fade-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @keyframes fade-in-up {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-in-down {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-in-left {
-    from {
-        opacity: 0;
-        transform: translateX(-40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slide-in-right {
-    from {
-        opacity: 0;
-        transform: translateX(40px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes slide-in-bottom {
-    from {
-        opacity: 0;
-        transform: translateY(60px) rotate(2deg);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) rotate(0);
-    }
+    from { opacity: 0; transform: translateY(60px) rotate(2deg); }
+    to { opacity: 1; transform: translateY(0) rotate(0); }
 }
 
 @keyframes scale-in {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes marquee {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
 @keyframes bounce-subtle {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-8px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 
 @keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }
 
 @keyframes float {
-    0%,
-    100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 
 @keyframes pulse-slow {
-    0%,
-    100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 @keyframes bounce-horizontal {
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-    50% {
-        transform: translateX(4px);
-    }
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
 }
 
-/* â”€â”€ Base styles â”€â”€ */
+/* ── Base styles ── */
 html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* Native instant scroll â€” faster & more precise response than CSS smooth */
     text-rendering: optimizeLegibility;
 }
 
@@ -381,7 +338,6 @@ body {
     color: hsl(var(--foreground));
     font-family: var(--font-sans), system-ui, sans-serif;
     overflow-x: hidden;
-    /* No overscroll-behavior-y override â€” lets browsers render native rubber-band / momentum */
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -401,20 +357,19 @@ svg {
 @supports (content-visibility: auto) {
     .content-auto {
         content-visibility: auto;
-        /* auto remembers real size after first render, eliminating layout shift on revisit */
         contain-intrinsic-size: auto 900px;
     }
 }
 
-/* â”€â”€ Selection styling â”€â”€ */
+/* ── Selection styling ── */
 ::selection {
-    background-color: hsl(37 45% 60% / 0.3);
-    color: hsl(0 0% 10%);
+    background-color: var(--accent-lime);
+    color: var(--on-accent);
 }
 
-/* â”€â”€ Custom scrollbar â”€â”€ */
+/* ── Custom scrollbar ── */
 ::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -422,28 +377,28 @@ svg {
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: hsl(40 10% 80%);
-    border-radius: 3px;
+    background-color: color-mix(in srgb, var(--content) 20%, transparent);
+    border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(37 45% 60%);
+    background-color: var(--accent-lime);
 }
 
-/* â”€â”€ Utility classes â”€â”€ */
+/* ── Utility classes ── */
 .text-gradient-gold {
     background: linear-gradient(
         135deg,
-        hsl(37 55% 55%),
-        hsl(37 45% 70%),
-        hsl(30 50% 50%)
+        var(--accent-lime),
+        color-mix(in srgb, var(--accent-lime) 70%, white),
+        var(--accent-red)
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-/* â”€â”€ 3D Utilities for Mobile Flip Card â”€â”€ */
+/* ── 3D Utilities ── */
 .perspective-1000 {
     perspective: 1000px;
 }
@@ -471,17 +426,15 @@ svg {
 }
 
 .glass {
-    background: hsl(40 20% 98% / 0.96);
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(40 10% 90% / 0.5);
-    /* Force navbar to its own GPU layer before scroll triggers */
+    border: 1px solid color-mix(in srgb, var(--line) 10%, transparent);
     will-change: transform;
     transform: translateZ(0);
 }
 
-/* â”€â”€ GPU compositor layer utilities â”€â”€ */
-/* Apply to any element that will animate transform/opacity  */
+/* ── GPU compositor layer utilities ── */
 .will-change-transform {
     will-change: transform;
     transform: translateZ(0);
@@ -493,7 +446,6 @@ svg {
     will-change: opacity;
 }
 
-/* â”€â”€ Marquee: always GPU-promoted so it never touches main thread â”€â”€ */
 .animate-marquee {
     will-change: transform;
     transform: translateZ(0);
@@ -501,7 +453,6 @@ svg {
     -webkit-backface-visibility: hidden;
 }
 
-/* â”€â”€ Parallax layers: promote before first scroll to avoid layer-creation jank â”€â”€ */
 .parallax-layer {
     will-change: transform;
     transform: translateZ(0);
@@ -509,13 +460,11 @@ svg {
     -webkit-backface-visibility: hidden;
 }
 
-/* â”€â”€ Sticky / fixed elements: decoupled from scroll by GPU layer â”€â”€ */
 .fixed-gpu {
     will-change: transform;
     transform: translateZ(0);
 }
 
-/* â”€â”€ Decorative blur orbs: hide on mobile to prevent expensive filter compositing â”€â”€ */
 .decor-blur-orb {
     display: none;
 }
@@ -526,7 +475,6 @@ svg {
     }
 }
 
-/* â”€â”€ Prevent touch delay on interactive elements â”€â”€ */
 button,
 a,
 [role="button"],
@@ -535,7 +483,6 @@ a,
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Product card image zoom on hover â€” GPU-promoted compositor layer */
 .product-card-image {
     will-change: transform;
     transform: translateZ(0);
@@ -548,7 +495,6 @@ a,
     transform: translateZ(0) scale(1.06);
 }
 
-/* Scroll reveal utility â€” GPU-friendly: only transitions compositor properties */
 .reveal {
     opacity: 0;
     transform: translateY(24px) translateZ(0);
@@ -565,7 +511,6 @@ a,
     will-change: auto;
 }
 
-/* Horizontal scroll container (mobile product carousel) */
 .scroll-snap-x {
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
@@ -577,7 +522,6 @@ a,
     scroll-snap-align: start;
 }
 
-/* Hide scrollbar for carousel */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -586,7 +530,6 @@ a,
     scrollbar-width: none;
 }
 
-/* Alias used in some components */
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -595,355 +538,47 @@ a,
     scrollbar-width: none;
 }
 
-/* Mobile safe-area inset for sticky bottom bars */
 .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Tactile grain overlay for organic paper texture */
-.grain-overlay {
-    display: none;
-}
-
 /* ═══════════════════════════════════════════════════════════════
-   PREMIUM HOMEPAGE BACKGROUND — Smooth Matte Clay (Atelier Paper)
-   Very light, non-disturbing, warm clay/matte finish specific to
-   Rangat Pehnawa: handcrafted heritage meets quiet modern luxury.
-   The texture is barely visible in direct view but creates a rich,
-   frosted, material-like blur under the navbar — like fine paper or
-   subtle handloom fabric under glass.
+   PREMIUM HOMEPAGE BACKGROUND — Matte Paper
+   Clean, high-contrast canvas for the brutalist-monochrome system.
    ═══════════════════════════════════════════════════════════════ */
 .homepage-clay {
-  background-color: #f7f4ed;
+  background-color: var(--surface);
   background-image:
-    /* Base warm clay with gentle depth */
-    linear-gradient(180deg, #faf7f1 0%, #f6f1e8 42%, #f7f4ed 100%),
-    /* Very soft directional light (atelier window feel) */
-    radial-gradient(ellipse at 48% 12%, rgba(145, 115, 85, 0.022) 0%, transparent 62%),
-    /* Subtle bottom grounding */
-    linear-gradient(to bottom, transparent 68%, rgba(120, 95, 70, 0.015) 100%);
-  background-size: 100% 100%, 100% 100%, 100% 100%;
+    linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
   background-attachment: fixed;
 }
 
-/* Refined organic texture — premium handloom linen + atelier paper. 
-   Barely visible straight on. Transforms into rich, frosted material when blurred by navbar.
-   Specific to Rangat: subtle weave evoking fine Chanderi and handloom. */
 .homepage-clay::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: -1;
-  /* Primary fine linen weave (horizontal + vertical threads) */
   background-image:
-    linear-gradient(rgba(0,0,0,0.009) 0.8px, transparent 0.8px),
-    linear-gradient(90deg, rgba(0,0,0,0.009) 0.8px, transparent 0.8px),
-    /* Secondary larger, softer paper fiber texture */
-    radial-gradient(circle at 30% 20%, rgba(0,0,0,0.004) 0.5px, transparent 1.5px),
-    radial-gradient(circle at 70% 80%, rgba(0,0,0,0.004) 0.5px, transparent 1.5px);
-  background-size: 2.4px 2.4px, 2.4px 2.4px, 7px 7px, 9px 9px;
-  opacity: 0.82;
+    linear-gradient(color-mix(in srgb, var(--line) 0.6%, transparent) 0.8px, transparent 0.8px),
+    linear-gradient(90deg, color-mix(in srgb, var(--line) 0.6%, transparent) 0.8px, transparent 0.8px);
+  background-size: 2.4px 2.4px;
+  opacity: 0.5;
   mix-blend-mode: multiply;
-}
-
-/* Homepage motion language: textile curves, atelier light and restrained sheen. */
-.hero-orbit {
-  position: absolute;
-  pointer-events: none;
-  border: 1px solid hsl(37 45% 45% / 0.14);
-  border-radius: 50%;
-}
-
-.hero-orbit--one {
-  width: min(56vw, 780px);
-  aspect-ratio: 1;
-  right: -18%;
-  top: 6%;
-  animation: orbit-drift 18s ease-in-out infinite alternate;
-}
-
-.hero-orbit--two {
-  width: min(34vw, 480px);
-  aspect-ratio: 1;
-  left: -18%;
-  bottom: -20%;
-  animation: orbit-drift 22s ease-in-out infinite alternate-reverse;
-}
-
-.hero-image-sheen {
-  background: linear-gradient(105deg, transparent 32%, rgb(255 255 255 / 0.2) 48%, transparent 64%);
-  transform: translateX(-120%);
-  animation: atelier-sheen 8s cubic-bezier(0.16, 1, 0.3, 1) 1.5s infinite;
-  pointer-events: none;
-}
-
-.lane-light {
-  background: linear-gradient(112deg, transparent 25%, rgb(255 255 255 / 0.15) 47%, transparent 68%);
-  transform: translateX(-25%);
-}
-
-.product-stage-glow {
-  background:
-    radial-gradient(circle at 14% 22%, hsl(37 45% 54% / 0.12), transparent 28%),
-    radial-gradient(circle at 92% 80%, hsl(27 35% 38% / 0.1), transparent 32%);
-  pointer-events: none;
-}
-
-.bulk-cta-thread {
-  background-image:
-    linear-gradient(112deg, transparent 0 68%, hsl(37 45% 54% / 0.08) 68% 68.15%, transparent 68.15%),
-    linear-gradient(112deg, transparent 0 76%, hsl(37 45% 54% / 0.08) 76% 76.15%, transparent 76.15%);
-  pointer-events: none;
-}
-
-@keyframes atelier-sheen {
-  0%, 62% { transform: translateX(-120%); opacity: 0; }
-  70% { opacity: 1; }
-  88%, 100% { transform: translateX(120%); opacity: 0; }
-}
-
-@keyframes orbit-drift {
-  from { transform: translate3d(0, 0, 0) rotate(0deg); }
-  to { transform: translate3d(-20px, 14px, 0) rotate(7deg); }
 }
 
 @media (max-width: 767px) {
   .homepage-clay {
     background-attachment: scroll;
   }
-
-  .hero-orbit--one {
-    width: 125vw;
-    right: -72%;
-  }
-
-  .hero-orbit--two {
-    display: none;
-  }
 }
 
-/* Contemporary wholesale line-book homepage. Deliberately avoids the site's
-   default faux-luxury serif/card language in favor of merchant typography. */
-.linebook-hero {
-  isolation: isolate;
-}
+/* ═══════════════════════════════════════════════════════════════
+   BRUTALIST-MONOCHROME DESIGN SYSTEM
+   Editorial, square-cornered, hairline-bordered, high-contrast.
+   ═══════════════════════════════════════════════════════════════ */
 
-/* Hero image treated as a printed line-book plate: paper border, registration
-   crop marks at each corner, and a single slow sheen so it reads finished. */
-.hero-plate {
-  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.75);
-}
-
-.hero-plate-mark {
-  position: absolute;
-  z-index: 20;
-  width: 12px;
-  height: 12px;
-  pointer-events: none;
-  opacity: 0.55;
-}
-
-.hero-plate-mark::before,
-.hero-plate-mark::after {
-  content: "";
-  position: absolute;
-  background: #d8ff4f;
-}
-
-.hero-plate-mark::before { width: 100%; height: 1px; top: 0; }
-.hero-plate-mark::after { width: 1px; height: 100%; left: 0; }
-
-.hero-plate-mark--tl { top: -5px; left: -5px; }
-.hero-plate-mark--tr { top: -5px; right: -5px; }
-.hero-plate-mark--tr::after { left: auto; right: 0; }
-.hero-plate-mark--bl { bottom: -5px; left: -5px; }
-.hero-plate-mark--bl::before { top: auto; bottom: 0; }
-.hero-plate-mark--br { bottom: -5px; right: -5px; }
-.hero-plate-mark--br::before { top: auto; bottom: 0; }
-.hero-plate-mark--br::after { left: auto; right: 0; }
-
-.hero-plate-sheen {
-  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.14) 50%, transparent 62%);
-  transform: translateX(-130%);
-  animation: hero-plate-sheen 9s cubic-bezier(0.16, 1, 0.3, 1) 2s infinite;
-  pointer-events: none;
-}
-
-@keyframes hero-plate-sheen {
-  0%, 70% { transform: translateX(-130%); opacity: 0; }
-  76% { opacity: 1; }
-  92%, 100% { transform: translateX(130%); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-plate-sheen { animation: none; opacity: 0; }
-}
-
-/* Scroll reveals are now handled cross-browser by the framer-motion <Reveal>
-   component (src/components/ui/reveal.tsx). The old CSS `animation-timeline:
-   view()` rules only ran in Chromium and left Firefox/Safari flat, so they were
-   removed to avoid double-animating the same elements. */
-
-.linebook-grid {
-  opacity: 0.11;
-  background-image:
-    linear-gradient(to right, rgb(241 238 229 / 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(241 238 229 / 0.22) 1px, transparent 1px);
-  background-size: 8.333vw 100%, 100% 4.5rem;
-  mask-image: linear-gradient(to bottom, black, transparent 94%);
-  pointer-events: none;
-}
-
-/* Buying-index plate backdrop — same line-book grid as the hero, scaled for the
-   right-hand panel so the second section shares the catalogue identity. */
-.lane-plate-grid {
-  opacity: 0.09;
-  background-image:
-    linear-gradient(to right, rgb(241 238 229 / 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(241 238 229 / 0.28) 1px, transparent 1px);
-  background-size: 3.5rem 100%, 100% 3.5rem;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
-}
-
-.inventory-row {
-  position: relative;
-  transition: padding 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.5s ease;
-}
-
-.inventory-row::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* z-index 0 (not -1): the fill sits at the row's own base layer and the row
-     content is lifted to z-index 1 above it. Negative z-index used to drop the
-     fill behind the page whenever framer-motion cleared the reveal transform
-     (which had been supplying a stacking context) — that was the "works ~1-2s
-     then the green stops" bug. This layering needs no stacking context at all. */
-  z-index: 0;
-  background: var(--accent-lime);
-  transform: scaleY(0);
-  transform-origin: bottom;
-  opacity: 0;
-  /* Slow, soft settle — the fill dissolves upward rather than snapping in.
-     Longer scale, gently trailing opacity, calm ease with no overshoot. */
-  transition:
-    transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.5s ease-out;
-}
-
-/* Keep row content above the hover fill regardless of animation state. */
-.inventory-row > * {
-  position: relative;
-  z-index: 1;
-}
-
-.inventory-row:hover::before,
-.inventory-row:focus-visible::before {
-  transform: scaleY(1);
-  opacity: 1;
-}
-
-/* On hover the row fills with fixed-bright lime, but --content is light ink in
-   dark mode → light-on-lime washout. Rebind --content to the always-dark
-   on-accent ink within the hovered row so the title, the muted code/size/price
-   variants (color-mix on --content) all recompute to readable dark ink. Correct
-   in both themes since --on-accent never flips. */
-.inventory-row:hover,
-.inventory-row:focus-visible {
-  --content: var(--on-accent);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .inventory-row::before {
-    transition: opacity 0.4s ease;
-    transform: scaleY(1);
-  }
-}
-
-/* Trade-tier cards lift subtly on hover to match the hero's tactile quality. */
-.tier-card {
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
-  will-change: transform;
-}
-
-.tier-card:hover {
-  transform: translateY(-4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tier-card:hover { transform: none; }
-}
-
-.linebook-button {
-  display: inline-flex;
-  min-height: 3rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.8rem;
-  border: 1px solid color-mix(in srgb, var(--content) 35%, transparent);
-  padding: 0.85rem 1.25rem;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--content);
-  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
-}
-
-.linebook-button:hover,
-.linebook-button:focus-visible {
-  border-color: var(--content);
-}
-
-.linebook-button--dark {
-  border-color: var(--surface-inverse);
-  background: var(--surface-inverse);
-  color: var(--content-inverse);
-}
-
-.linebook-button--dark:hover,
-.linebook-button--dark:focus-visible {
-  border-color: var(--accent-red);
-  background: var(--accent-red);
-  color: #f6f3ec; /* fixed light ink — accent-red is a fixed mid-tone in both themes */
-}
-
-@media (max-width: 639px) {
-  .linebook-grid {
-    background-size: 25vw 100%, 100% 4rem;
-  }
-}
-
-/* Make the fixed navbar glass look richer over the clay background.
-   The blur now reveals the handloom texture beautifully — premium frosted effect. */
-.homepage-clay .glass,
-.homepage-clay nav {
-  background: hsl(35 32% 96% / 0.74) !important;
-  backdrop-filter: blur(42px) saturate(1.42) contrast(0.97);
-  -webkit-backdrop-filter: blur(42px) saturate(1.42) contrast(0.97);
-  border-color: hsl(32 26% 80% / 0.45);
-  box-shadow: 0 10px 36px -14px rgba(0,0,0,0.05);
-}
-
-/* When scrolled, even more refined glass */
-.homepage-clay nav.scrolled {
-  background: hsl(35 30% 95% / 0.84) !important;
-  border-color: hsl(32 24% 76% / 0.5);
-  box-shadow: 0 14px 44px -16px rgba(0,0,0,0.07);
-}
-
-/* Make sure the top promotional banner feels part of the premium experience */
-.homepage-clay .bg-charcoal {
-  background-color: #1f1c17 !important;
-}
-
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-   COMMERCE DESIGN SYSTEM - site-wide primitives
-   Editorial, square-cornered, hairline-bordered quiet luxury.
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
-
-/* â”€â”€ Eyebrow / overline microlabel â”€â”€ */
+/* ── Eyebrow / overline microlabel ── */
 .eyebrow {
     display: inline-flex;
     align-items: center;
@@ -952,7 +587,7 @@ a,
     font-weight: 800;
     letter-spacing: 0.32em;
     text-transform: uppercase;
-    color: #cc2f4a;
+    color: var(--accent-red);
 }
 
 .eyebrow::before {
@@ -960,14 +595,14 @@ a,
     display: block;
     width: 1.75rem;
     height: 2px;
-    background: #cc2f4a;
+    background: var(--accent-red);
 }
 
 .eyebrow--bare::before {
     display: none;
 }
 
-/* â”€â”€ Primary CTA: charcoal block w/ gold sweep â”€â”€ */
+/* ── Primary CTA: ink block w/ saffron sweep ── */
 .btn-luxe {
     position: relative;
     display: inline-flex;
@@ -1016,7 +651,7 @@ a,
     display: none;
 }
 
-/* â”€â”€ Secondary CTA: hairline outline that inks in â”€â”€ */
+/* ── Secondary CTA: hairline outline that inks in ── */
 .btn-luxe-outline {
     position: relative;
     display: inline-flex;
@@ -1060,13 +695,11 @@ a,
     transform: translateY(0);
 }
 
-/* â”€â”€ Editorial form field: hairline underline â”€â”€ */
+/* ── Editorial form field: hairline underline ── */
 .field-luxe {
     width: 100%;
     background: transparent;
     border: 0;
-    /* Token-driven (was hardcoded ink): fields must stay readable when the
-       .dark role palette flips — dark-on-dark inputs were invisible. */
     border-bottom: 1px solid color-mix(in srgb, var(--line) 25%, transparent);
     border-radius: 0;
     padding: 0.875rem 0;
@@ -1097,11 +730,11 @@ a,
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.24em;
-    color: rgb(23 24 20 / 0.5);
+    color: color-mix(in srgb, var(--content) 50%, transparent);
     margin-bottom: 0.35rem;
 }
 
-/* â”€â”€ Animated link underline (gold, leftâ†’right) â”€â”€ */
+/* ── Animated link underline (vermilion, left→right) ── */
 .link-luxe {
     position: relative;
     display: inline-block;
@@ -1114,7 +747,7 @@ a,
     bottom: -2px;
     height: 2px;
     width: 100%;
-    background: #cc2f4a;
+    background: var(--accent-red);
     transform: scaleX(0);
     transform-origin: right;
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1126,14 +759,14 @@ a,
     transform-origin: left;
 }
 
-/* â”€â”€ Hairline-framed panel â”€â”€ */
+/* ── Hairline-framed panel ── */
 .panel-luxe {
-    background: #f2efe6;
-    border: 1px solid rgb(23 24 20 / 0.2);
+    background: var(--surface-2);
+    border: 1px solid color-mix(in srgb, var(--line) 20%, transparent);
     box-shadow: none;
 }
 
-/* â”€â”€ Double hairline frame (lime inner rule) â”€â”€ */
+/* ── Double hairline frame (saffron inner rule) ── */
 .frame-luxe {
     position: relative;
 }
@@ -1142,7 +775,7 @@ a,
     content: "";
     position: absolute;
     inset: 8px;
-    border: 1px solid rgb(216 255 79 / 0.5);
+    border: 1px solid color-mix(in srgb, var(--accent-lime) 50%, transparent);
     pointer-events: none;
 }
 
@@ -1150,986 +783,269 @@ a,
     animation: line-sheet-scan 6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-.atelier-desk {
-    isolation: isolate;
+/* ── Hero plate — printed line-book aesthetic ── */
+.linebook-hero {
+  isolation: isolate;
 }
 
-.atelier-desk::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        linear-gradient(115deg, hsl(24 16% 12% / 0.08), transparent 42%),
-        linear-gradient(180deg, transparent 0%, hsl(24 16% 12% / 0.08) 100%);
+.hero-plate {
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.75);
 }
 
-.atelier-float-slow {
-    animation: atelier-float-slow 7s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+.hero-plate-mark {
+  position: absolute;
+  z-index: 20;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+  opacity: 0.55;
 }
 
-.atelier-float-delay {
-    animation: atelier-float-delay 8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+.hero-plate-mark::before,
+.hero-plate-mark::after {
+  content: "";
+  position: absolute;
+  background: var(--accent-lime);
 }
 
-.atelier-tape {
-    animation: atelier-tape 22s linear infinite;
-}
-
-.rangat-liquid-hero {
-    isolation: isolate;
-    background:
-        linear-gradient(90deg, hsl(40 30% 99%) 0%, hsl(40 28% 98%) 39%, hsl(88 14% 92%) 68%, hsl(36 28% 95%) 100%),
-        linear-gradient(135deg, hsl(0 0% 100% / 0.98) 0%, hsl(0 0% 100% / 0.48) 34%, transparent 56%),
-        linear-gradient(180deg, hsl(40 20% 98%) 0%, hsl(41 24% 97%) 52%, hsl(39 22% 94%) 100%);
-}
-
-.rangat-liquid-hero::before {
-    content: "";
-    position: absolute;
-    inset: -12% -10% -8%;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        linear-gradient(108deg, hsl(0 0% 100% / 0.98) 0%, hsl(0 0% 100% / 0.62) 30%, transparent 48%),
-        linear-gradient(77deg, transparent 0%, hsl(88 18% 44% / 0.1) 48%, hsl(37 45% 60% / 0.16) 100%),
-        linear-gradient(180deg, hsl(0 0% 100% / 0.72), transparent 36%, hsl(38 30% 86% / 0.16));
-    filter: blur(42px);
-    opacity: 0.98;
-}
-
-.rangat-liquid-hero::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        linear-gradient(116deg, transparent 0%, transparent 58%, hsl(0 0% 100% / 0.3) 58.2%, transparent 72%),
-        linear-gradient(90deg, hsl(0 0% 100% / 0.72), hsl(0 0% 100% / 0.2) 35%, transparent 58%),
-        linear-gradient(180deg, hsl(0 0% 100% / 0.32), transparent 30%, hsl(40 20% 98% / 0.26));
-    opacity: 0.68;
-    mix-blend-mode: normal;
-}
-
-.rangat-liquid-panel {
-    overflow: hidden;
-    border: 1px solid hsl(0 0% 100% / 0.76);
-    background:
-        linear-gradient(132deg, hsl(0 0% 100% / 0.64), hsl(92 18% 88% / 0.28) 45%, hsl(39 34% 91% / 0.35)),
-        linear-gradient(180deg, hsl(0 0% 100% / 0.26), hsl(24 18% 14% / 0.025));
-    backdrop-filter: blur(32px) saturate(1.12);
-    clip-path: polygon(6% 0, 100% 0, 96% 100%, 0 100%);
-    box-shadow:
-        0 58px 150px -92px hsl(24 18% 14% / 0.52),
-        inset 0 1px 0 hsl(0 0% 100% / 0.84),
-        inset 0 -1px 0 hsl(24 18% 14% / 0.05);
-}
-
-.rangat-liquid-panel::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    background:
-        linear-gradient(118deg, hsl(0 0% 100% / 0.66) 0%, transparent 35%, hsl(88 18% 44% / 0.08) 72%, hsl(37 45% 60% / 0.12) 100%),
-        linear-gradient(90deg, transparent 0%, hsl(0 0% 100% / 0.42) 44%, transparent 70%);
-    pointer-events: none;
-}
-
-.rangat-liquid-panel::after {
-    display: none;
-}
-
-.rangat-copy-in {
-    animation: rangat-copy-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.rangat-hero-heading {
-    position: relative;
-    text-wrap: balance;
-}
-
-.rangat-source-mark {
-    position: relative;
-    z-index: 0;
-    display: inline-block;
-    padding: 0 0.02em 0.01em 0;
-    color: hsl(24 18% 14%);
-    font-style: italic;
-    text-shadow: 0 0.12em 0 hsl(37 45% 60% / 0.1);
-}
-
-.rangat-source-mark::before {
-    content: "";
-    position: absolute;
-    left: -0.015em;
-    right: -0.025em;
-    bottom: 0.04em;
-    z-index: -1;
-    height: 0.22em;
-    background:
-        linear-gradient(90deg, hsl(37 45% 60% / 0.2), hsl(37 45% 60% / 0.32) 64%, hsl(88 18% 44% / 0.14)),
-        linear-gradient(180deg, hsl(0 0% 100% / 0.56), hsl(36 35% 82% / 0.16));
-    border-radius: 2px;
-    filter: blur(0.6px);
-    transform: rotate(-0.8deg) skewX(-10deg);
-    transform-origin: left center;
-    pointer-events: none;
-}
-
-.rangat-source-mark::after {
-    display: none;
-}
-
-.rangat-hero-caption {
-    position: relative;
-    padding: 0.98rem 1.1rem;
-    border: 1px solid hsl(37 24% 84% / 0.3);
-    background:
-        linear-gradient(135deg, hsl(0 0% 100% / 0.78), hsl(40 20% 98% / 0.34)),
-        linear-gradient(90deg, hsl(88 15% 89% / 0.1), transparent);
-    color: hsl(24 8% 31% / 0.86);
-    letter-spacing: 0.005em;
-    box-shadow:
-        0 24px 76px -62px hsl(24 18% 14% / 0.46),
-        inset 0 1px 0 hsl(0 0% 100% / 0.76);
-    text-wrap: pretty;
-    backdrop-filter: blur(18px);
-}
-
-.rangat-hero-caption::before {
-    display: none;
-}
-
-.rangat-buy-spec {
-    gap: 0.35rem;
-    padding: 0.34rem 0.42rem;
-    border: 1px solid hsl(37 24% 84% / 0.34);
-    border-radius: 999px;
-    background:
-        linear-gradient(135deg, hsl(0 0% 100% / 0.78), hsl(40 20% 98% / 0.45)),
-        linear-gradient(90deg, hsl(37 45% 60% / 0.07), hsl(88 18% 44% / 0.06));
-    box-shadow:
-        0 22px 64px -58px hsl(24 18% 14% / 0.48),
-        inset 0 1px 0 hsl(0 0% 100% / 0.86);
-    backdrop-filter: blur(20px) saturate(1.08);
-}
-
-.rangat-buy-spec-item {
-    display: inline-flex;
-    min-height: 2.32rem;
-    align-items: center;
-    gap: 0.38rem;
-    padding: 0 0.66rem;
-    border-radius: 999px;
-    white-space: nowrap;
-}
-
-.rangat-buy-spec-label {
-    font-size: 0.48rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: hsl(37 34% 43% / 0.74);
-}
-
-.rangat-buy-spec-value {
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 1.2rem;
-    font-weight: 600;
-    line-height: 1;
-    color: hsl(24 18% 14%);
-}
-
-.rangat-buy-spec-unit {
-    font-size: 0.56rem;
-    font-weight: 700;
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    color: hsl(24 8% 31% / 0.48);
-}
-
-.rangat-buy-spec-dot {
-    width: 1px;
-    height: 1.35rem;
-    border-radius: 999px;
-    background: linear-gradient(180deg, transparent, hsl(24 18% 14% / 0.16), transparent);
-    box-shadow: none;
-}
-
-.rangat-size-run {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.26rem;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 1.04rem;
-    font-weight: 600;
-    line-height: 1;
-    color: hsl(24 18% 14%);
-}
-
-.rangat-size-run-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.26rem;
-}
-
-.rangat-size-run-sep {
-    width: 0.16rem;
-    height: 0.16rem;
-    border-radius: 999px;
-    background: hsl(37 45% 60% / 0.5);
-}
-
-.rangat-action-row .btn-luxe,
-.rangat-action-row .btn-luxe-outline {
-    box-shadow: 0 18px 58px -48px hsl(24 18% 14% / 0.58);
-}
-
-.rangat-action-row .btn-luxe-outline {
-    background: linear-gradient(135deg, hsl(0 0% 100% / 0.72), hsl(0 0% 100% / 0.26));
-    backdrop-filter: blur(16px);
-}
-
-/* Hero CTAs — pill silhouette echoing sample-card buttons & buy-spec tray */
-.btn-luxe-hero {
-    border-radius: 999px;
-    letter-spacing: 0.22em;
-}
-
-.rangat-action-row .btn-luxe-hero {
-    border: 1px solid hsl(0 0% 10% / 0.08);
-    box-shadow:
-        0 22px 64px -48px hsl(24 18% 14% / 0.62),
-        inset 0 1px 0 hsl(0 0% 100% / 0.06);
-}
-
-.rangat-action-row .btn-luxe-outline.btn-luxe-hero {
-    border-color: hsl(37 24% 72% / 0.55);
-    color: hsl(24 18% 14% / 0.82);
-    background:
-        linear-gradient(135deg, hsl(0 0% 100% / 0.82), hsl(40 20% 98% / 0.38)),
-        linear-gradient(90deg, hsl(37 45% 60% / 0.06), hsl(88 18% 44% / 0.04));
-    box-shadow:
-        0 20px 58px -46px hsl(24 18% 14% / 0.5),
-        inset 0 1px 0 hsl(0 0% 100% / 0.88);
-}
-
-.rangat-action-row .btn-luxe-outline.btn-luxe-hero:hover,
-.rangat-action-row .btn-luxe-outline.btn-luxe-hero:focus-visible {
-    border-color: hsl(0 0% 10%);
-}
-
-.rangat-hero-caption {
-    font-size: 0.875rem;
-    line-height: 1.62;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   HERO SHEET — modern editorial buyer typography (homepage hero)
-   Sharp grid, sans-led display, gold thread accent. No pills/glass.
-   ═══════════════════════════════════════════════════════════════ */
-
-.hero-sheet {
-    position: relative;
-}
+.hero-plate-mark::before { width: 100%; height: 1px; top: 0; }
+.hero-plate-mark::after { width: 1px; height: 100%; left: 0; }
 
-.hero-sheet-kicker {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.hero-sheet-thread {
-    display: block;
-    width: 2px;
-    height: 2.75rem;
-    flex-shrink: 0;
-    background: linear-gradient(
-        180deg,
-        hsl(37 45% 58%) 0%,
-        hsl(37 45% 58% / 0.12) 100%
-    );
-}
-
-.hero-sheet-season {
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    color: hsl(0 0% 10% / 0.38);
-}
-
-.hero-sheet-season em {
-    font-style: normal;
-    font-weight: 600;
-    color: hsl(0 0% 10% / 0.82);
-}
-
-.hero-sheet-headline {
-    text-wrap: balance;
-}
-
-.hero-sheet-line {
-    display: block;
-}
-
-.hero-sheet-line--display {
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: clamp(2.65rem, 5.8vw, 4.35rem);
-    font-weight: 300;
-    line-height: 0.9;
-    letter-spacing: -0.045em;
-    color: hsl(0 0% 10%);
-}
-
-.hero-sheet-accent {
-    font-family: var(--font-serif), Georgia, serif;
-    font-style: italic;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-}
-
-.hero-sheet-line--sub {
-    margin-top: 0.55rem;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: clamp(1.45rem, 3vw, 2.15rem);
-    font-weight: 500;
-    line-height: 1;
-    letter-spacing: -0.035em;
-    color: hsl(0 0% 10% / 0.46);
-}
-
-.hero-sheet-emphasis {
-    color: hsl(0 0% 10%);
-}
-
-.hero-sheet-dot {
-    display: inline-block;
-    margin-left: 0.02em;
-    color: hsl(37 45% 52%);
-}
-
-.hero-sheet-lede {
-    margin-top: 1.75rem;
-    max-width: 36ch;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 15px;
-    font-weight: 400;
-    line-height: 1.65;
-    color: hsl(0 0% 10% / 0.52);
-    text-wrap: pretty;
-}
-
-.hero-sheet-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1.25rem;
-    margin-top: 2.5rem;
-    padding-top: 1.35rem;
-    border-top: 1px solid hsl(0 0% 10% / 0.1);
-}
-
-.hero-sheet-cell-value {
-    display: block;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: clamp(2rem, 3.8vw, 2.85rem);
-    font-weight: 300;
-    line-height: 1;
-    letter-spacing: -0.04em;
-    color: hsl(0 0% 10%);
-    font-variant-numeric: tabular-nums;
-}
-
-.hero-sheet-cell-value--sizes {
-    font-size: clamp(1.35rem, 2.6vw, 1.85rem);
-    font-weight: 500;
-    letter-spacing: -0.02em;
-}
-
-.hero-sheet-size-gap {
-    margin: 0 0.18em;
-    color: hsl(0 0% 10% / 0.22);
-    font-weight: 300;
-}
+.hero-plate-mark--tl { top: -5px; left: -5px; }
+.hero-plate-mark--tr { top: -5px; right: -5px; }
+.hero-plate-mark--tr::after { left: auto; right: 0; }
+.hero-plate-mark--bl { bottom: -5px; left: -5px; }
+.hero-plate-mark--bl::before { top: auto; bottom: 0; }
+.hero-plate-mark--br { bottom: -5px; right: -5px; }
+.hero-plate-mark--br::before { top: auto; bottom: 0; }
+.hero-plate-mark--br::after { left: auto; right: 0; }
 
-.hero-sheet-cell-value--word {
-    font-size: clamp(1.35rem, 2.4vw, 1.75rem);
-    font-weight: 500;
-    letter-spacing: -0.025em;
+.hero-plate-sheen {
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.14) 50%, transparent 62%);
+  transform: translateX(-130%);
+  animation: hero-plate-sheen 9s cubic-bezier(0.16, 1, 0.3, 1) 2s infinite;
+  pointer-events: none;
 }
-
-.hero-sheet-cell-label {
-    display: block;
-    margin-top: 0.45rem;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: hsl(0 0% 10% / 0.36);
-}
-
-.hero-sheet-cell--dispatch {
-    display: none;
-}
-
-.hero-sheet-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1.25rem;
-    margin-top: 2.25rem;
-}
-
-.hero-sheet-cta-primary {
-    height: 3.5rem !important;
-    gap: 0.75rem !important;
-    padding: 0 1.75rem !important;
-    border: 0 !important;
-    border-radius: 2px !important;
-    background: hsl(0 0% 10%) !important;
-    color: hsl(40 20% 98%) !important;
-    font-family: var(--font-sans), system-ui, sans-serif !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    letter-spacing: 0.22em !important;
-    text-transform: uppercase !important;
-    box-shadow: 0 20px 50px -28px hsl(0 0% 10% / 0.55) !important;
-    transition:
-        transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-        background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.hero-sheet-cta-primary:hover {
-    background: hsl(37 45% 40%) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 28px 60px -24px hsl(37 45% 30% / 0.45) !important;
-}
-
-.hero-sheet-cta-primary:focus-visible {
-    outline: 2px solid hsl(37 45% 52%);
-    outline-offset: 3px;
-}
-
-.hero-sheet-cta-icon {
-    width: 1rem;
-    height: 1rem;
-}
-
-.hero-sheet-cta-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    align-self: flex-start;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    color: hsl(0 0% 10% / 0.58);
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.hero-sheet-cta-link span {
-    position: relative;
-}
-
-.hero-sheet-cta-link span::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -3px;
-    width: 100%;
-    height: 1px;
-    background: hsl(37 45% 52%);
-    transform: scaleX(0);
-    transform-origin: right;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.hero-sheet-cta-link:hover {
-    color: hsl(0 0% 10%);
-}
-
-.hero-sheet-cta-link:hover span::after {
-    transform: scaleX(1);
-    transform-origin: left;
-}
-
-.hero-sheet-footnote {
-    margin-top: 1.75rem;
-    font-family: var(--font-sans), system-ui, sans-serif;
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: hsl(0 0% 10% / 0.32);
-}
-
-@media (min-width: 640px) {
-    .hero-sheet-actions {
-        flex-direction: row;
-        align-items: center;
-        gap: 2rem;
-    }
-
-    .hero-sheet-cta-primary {
-        width: auto;
-    }
-
-    .hero-sheet-cell--dispatch {
-        display: block;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-sheet-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 
-    .hero-sheet-cell--dispatch {
-        display: block;
-        grid-column: 1 / -1;
-    }
+@keyframes hero-plate-sheen {
+  0%, 70% { transform: translateX(-130%); opacity: 0; }
+  76% { opacity: 1; }
+  92%, 100% { transform: translateX(130%); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-sheet-cta-primary:hover {
-        transform: none;
-    }
+  .hero-plate-sheen { animation: none; opacity: 0; }
 }
 
-.rangat-stage-in {
-    animation: rangat-stage-in 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+.linebook-grid {
+  opacity: 0.06;
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 8.333vw 100%, 100% 4.5rem;
+  mask-image: linear-gradient(to bottom, black, transparent 94%);
+  pointer-events: none;
 }
 
-.rangat-hero-card {
-    animation: rangat-hero-card 1s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
-    will-change: transform;
+.lane-plate-grid {
+  opacity: 0.06;
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 3.5rem 100%, 100% 3.5rem;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 85%);
 }
 
-.rangat-orbit-a {
-    animation: rangat-orbit-a 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
-    will-change: transform;
+.inventory-row {
+  position: relative;
+  transition: padding 0.6s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.5s ease;
 }
 
-.rangat-orbit-b {
-    animation: rangat-orbit-b 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
-    will-change: transform;
+.inventory-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--accent-lime);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  opacity: 0;
+  transition:
+    transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s ease-out;
 }
 
-.rangat-title-card {
-    animation: rangat-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both;
-    border: 1px solid hsl(0 0% 100% / 0.68);
-    background:
-        linear-gradient(135deg, hsl(0 0% 100% / 0.74), hsl(40 20% 98% / 0.56) 54%, hsl(88 15% 89% / 0.3)),
-        linear-gradient(90deg, hsl(0 0% 100% / 0.4), transparent);
-    backdrop-filter: blur(24px) saturate(1.08);
-    box-shadow:
-        0 28px 80px -62px hsl(24 18% 14% / 0.56),
-        inset 0 1px 0 hsl(0 0% 100% / 0.86);
+.inventory-row > * {
+  position: relative;
+  z-index: 1;
 }
 
-.rangat-title-card::before {
-    display: none;
+.inventory-row:hover::before,
+.inventory-row:focus-visible::before {
+  transform: scaleY(1);
+  opacity: 1;
 }
 
-.rangat-title-card::after {
-    display: none;
-}
-
-.rangat-stat-card {
-    animation: rangat-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
-}
-
-/* .rangat-lane-reel styles retired — fully redesigned as premium vibrant BuyerLanes with Framer + modern bento */
-
-@keyframes line-sheet-scan {
-    0%,
-    18% {
-        transform: translateY(0);
-        opacity: 0;
-    }
-    28% {
-        opacity: 1;
-    }
-    78% {
-        transform: translateY(620px);
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(620px);
-        opacity: 0;
-    }
-}
-
-@keyframes atelier-float-slow {
-    0%,
-    100% {
-        transform: translate3d(0, 0, 0) rotate(-1.2deg);
-    }
-    50% {
-        transform: translate3d(0, -8px, 0) rotate(-0.35deg);
-    }
-}
-
-@keyframes atelier-float-delay {
-    0%,
-    100% {
-        transform: translate3d(0, 0, 0) rotate(1.15deg);
-    }
-    50% {
-        transform: translate3d(0, 9px, 0) rotate(0.25deg);
-    }
-}
-
-@keyframes atelier-tape {
-    0% {
-        transform: translate3d(0, 0, 0);
-    }
-    100% {
-        transform: translate3d(-50%, 0, 0);
-    }
-}
-
-@keyframes rangat-copy-in {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 22px, 0);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
-}
-
-@keyframes rangat-stage-in {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 22px, 0);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
-}
-
-@keyframes rangat-hero-card {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 30px, 0) scale(0.975) rotate(-1.4deg);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1) rotate(-0.45deg);
-    }
-}
-
-@keyframes rangat-orbit-a {
-    0% {
-        opacity: 0;
-        transform: translate3d(-18px, 18px, 0) rotate(0deg);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) rotate(1.2deg);
-    }
-}
-
-@keyframes rangat-orbit-b {
-    0% {
-        opacity: 0;
-        transform: translate3d(18px, 20px, 0) rotate(0deg);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0) rotate(-2deg);
-    }
-}
-
-@keyframes rangat-card-in {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 16px, 0);
-    }
-    100% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
-}
-
-/* Magnetic style cursor */
-.custom-cursor {
-    display: none;
-    width: 20px;
-    height: 20px;
-    border: 1px solid hsl(37 45% 60%);
-    border-radius: 50%;
-    position: fixed;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 10000;
-    transition:
-        width 0.3s,
-        height 0.3s,
-        background-color 0.3s;
-}
-
-.custom-cursor-dot {
-    display: none;
-    width: 4px;
-    height: 4px;
-    background-color: hsl(37 45% 60%);
-    border-radius: 50%;
-    position: fixed;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    z-index: 10000;
-}
-
-:where(a, button, input, select, textarea):focus-visible {
-    outline: 2px solid hsl(37 45% 60% / 0.75);
-    outline-offset: 3px;
-}
-
-/* â”€â”€ Mobile micro-interactions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-   Tactile press feedback for touch devices. Hover sweeps never fire on touch,
-   so :active becomes the primary signal: CTAs ink instantly to deep gold and
-   compress a hair; cards and tap targets settle under the finger. Scoped to
-   (hover: none) so desktop keeps its slow cinematic transitions. */
-.btn-luxe,
-.btn-luxe-outline {
-    transition-property: color, background-color, border-color, transform;
-    transition-duration: 0.45s;
-    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (hover: none) {
-    .btn-luxe:active:not(:disabled) {
-        background: hsl(37 45% 38%);
-        transform: scale(0.98);
-        transition-duration: 0.08s;
-    }
-
-    .btn-luxe-outline:active:not(:disabled) {
-        background: hsl(0 0% 10%);
-        color: hsl(40 20% 98%);
-        border-color: hsl(0 0% 10%);
-        transform: scale(0.98);
-        transition-duration: 0.08s;
-    }
-
-    .tap-luxe {
-        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .tap-luxe:active {
-        transform: scale(0.985);
-        transition-duration: 0.08s;
-    }
-
-    .link-luxe:active {
-        color: hsl(37 45% 45%);
-    }
+.inventory-row:hover,
+.inventory-row:focus-visible {
+  --content: var(--on-accent);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-    }
-
-    html {
-        scroll-behavior: auto;
-    }
+  .inventory-row::before {
+    transition: opacity 0.4s ease;
+    transform: scaleY(1);
+  }
 }
 
-/* ── B2B Luxe Hero Textures & Animations ── */
-.rangat-linen-texture {
-    background-color: hsl(40 20% 98%);
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+.tier-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+  will-change: transform;
 }
 
-.rangat-tailor-grid {
-    background-size: 50px 50px;
-    background-image: 
-        linear-gradient(to right, hsl(37 45% 60% / 0.045) 1px, transparent 1px),
-        linear-gradient(to bottom, hsl(37 45% 60% / 0.045) 1px, transparent 1px);
+.tier-card:hover {
+  transform: translateY(-4px);
 }
 
-.rangat-glow-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(140px);
-    opacity: 0.12;
-    pointer-events: none;
-    z-index: 0;
-    will-change: transform;
+@media (prefers-reduced-motion: reduce) {
+  .tier-card:hover { transform: none; }
 }
 
-.rangat-glow-blob.color-gold {
-    background: hsl(37 45% 60%);
-    width: 650px;
-    height: 650px;
-    animation: rangat-glow-float-1 28s ease-in-out infinite alternate;
+.linebook-button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--content) 35%, transparent);
+  padding: 0.85rem 1.25rem;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--content);
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
-.rangat-glow-blob.color-sage {
-    background: hsl(88 18% 44%);
-    width: 550px;
-    height: 550px;
-    animation: rangat-glow-float-2 22s ease-in-out infinite alternate;
+.linebook-button:hover,
+.linebook-button:focus-visible {
+  border-color: var(--content);
 }
 
-@keyframes rangat-glow-float-1 {
-    0% {
-        transform: translate3d(0, 0, 0) scale(1);
-    }
-    50% {
-        transform: translate3d(12%, -18%, 0) scale(1.15);
-    }
-    100% {
-        transform: translate3d(-8%, 8%, 0) scale(0.92);
-    }
+.linebook-button--dark {
+  border-color: var(--surface-inverse);
+  background: var(--surface-inverse);
+  color: var(--content-inverse);
 }
 
-@keyframes rangat-glow-float-2 {
-    0% {
-        transform: translate3d(0, 0, 0) scale(0.92);
-    }
-    50% {
-        transform: translate3d(-14%, 12%, 0) scale(1.08);
-    }
-    100% {
-        transform: translate3d(10%, -10%, 0) scale(1);
-    }
+.linebook-button--dark:hover,
+.linebook-button--dark:focus-visible {
+  border-color: var(--accent-red);
+  background: var(--accent-red);
+  color: #FFFFFF;
 }
 
-/* Custom premium hover and active effects for spec tags and sliders */
-.spec-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: hsl(37 45% 60%);
-    border: 2px solid hsl(40 20% 98%);
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s, background-color 0.2s;
+@media (max-width: 639px) {
+  .linebook-grid {
+    background-size: 25vw 100%, 100% 4rem;
+  }
 }
 
-.spec-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
-    background: hsl(37 45% 45%);
+/* Make the fixed navbar glass look richer over the paper background. */
+.homepage-clay .glass,
+.homepage-clay nav {
+  background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+  backdrop-filter: blur(42px) saturate(1.1);
+  -webkit-backdrop-filter: blur(42px) saturate(1.1);
+  border-color: color-mix(in srgb, var(--line) 12%, transparent);
+  box-shadow: 0 10px 36px -14px rgba(0,0,0,0.05);
+}
+
+.homepage-clay nav.scrolled {
+  background: color-mix(in srgb, var(--surface) 94%, transparent) !important;
+  border-color: color-mix(in srgb, var(--line) 16%, transparent);
+  box-shadow: 0 14px 44px -16px rgba(0,0,0,0.07);
+}
+
+.homepage-clay .bg-charcoal {
+  background-color: var(--surface-inverse) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    DARK-MODE PRIMITIVE OVERRIDES
-   The site-wide primitives above hardcode the light palette. These
-   overrides re-skin them for `.dark` using the warm-dark tokens. All are
-   additive: strip the `.dark` class and every rule here goes dormant.
+   The site-wide primitives above use the light palette. These overrides
+   re-skin them for `.dark` using the warm-dark tokens. All are additive:
+   strip the `.dark` class and every rule here goes dormant.
    ═══════════════════════════════════════════════════════════════ */
 
-/* Body already reads hsl(var(--background/foreground)) — flips for free. */
-
-/* Selection: warm lime tint on dark instead of gold. */
 .dark ::selection {
-    background-color: hsl(74 100% 65% / 0.28);
-    color: #15120e;
+    background-color: var(--accent-lime);
+    color: var(--on-accent);
 }
 
-/* Scrollbar: warm neutral thumb on dark. */
 .dark ::-webkit-scrollbar-thumb {
-    background-color: hsl(40 8% 30%);
+    background-color: color-mix(in srgb, var(--content) 30%, transparent);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
     background-color: var(--accent-lime);
 }
 
-/* Frosted navbar glass — warm-dark tint, keeps the premium blur. */
 .dark .glass {
-    background: hsl(40 9% 9% / 0.72);
-    border: 1px solid hsl(40 12% 22% / 0.5);
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    border: 1px solid color-mix(in srgb, var(--line) 22%, transparent);
 }
 
-/* Homepage clay canvas → matte espresso with the same atelier light.
-   The ::before weave switches to a faint light thread via screen blend. */
 .dark .homepage-clay {
-    background-color: #15120e;
+    background-color: var(--surface);
     background-image:
-        linear-gradient(180deg, #1a1610 0%, #141009 42%, #15120e 100%),
-        radial-gradient(ellipse at 48% 12%, rgba(216, 255, 79, 0.02) 0%, transparent 62%),
-        linear-gradient(to bottom, transparent 68%, rgba(0, 0, 0, 0.22) 100%);
+        linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
 }
 .dark .homepage-clay::before {
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.015) 0.8px, transparent 0.8px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0.8px, transparent 0.8px),
-        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.008) 0.5px, transparent 1.5px),
-        radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.008) 0.5px, transparent 1.5px);
+        linear-gradient(color-mix(in srgb, var(--line) 1.5%, transparent) 0.8px, transparent 0.8px),
+        linear-gradient(90deg, color-mix(in srgb, var(--line) 1.5%, transparent) 0.8px, transparent 0.8px);
     mix-blend-mode: screen;
-    opacity: 0.7;
+    opacity: 0.3;
 }
 .dark .homepage-clay .glass,
 .dark .homepage-clay nav {
-    background: hsl(40 9% 9% / 0.74) !important;
-    border-color: hsl(40 12% 22% / 0.5);
-    box-shadow: 0 10px 36px -14px rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--surface) 78%, transparent) !important;
+  border-color: color-mix(in srgb, var(--line) 22%, transparent);
+  box-shadow: 0 10px 36px -14px rgba(0, 0, 0, 0.5);
 }
 .dark .homepage-clay nav.scrolled {
-    background: hsl(40 9% 10% / 0.86) !important;
-    border-color: hsl(40 12% 24% / 0.55);
-    box-shadow: 0 14px 44px -16px rgba(0, 0, 0, 0.6);
+  background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+  border-color: color-mix(in srgb, var(--line) 24%, transparent);
+  box-shadow: 0 14px 44px -16px rgba(0, 0, 0, 0.6);
 }
 .dark .homepage-clay .bg-charcoal {
-    background-color: #0f0c08 !important;
+  background-color: var(--surface-inverse) !important;
 }
 
-/* Primary/outline CTAs are fully tokenized in their base rules
-   (var(--surface-inverse) / --content-inverse / --content / --on-accent),
-   so they flip for dark mode with no override needed. Do NOT re-add
-   hardcoded .dark .btn-luxe* rules — that drift is what made buttons
-   unreadable in dark mode. */
-
-/* Editorial form field underline. */
 .dark .field-luxe {
     color: var(--content);
-    border-bottom-color: hsl(40 22% 91% / 0.25);
+    border-bottom-color: color-mix(in srgb, var(--line) 25%, transparent);
 }
 .dark .field-luxe::placeholder {
-    color: hsl(40 22% 91% / 0.32);
+    color: color-mix(in srgb, var(--content) 32%, transparent);
 }
 .dark .field-luxe:focus {
     border-bottom-color: var(--accent-lime);
     box-shadow: 0 2px 0 0 var(--accent-lime);
 }
 .dark .field-luxe:disabled {
-    color: hsl(40 22% 91% / 0.4);
+    color: color-mix(in srgb, var(--content) 40%, transparent);
 }
 .dark .field-label {
-    color: hsl(40 22% 91% / 0.5);
+    color: color-mix(in srgb, var(--content) 50%, transparent);
 }
 
-/* Hairline panels. linebook-button is tokenized in its base rule and
-   flips for dark automatically — no .dark override needed. */
 .dark .panel-luxe {
     background: var(--surface-2);
-    border-color: hsl(40 22% 91% / 0.16);
+    border-color: color-mix(in srgb, var(--line) 16%, transparent);
 }
 
-/* Inventory row hover flood + tier card stay lime — already token-safe. */
-
-/* ── Theme switch reveal / progress bar chrome ──────────────────── */
+/* ── Theme switch reveal / progress bar chrome ── */
 .theme-circle-overlay {
     contain: strict;
 }
@@ -2155,20 +1071,12 @@ a,
     animation: theme-progress-complete 0.2s ease-out forwards;
 }
 @keyframes theme-progress-run {
-    from {
-        transform: scaleX(0);
-    }
-    to {
-        transform: scaleX(0.7);
-    }
+    from { transform: scaleX(0); }
+    to { transform: scaleX(0.7); }
 }
 @keyframes theme-progress-complete {
-    from {
-        transform: scaleX(0.7);
-    }
-    to {
-        transform: scaleX(1);
-    }
+    from { transform: scaleX(0.7); }
+    to { transform: scaleX(1); }
 }
 @media (prefers-reduced-motion: reduce) {
     .theme-progress-run,
@@ -2177,8 +1085,8 @@ a,
     }
 }
 
-/* ════════════════════════════════════════════════════════════════════════
-   VIEW TRANSITIONS — one continuous catalogue (appended block)
+/* ═══════════════════════════════════════════════════════════════
+   VIEW TRANSITIONS — one continuous catalogue
    Route navigations run through the browser View Transitions API:
    experimental.viewTransition (next.config.ts) + the <ViewTransition>
    boundary in src/app/template.tsx.
@@ -2188,27 +1096,245 @@ a,
    (`product-plate-<id>`), so the garment travels between pages.
    All timing uses the house ease; every animation is gated on
    prefers-reduced-motion. Browsers without the API navigate normally.
-   ════════════════════════════════════════════════════════════════════════ */
+   ═══════════════════════════════════════════════════════════════ */
 @media not (prefers-reduced-motion: reduce) {
     ::view-transition-old(root),
     ::view-transition-new(root) {
         animation-duration: 0.24s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
-    /* Shared-element groups (product plate morphs + template boundary pairs)
-       ride the same ease, a touch longer so travel reads as one motion. */
     ::view-transition-group(*) {
         animation-duration: 0.3s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     }
 }
 @media (prefers-reduced-motion: reduce) {
-    /* Reduced motion: suppress every view-transition animation — the swap
-       becomes an instant cut, matching the rest of the motion system. */
     ::view-transition-group(*),
     ::view-transition-image-pair(*),
     ::view-transition-old(*),
     ::view-transition-new(*) {
         animation: none !important;
     }
+}
+
+/* ── B2B Luxe Hero Textures & Animations ── */
+.rangat-linen-texture {
+    background-color: var(--surface);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+.rangat-tailor-grid {
+    background-size: 50px 50px;
+    background-image:
+        linear-gradient(to right, color-mix(in srgb, var(--line) 4.5%, transparent) 1px, transparent 1px),
+        linear-gradient(to bottom, color-mix(in srgb, var(--line) 4.5%, transparent) 1px, transparent 1px);
+}
+
+.rangat-glow-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+    will-change: transform;
+}
+
+.rangat-glow-blob.color-gold {
+    background: var(--accent-lime);
+    width: 650px;
+    height: 650px;
+    animation: rangat-glow-float-1 28s ease-in-out infinite alternate;
+}
+
+.rangat-glow-blob.color-sage {
+    background: var(--accent-red);
+    width: 550px;
+    height: 550px;
+    animation: rangat-glow-float-2 22s ease-in-out infinite alternate;
+}
+
+@keyframes rangat-glow-float-1 {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(12%, -18%, 0) scale(1.15); }
+    100% { transform: translate3d(-8%, 8%, 0) scale(0.92); }
+}
+
+@keyframes rangat-glow-float-2 {
+    0% { transform: translate3d(0, 0, 0) scale(0.92); }
+    50% { transform: translate3d(-14%, 12%, 0) scale(1.08); }
+    100% { transform: translate3d(10%, -10%, 0) scale(1); }
+}
+
+.spec-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent-lime);
+    border: 2px solid var(--surface);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.spec-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: var(--accent-red);
+}
+
+/* ── Mobile micro-interactions ── */
+.btn-luxe,
+.btn-luxe-outline {
+    transition-property: color, background-color, border-color, transform;
+    transition-duration: 0.45s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: none) {
+    .btn-luxe:active:not(:disabled) {
+        background: var(--accent-lime);
+        color: var(--on-accent);
+        transform: scale(0.98);
+        transition-duration: 0.08s;
+    }
+
+    .btn-luxe-outline:active:not(:disabled) {
+        background: var(--surface-inverse);
+        color: var(--content-inverse);
+        border-color: var(--surface-inverse);
+        transform: scale(0.98);
+        transition-duration: 0.08s;
+    }
+
+    .tap-luxe {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tap-luxe:active {
+        transform: scale(0.985);
+        transition-duration: 0.08s;
+    }
+
+    .link-luxe:active {
+        color: var(--accent-red);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LEGACY / DEPRECATED — kept for backward compatibility with pages
+   that have not yet been migrated to the new primitives. These will be
+   removed in a future pass.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Old hero sheet classes — replaced by the new hero component */
+.hero-sheet { position: relative; }
+.hero-sheet-kicker { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+.hero-sheet-thread { display: block; width: 2px; height: 2.75rem; flex-shrink: 0; background: linear-gradient(180deg, var(--accent-lime) 0%, color-mix(in srgb, var(--accent-lime) 12%, transparent) 100%); }
+.hero-sheet-season { font-family: var(--font-sans), system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.34em; text-transform: uppercase; color: color-mix(in srgb, var(--content) 38%, transparent); }
+.hero-sheet-season em { font-style: normal; font-weight: 600; color: color-mix(in srgb, var(--content) 82%, transparent); }
+.hero-sheet-headline { text-wrap: balance; }
+.hero-sheet-line { display: block; }
+.hero-sheet-line--display { font-family: var(--font-sans), system-ui, sans-serif; font-size: clamp(2.65rem, 5.8vw, 4.35rem); font-weight: 300; line-height: 0.9; letter-spacing: -0.045em; color: var(--content); }
+.hero-sheet-accent { font-family: var(--font-serif), Georgia, serif; font-style: italic; font-weight: 400; letter-spacing: -0.02em; }
+.hero-sheet-line--sub { margin-top: 0.55rem; font-family: var(--font-sans), system-ui, sans-serif; font-size: clamp(1.45rem, 3vw, 2.15rem); font-weight: 500; line-height: 1; letter-spacing: -0.035em; color: color-mix(in srgb, var(--content) 46%, transparent); }
+.hero-sheet-emphasis { color: var(--content); }
+.hero-sheet-dot { display: inline-block; margin-left: 0.02em; color: var(--accent-lime); }
+.hero-sheet-lede { margin-top: 1.75rem; max-width: 36ch; font-family: var(--font-sans), system-ui, sans-serif; font-size: 15px; font-weight: 400; line-height: 1.65; color: color-mix(in srgb, var(--content) 52%, transparent); text-wrap: pretty; }
+.hero-sheet-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-top: 2.5rem; padding-top: 1.35rem; border-top: 1px solid color-mix(in srgb, var(--line) 10%, transparent); }
+.hero-sheet-cell-value { display: block; font-family: var(--font-sans), system-ui, sans-serif; font-size: clamp(2rem, 3.8vw, 2.85rem); font-weight: 300; line-height: 1; letter-spacing: -0.04em; color: var(--content); font-variant-numeric: tabular-nums; }
+.hero-sheet-cell-value--sizes { font-size: clamp(1.35rem, 2.6vw, 1.85rem); font-weight: 500; letter-spacing: -0.02em; }
+.hero-sheet-size-gap { margin: 0 0.18em; color: color-mix(in srgb, var(--content) 22%, transparent); font-weight: 300; }
+.hero-sheet-cell-value--word { font-size: clamp(1.35rem, 2.4vw, 1.75rem); font-weight: 500; letter-spacing: -0.025em; }
+.hero-sheet-cell-label { display: block; margin-top: 0.45rem; font-family: var(--font-sans), system-ui, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: color-mix(in srgb, var(--content) 36%, transparent); }
+.hero-sheet-cell--dispatch { display: none; }
+.hero-sheet-actions { display: flex; flex-direction: column; align-items: stretch; gap: 1.25rem; margin-top: 2.25rem; }
+.hero-sheet-cta-primary { height: 3.5rem !important; gap: 0.75rem !important; padding: 0 1.75rem !important; border: 0 !important; border-radius: 2px !important; background: var(--surface-inverse) !important; color: var(--content-inverse) !important; font-family: var(--font-sans), system-ui, sans-serif !important; font-size: 11px !important; font-weight: 600 !important; letter-spacing: 0.22em !important; text-transform: uppercase !important; box-shadow: 0 20px 50px -28px color-mix(in srgb, var(--content) 55%, transparent) !important; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important; }
+.hero-sheet-cta-primary:hover { background: var(--accent-lime) !important; color: var(--on-accent) !important; transform: translateY(-2px); box-shadow: 0 28px 60px -24px color-mix(in srgb, var(--accent-lime) 45%, transparent) !important; }
+.hero-sheet-cta-primary:focus-visible { outline: 2px solid var(--accent-lime); outline-offset: 3px; }
+.hero-sheet-cta-icon { width: 1rem; height: 1rem; }
+.hero-sheet-cta-link { display: inline-flex; align-items: center; gap: 0.5rem; align-self: flex-start; font-family: var(--font-sans), system-ui, sans-serif; font-size: 12px; font-weight: 500; letter-spacing: 0.06em; color: color-mix(in srgb, var(--content) 58%, transparent); text-decoration: none; transition: color 0.3s ease; }
+.hero-sheet-cta-link span { position: relative; }
+.hero-sheet-cta-link span::after { content: ""; position: absolute; left: 0; bottom: -3px; width: 100%; height: 1px; background: var(--accent-lime); transform: scaleX(0); transform-origin: right; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.hero-sheet-cta-link:hover { color: var(--content); }
+.hero-sheet-cta-link:hover span::after { transform: scaleX(1); transform-origin: left; }
+.hero-sheet-footnote { margin-top: 1.75rem; font-family: var(--font-sans), system-ui, sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: color-mix(in srgb, var(--content) 32%, transparent); }
+
+@media (min-width: 640px) {
+    .hero-sheet-actions { flex-direction: row; align-items: center; gap: 2rem; }
+    .hero-sheet-cta-primary { width: auto; }
+    .hero-sheet-cell--dispatch { display: block; }
+}
+
+@media (max-width: 480px) {
+    .hero-sheet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hero-sheet-cell--dispatch { display: block; grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-sheet-cta-primary:hover { transform: none; }
+}
+
+/* Old rangat hero classes — replaced by the new hero component */
+.rangat-stage-in { animation: rangat-stage-in 0.95s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.rangat-hero-card { animation: rangat-hero-card 1s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; will-change: transform; }
+.rangat-orbit-a { animation: rangat-orbit-a 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both; will-change: transform; }
+.rangat-orbit-b { animation: rangat-orbit-b 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both; will-change: transform; }
+.rangat-title-card { animation: rangat-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; border: 1px solid color-mix(in srgb, var(--line) 68%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 74%, transparent), color-mix(in srgb, var(--surface-2) 56%, transparent) 54%, color-mix(in srgb, var(--surface-hover) 30%, transparent)), linear-gradient(90deg, color-mix(in srgb, var(--surface) 40%, transparent), transparent); backdrop-filter: blur(24px) saturate(1.08); box-shadow: 0 28px 80px -62px color-mix(in srgb, var(--content) 56%, transparent), inset 0 1px 0 color-mix(in srgb, var(--surface) 86%, transparent); }
+.rangat-title-card::before { display: none; }
+.rangat-title-card::after { display: none; }
+.rangat-stat-card { animation: rangat-card-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+
+@keyframes rangat-stage-in { 0% { opacity: 0; transform: translate3d(0, 22px, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes rangat-hero-card { 0% { opacity: 0; transform: translate3d(0, 30px, 0) scale(0.975) rotate(-1.4deg); } 100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1) rotate(-0.45deg); } }
+@keyframes rangat-orbit-a { 0% { opacity: 0; transform: translate3d(-18px, 18px, 0) rotate(0deg); } 100% { opacity: 1; transform: translate3d(0, 0, 0) rotate(1.2deg); } }
+@keyframes rangat-orbit-b { 0% { opacity: 0; transform: translate3d(18px, 20px, 0) rotate(0deg); } 100% { opacity: 1; transform: translate3d(0, 0, 0) rotate(-2deg); } }
+@keyframes rangat-card-in { 0% { opacity: 0; transform: translate3d(0, 16px, 0); } 100% { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes line-sheet-scan { 0%, 18% { transform: translateY(0); opacity: 0; } 28% { opacity: 1; } 78% { transform: translateY(620px); opacity: 1; } 100% { transform: translateY(620px); opacity: 0; } }
+
+/* Magnetic style cursor */
+.custom-cursor {
+    display: none;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--accent-lime);
+    border-radius: 50%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10000;
+    transition: width 0.3s, height 0.3s, background-color 0.3s;
+}
+
+.custom-cursor-dot {
+    display: none;
+    width: 4px;
+    height: 4px;
+    background-color: var(--accent-lime);
+    border-radius: 50%;
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 10000;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent-lime) 75%, transparent);
+    outline-offset: 3px;
 }

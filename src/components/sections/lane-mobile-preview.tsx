@@ -112,11 +112,11 @@ export function LaneMobilePreview({
           >
             <Link
               href={lane.href}
-              className="group block bg-[#292a24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-lime"
+              className="group block bg-surface-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-lime"
               aria-label={`${lane.title} — ${lane.price} set, ${lane.perPiece}/pc`}
             >
               {/* ── Image well ── */}
-              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#1c1d18]">
+              <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-hover">
                 <Image
                   src={lane.image}
                   alt={lane.title}
@@ -191,7 +191,7 @@ export function LaneMobilePreview({
         {lanes.map((lane, i) => (
           <span
             key={lane.code}
-            className={`block h-[3px] rounded-full transition-all duration-300 ${
+            className={`block h-[3px] transition-all duration-300 ${
               i === activeIndex
                 ? "w-5 bg-accent-red"
                 : "w-1.5 bg-line/20"

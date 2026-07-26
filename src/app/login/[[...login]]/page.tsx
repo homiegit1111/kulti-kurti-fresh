@@ -164,7 +164,7 @@ function OtpInput({
               ? "border-accent-red bg-accent-red/10"
               : char
                 ? "border-line bg-white"
-                : "border-line/20 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f]"
+                : "border-line/20 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_var(--accent-lime)]"
           }`}
         />
       ))}
@@ -583,7 +583,7 @@ function UnifiedAuthInner() {
                       disabled={busy}
                       value={emailAddress}
                       onChange={(e) => setEmailAddress(e.target.value)}
-                      className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f] disabled:opacity-60"
+                      className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_var(--accent-lime)] disabled:opacity-60"
                       placeholder="name@example.com"
                     />
                     <PrimaryButton busy={busy} label="Continue" loadingLabel="Sending code…" />
@@ -637,7 +637,7 @@ function UnifiedAuthInner() {
                         disabled={busy}
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f] disabled:opacity-60"
+                        className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_var(--accent-lime)] disabled:opacity-60"
                         placeholder="First name"
                       />
                       <input
@@ -647,7 +647,7 @@ function UnifiedAuthInner() {
                         disabled={busy}
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_#d8ff4f] disabled:opacity-60"
+                        className="h-14 w-full border border-line/20 bg-surface-2 px-5 text-sm font-medium text-content outline-none transition-all placeholder:text-content/35 focus:border-line focus:bg-white focus:text-on-accent focus:shadow-[0_0_0_2px_var(--accent-lime)] disabled:opacity-60"
                         placeholder="Last name"
                       />
                     </div>
@@ -727,11 +727,11 @@ function UnifiedAuthInner() {
 
           <p className="mt-8 text-center text-[10px] leading-relaxed text-content/40">
             By continuing you agree to our{" "}
-            <Link href="/terms" className="underline decoration-[#cc2f4a] decoration-2 underline-offset-2 hover:text-content">
+            <Link href="/terms" className="underline decoration-accent-red decoration-2 underline-offset-2 hover:text-content">
               Terms
             </Link>{" "}
             &amp;{" "}
-            <Link href="/privacy" className="underline decoration-[#cc2f4a] decoration-2 underline-offset-2 hover:text-content">
+            <Link href="/privacy" className="underline decoration-accent-red decoration-2 underline-offset-2 hover:text-content">
               Privacy Policy
             </Link>
             .

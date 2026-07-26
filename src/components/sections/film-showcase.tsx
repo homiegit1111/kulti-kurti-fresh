@@ -209,14 +209,14 @@ export function FilmShowcase() {
             whileInView="visible"
             viewport={VIEWPORT_EARLY}
             variants={plateReveal}
-            className="hero-plate relative bg-[#292a24] p-1.5"
+            className="hero-plate relative bg-surface-2 p-1.5"
           >
             <span className="hero-plate-mark hero-plate-mark--tl" aria-hidden />
             <span className="hero-plate-mark hero-plate-mark--tr" aria-hidden />
             <span className="hero-plate-mark hero-plate-mark--bl" aria-hidden />
             <span className="hero-plate-mark hero-plate-mark--br" aria-hidden />
 
-            <div className="relative aspect-video w-full overflow-hidden bg-[#1c1d18]">
+            <div className="relative aspect-video w-full overflow-hidden bg-surface-hover">
               <video
                 ref={mobileVideoRef}
                 src="/videos/background.mp4"
@@ -237,7 +237,7 @@ export function FilmShowcase() {
                   aria-label="Play collection film"
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/20"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center border border-[#f1eee5]/40 bg-surface-inverse">
+                  <span className="flex h-12 w-12 items-center justify-center border border-content-inverse/40 bg-surface-inverse">
                     <Play className="h-4 w-4 fill-content-inverse text-content-inverse" />
                   </span>
                 </button>
@@ -249,9 +249,9 @@ export function FilmShowcase() {
                 aria-hidden
               />
 
-              {/* REC dot */}
-              <div className="absolute left-3 top-3 flex items-center gap-1.5" aria-hidden>
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-lime" />
+              {/* Playing marker — see the note on the desktop frame above. */}
+              <div className="absolute left-3 top-3 flex items-center gap-2" aria-hidden>
+                <span className="h-2 w-[2px] bg-accent-lime" />
                 <span className="text-[7px] font-bold uppercase tracking-[0.22em] text-content-inverse/70">
                   Now playing
                 </span>
@@ -315,7 +315,7 @@ export function FilmShowcase() {
             whileInView="visible"
             viewport={VIEWPORT_EARLY}
             variants={plateReveal}
-            className="hero-plate flex bg-[#292a24] p-2"
+            className="hero-plate flex bg-surface-2 p-2"
           >
             <span className="hero-plate-mark hero-plate-mark--tl" aria-hidden />
             <span className="hero-plate-mark hero-plate-mark--tr" aria-hidden />
@@ -323,7 +323,7 @@ export function FilmShowcase() {
             <span className="hero-plate-mark hero-plate-mark--br" aria-hidden />
 
             {/* left — video well, letterbox 21/9, max 420px tall */}
-            <div className="relative w-[62%] shrink-0 overflow-hidden bg-[#1c1d18]" style={{ aspectRatio: "21/9", maxHeight: "420px" }}>
+            <div className="relative w-[62%] shrink-0 overflow-hidden bg-surface-hover" style={{ aspectRatio: "21/9", maxHeight: "420px" }}>
               <video
                 ref={desktopVideoRef}
                 src="/videos/background.mp4"
@@ -344,7 +344,7 @@ export function FilmShowcase() {
                   aria-label="Play collection film"
                   className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors hover:bg-black/20"
                 >
-                  <span className="flex h-14 w-14 items-center justify-center border border-[#f1eee5]/40 bg-surface-inverse">
+                  <span className="flex h-14 w-14 items-center justify-center border border-content-inverse/40 bg-surface-inverse">
                     <Play className="h-5 w-5 fill-content-inverse text-content-inverse" />
                   </span>
                 </button>
@@ -356,9 +356,12 @@ export function FilmShowcase() {
                 aria-hidden
               />
 
-              {/* REC dot */}
-              <div className="absolute left-4 top-4 flex items-center gap-1.5" aria-hidden>
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-lime" />
+              {/* Playing marker. Square hairline, not a pulsing dot: the design
+                  contract forbids rounded-full, and a blinking circle is the
+                  borrowed grammar of a recording light on a clip that is simply
+                  playing. */}
+              <div className="absolute left-4 top-4 flex items-center gap-2" aria-hidden>
+                <span className="h-2 w-[2px] bg-accent-lime" />
                 <span className="text-[7px] font-bold uppercase tracking-[0.22em] text-content-inverse/70">
                   Now playing
                 </span>
@@ -379,7 +382,7 @@ export function FilmShowcase() {
               whileInView="visible"
               viewport={VIEWPORT_EARLY}
               variants={captionStagger}
-              className="flex min-w-0 flex-1 flex-col justify-between bg-[#1c1d18] px-7 py-6"
+              className="flex min-w-0 flex-1 flex-col justify-between bg-surface-hover px-7 py-6"
             >
               {/* top: collection label */}
               <motion.div variants={captionItem}>

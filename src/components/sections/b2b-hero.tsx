@@ -46,19 +46,10 @@ export function B2BHero({
   const secondaryY = useTransform(scrollYProgress, [0, 1], [0, 36]);
 
   // ── Plate advance ──────────────────────────────────────────────────────
-  // The plate cycles through the top hero products like flipping printed
-  // plates, and the `Plate NN / NN` counter finally means something. Frame 0
-  // is always the passed-in heroProduct so the LCP image is deterministic and
-  // matches what the server rendered. Motion is gated on: in-view, not paused
-  // (hover), not reduced-motion — so nothing animates before load or off-screen.
   const reduce = useReducedMotion();
   const inView = useInView(ref, { amount: 0.4 });
 
   // ── Opening choreography ───────────────────────────────────────────────
-  // One shared entrance helper so the whole opening reads as a single
-  // directed sequence: type first, plate lands second, metadata row last.
-  // Under reduced motion every transform snaps (duration 0) and only a plain
-  // cross-fade remains — markup stays identical, so SSR hydration is stable.
   const intro = (delay: number, duration = 0.65) =>
     reduce
       ? { duration: 0.45, x: { duration: 0 }, y: { duration: 0 } }
@@ -108,10 +99,7 @@ export function B2BHero({
     >
       <div className="linebook-grid absolute inset-0" />
 
-      {/* Static film grain over the whole hero frame — one texture, no motion.
-          Normal blending (overlay is a no-op on near-black ink) at a whisper:
-          projection-room air on the dark field, imperceptible over the
-          photography. */}
+      {/* Static film grain over the whole hero frame — one texture, no motion. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-40 opacity-[0.035] dark:opacity-[0.05]"
@@ -163,7 +151,7 @@ export function B2BHero({
               }}
               className={`block ${
                 index === 1
-                  ? "tracking-[0.01em] text-transparent [-webkit-text-stroke:1.5px_#f1eee5]"
+                  ? "tracking-[0.01em] text-transparent [-webkit-text-stroke:1.5px_var(--content-inverse)]"
                   : ""
               }`}
             >
@@ -172,17 +160,15 @@ export function B2BHero({
           ))}
         </motion.h1>
 
-        {/* 3. Product plate — in-flow block, full width, NO scroll transform.
-            The frame + crop marks are static from the first paint (the empty
-            projector gate); the slide itself wipes in via PlateCurtain. */}
-        <div className="hero-plate group relative mb-5 w-full bg-[#292a24] p-2">
+        {/* 3. Product plate — in-flow block, full width, NO scroll transform. */}
+        <div className="hero-plate group relative mb-5 w-full bg-surface-2 p-2">
           {/* registration crop marks */}
           <span className="hero-plate-mark hero-plate-mark--tl" aria-hidden />
           <span className="hero-plate-mark hero-plate-mark--tr" aria-hidden />
           <span className="hero-plate-mark hero-plate-mark--bl" aria-hidden />
           <span className="hero-plate-mark hero-plate-mark--br" aria-hidden />
 
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#1c1d18]">
+          <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-hover">
             <PlateExposure reduce={reduce} delay={0.3}>
               <PlateStack
                 plates={plates}
@@ -203,14 +189,14 @@ export function B2BHero({
             <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/25 to-transparent p-3 pb-10">
               <div className="flex items-center justify-between text-[7px] font-bold uppercase tracking-[0.22em] text-content-inverse/80">
                 <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent-lime" />
-                  In stock
+                  <span className="inline-block h-2 w-2 bg-accent-lime" />
+                  Set of {B2B_CONFIG.setSize}
                 </span>
                 <span className="bg-accent-lime px-2 py-1 text-on-accent">
                   {primaryStyleCode}
                 </span>
               </div>
-              <div className="mt-2.5 flex items-end justify-between gap-3 border-t border-[#f1eee5]/25 pt-2.5">
+              <div className="mt-2.5 flex items-end justify-between gap-3 border-t border-content-inverse/25 pt-2.5">
                 <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.16em] text-content-inverse">
                   {primary?.title ?? "New arrival"}
                 </p>
@@ -246,13 +232,13 @@ export function B2BHero({
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={intro(0.5, 0.55)}
-          className="mb-5 grid grid-cols-3 border-t border-[#f1eee5]/25 pt-4 text-[9px] font-semibold uppercase tracking-[0.2em]"
+          className="mb-5 grid grid-cols-3 border-t border-content-inverse/25 pt-4 text-[9px] font-semibold uppercase tracking-[0.2em]"
         >
           <div className="pr-3">
             <p className="text-content-inverse/55">MOQ</p>
             <p className="mt-0.5 text-content-inverse">{B2B_CONFIG.minimumOrderSets} sets</p>
           </div>
-          <div className="border-x border-[#f1eee5]/15 px-3">
+          <div className="border-x border-content-inverse/15 px-3">
             <p className="text-content-inverse/55">Packs</p>
             <p className="mt-0.5 text-content-inverse">Style specific</p>
           </div>
@@ -291,7 +277,7 @@ export function B2BHero({
             href={catalogRequestUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-[52px] w-[52px] items-center justify-center border border-[#f1eee5]/30 transition-colors hover:border-accent-lime hover:text-accent-lime"
+            className="flex min-h-[52px] w-[52px] items-center justify-center border border-content-inverse/30 transition-colors hover:border-accent-lime hover:text-accent-lime"
             aria-label="Request catalogue on WhatsApp"
           >
             <MessageCircle className="h-4 w-4" />
@@ -313,21 +299,19 @@ export function B2BHero({
           Wholesale line book · India · 2026
         </motion.p>
 
-        {/* primary plate — absolutely positioned, parallax scroll. The frame,
-            crop marks and dark gate render on the very first frame; the slide
-            arrives inside via PlateCurtain (transform-only, LCP-safe). */}
+        {/* primary plate — absolutely positioned, parallax scroll. */}
         <motion.div
           style={{ y: primaryY }}
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
-          className="hero-plate group absolute right-0 top-[8%] z-20 h-[54%] w-[66%] bg-[#292a24] p-2 sm:right-[4%] sm:h-[66%] sm:w-[52%] sm:p-2.5 lg:right-[8%] lg:top-[4%] lg:h-[76%] lg:w-[41%]"
+          className="hero-plate group absolute right-0 top-[8%] z-20 h-[54%] w-[66%] bg-surface-2 p-2 sm:right-[4%] sm:h-[66%] sm:w-[52%] sm:p-2.5 lg:right-[8%] lg:top-[4%] lg:h-[76%] lg:w-[41%]"
         >
           <span className="hero-plate-mark hero-plate-mark--tl" aria-hidden />
           <span className="hero-plate-mark hero-plate-mark--tr" aria-hidden />
           <span className="hero-plate-mark hero-plate-mark--bl" aria-hidden />
           <span className="hero-plate-mark hero-plate-mark--br" aria-hidden />
 
-          <div className="relative h-full w-full overflow-hidden bg-[#1c1d18]">
+          <div className="relative h-full w-full overflow-hidden bg-surface-hover">
             <PlateExposure reduce={reduce} delay={0.38}>
               <PlateStack
                 plates={plates}
@@ -347,14 +331,14 @@ export function B2BHero({
             <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/70 via-black/25 to-transparent p-3 pb-10 sm:p-4 sm:pb-12">
               <div className="flex items-center justify-between text-[7px] font-bold uppercase tracking-[0.22em] text-content-inverse/80">
                 <span className="flex items-center gap-1.5">
-                  <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent-lime" />
-                  In stock
+                  <span className="inline-block h-2 w-2 bg-accent-lime" />
+                  Set of {B2B_CONFIG.setSize}
                 </span>
                 <span className="bg-accent-lime px-2 py-1 text-on-accent">
                   {primaryStyleCode}
                 </span>
               </div>
-              <div className="mt-2.5 flex items-end justify-between gap-3 border-t border-[#f1eee5]/25 pt-2.5">
+              <div className="mt-2.5 flex items-end justify-between gap-3 border-t border-content-inverse/25 pt-2.5">
                 <p className="min-w-0 truncate text-[10px] font-bold uppercase tracking-[0.16em] text-content-inverse sm:text-xs">
                   {primary?.title ?? "New arrival"}
                 </p>
@@ -391,7 +375,7 @@ export function B2BHero({
             animate={{ opacity: 1, x: 0 }}
             transition={intro(0.85, 0.75)}
             style={{ y: secondaryY }}
-            className="absolute bottom-[13%] left-[5%] z-10 hidden aspect-[3/4] w-[15%] overflow-hidden border-4 border-line bg-[#292a24] lg:block"
+            className="absolute bottom-[13%] left-[5%] z-10 hidden aspect-[3/4] w-[15%] overflow-hidden border-4 border-line bg-surface-2 lg:block"
           >
             <Image
               src={secondary.image}
@@ -436,7 +420,7 @@ export function B2BHero({
                 }}
                 className={`block ${
                   index === 1
-                    ? "relative z-10 ml-[8vw] tracking-[0.02em] text-transparent [-webkit-text-stroke:1.5px_#f1eee5] sm:ml-[13vw] sm:[-webkit-text-stroke:2px_#f1eee5]"
+                    ? "relative z-10 ml-[8vw] tracking-[0.02em] text-transparent [-webkit-text-stroke:1.5px_var(--content-inverse)] sm:ml-[13vw] sm:[-webkit-text-stroke:2px_var(--content-inverse)]"
                     : ""
                 } ${index === 2 ? "relative z-30" : ""}`}
               >
@@ -449,7 +433,7 @@ export function B2BHero({
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={intro(0.95)}
-            className="relative z-30 grid gap-5 border-t border-[#f1eee5]/25 pt-4 sm:grid-cols-[1fr_auto] sm:items-end lg:grid-cols-[1fr_1fr_auto]"
+            className="relative z-30 grid gap-5 border-t border-content-inverse/25 pt-4 sm:grid-cols-[1fr_auto] sm:items-end lg:grid-cols-[1fr_1fr_auto]"
           >
             <div className="flex gap-8 text-[9px] font-semibold uppercase leading-5 tracking-[0.2em] text-content-inverse/55">
               <p>
@@ -484,7 +468,7 @@ export function B2BHero({
                 href={catalogRequestUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex h-12 w-12 items-center justify-center border border-[#f1eee5]/30 transition-colors hover:border-accent-lime hover:text-accent-lime"
+                className="flex h-12 w-12 items-center justify-center border border-content-inverse/30 transition-colors hover:border-accent-lime hover:text-accent-lime"
                 aria-label="Request catalogue on WhatsApp"
               >
                 <MessageCircle className="h-4 w-4" />
@@ -537,7 +521,7 @@ function PlateExposure({
 
 /**
  * The opening wipe: an opaque gate-colored panel over the whole plate face
- * that slides off to the right, its leading edge carrying a 2px lime
+ * that slides off to the right, its leading edge carrying a 2px saffron
  * registration scan. Transform-only, so the LCP image beneath paints at full
  * size from the first frame (occlusion doesn't affect LCP) and nothing can
  * shift layout. After the sweep it rests at x:103% inside the overflow-hidden
@@ -558,7 +542,7 @@ function PlateCurtain({
       initial={{ x: "0%" }}
       animate={{ x: "103%" }}
       transition={reduce ? { duration: 0 } : { duration, delay, ease: EASE }}
-      className="pointer-events-none absolute inset-0 z-30 bg-[#1c1d18]"
+      className="pointer-events-none absolute inset-0 z-30 bg-surface-hover"
     >
       <span className="absolute inset-y-0 left-0 w-[2px] bg-accent-lime/90" />
       <span className="absolute inset-y-0 left-0 w-14 bg-gradient-to-r from-accent-lime/15 to-transparent" />
@@ -611,7 +595,7 @@ function PlateStack({
 }
 
 /**
- * Thin lime rule that fills across the top of the plate as the slide timer
+ * Thin saffron rule that fills across the top of the plate as the slide timer
  * runs — a quiet "time until next plate" cue. Keyed to `active` so it restarts
  * each advance; frozen full when paused or reduced-motion.
  */

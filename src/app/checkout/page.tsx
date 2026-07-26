@@ -342,7 +342,7 @@ export default function CheckoutPage() {
           total_sets: String(totals.totalSets),
           ...(medusaCartId ? { medusa_cart_id: medusaCartId } : {}),
         },
-        theme: { color: "#121310" },
+        theme: { color: "#101528" },
         handler: async (response) => {
           setLoadingPayment(true);
           setStatus("Payment received by Razorpay. Verifying signature...");
@@ -601,7 +601,7 @@ export default function CheckoutPage() {
                           type="checkbox"
                           checked={buyer.wantsGstInvoice}
                           onChange={(event) => updateBuyer("wantsGstInvoice", event.target.checked)}
-                          className="h-4 w-4 accent-[#121310]"
+                          className="h-4 w-4 accent-surface-inverse"
                         />
                         GST invoice required
                       </label>

@@ -79,14 +79,14 @@ function FeedTile({
         // snap tile sizing: mobile ~44vw capped at 220px; desktop fixed 13rem
         "group relative shrink-0 snap-start",
         "w-[44vw] max-w-[220px] sm:w-44 md:w-48 lg:w-52",
-        // catalogue plate frame: thin charcoal border, dark well
-        "overflow-hidden bg-[#1c1d18] ring-1 ring-[#292a24]",
+        // catalogue plate frame: thin ink border, surface well
+        "overflow-hidden bg-surface-hover ring-1 ring-line/20",
         // focus ring in lime
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-lime",
       ].join(" ")}
     >
       {/* image well — 4/5 portrait */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#1c1d18]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-surface-hover">
         {imgFailed ? (
           /* branded fallback plate — same footprint, no broken-image well */
           <div className="absolute inset-0 flex flex-col items-start justify-between p-3">
@@ -128,7 +128,9 @@ function FeedTile({
         {!imgFailed && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-[#0e0f0c]/80 via-[#0e0f0c]/25 to-transparent"
+            /* Scrim routed through the token, not the retired #0e0f0c. Any
+               future palette rotation now reaches this gradient too. */
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-surface-inverse/80 via-surface-inverse/25 to-transparent"
           />
         )}
 
@@ -183,11 +185,15 @@ function FeedTile({
           </div>
         </div>
 
-        {/* reel chip — always visible */}
+        {/* reel chip — always visible.
+            Square, and filled from the token rather than the hardcoded #0e0f0c
+            it used to carry: that literal was a leftover from the retired
+            palette and would have stayed near-black while the rest of the site
+            moved to indigo. */}
         {reel && (
           <span
             aria-label="Reel"
-            className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#0e0f0c]/85 ring-1 ring-white/20"
+            className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center bg-surface-inverse/85 ring-1 ring-content-inverse/20"
           >
             <Play
               className="ml-px h-2.5 w-2.5 fill-content-inverse text-content-inverse"
@@ -200,7 +206,7 @@ function FeedTile({
       {/* plate footer: tiny catalogue label */}
       <div
         aria-hidden="true"
-        className="flex items-center justify-between border-t border-[#292a24] px-2.5 py-1.5"
+        className="flex items-center justify-between border-t border-line/20 px-2.5 py-1.5"
       >
         <span className="text-[8px] font-bold uppercase tracking-[0.22em] text-content-inverse/25">
           {reel ? "Film" : "Studio"}
@@ -349,7 +355,7 @@ export function InstagramGallery() {
                 "group relative shrink-0 snap-start",
                 "w-[44vw] max-w-[220px] sm:w-44 md:w-48 lg:w-52",
                 "flex aspect-[4/5] flex-col items-start justify-between",
-                "border border-[#292a24] bg-[#1c1d18] p-4",
+                "border border-line/20 bg-surface-hover p-4",
                 "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-lime",
               ].join(" ")}
             >

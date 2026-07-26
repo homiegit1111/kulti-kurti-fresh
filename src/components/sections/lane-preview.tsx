@@ -46,10 +46,11 @@ export function LanePreview({ active, total }: { active: Lane; total: number }) 
           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-content-inverse/55">
             Buying index · Preview
           </p>
-          {/* Red plate-number stamp — catalogue identity marker */}
+          {/* Red plate-number stamp — catalogue identity marker.
+              Square, not a circle: the contract allows no rounded corners. */}
           <span className="flex items-center gap-2">
             <span
-              className="inline-block w-1.5 h-1.5 rounded-full bg-accent-red"
+              className="inline-block h-1.5 w-1.5 bg-accent-red"
               aria-hidden
             />
             <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-accent-red">
@@ -72,7 +73,7 @@ export function LanePreview({ active, total }: { active: Lane; total: number }) 
             {/* ── Image plate: framed, crop-marked, with inner vignette + sheen ── */}
             <div
               // Plate surface — same treatment as hero-plate but fills the column
-              className="hero-plate group relative flex-1 bg-[#292a24] p-2 cursor-pointer"
+              className="hero-plate group relative flex-1 bg-surface-2 p-2 cursor-pointer"
               style={{ minHeight: 0 }}
             >
               {/* Registration crop marks (reuse global CSS classes) */}
@@ -82,7 +83,7 @@ export function LanePreview({ active, total }: { active: Lane; total: number }) 
               <span className="hero-plate-mark hero-plate-mark--br" aria-hidden />
 
               {/* Image well */}
-              <div className="relative h-full w-full overflow-hidden bg-[#1c1d18]">
+              <div className="relative h-full w-full overflow-hidden bg-surface-hover">
                 <Image
                   src={active.image}
                   alt={active.title}
@@ -116,11 +117,17 @@ export function LanePreview({ active, total }: { active: Lane; total: number }) 
                   <span className="bg-accent-lime px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-on-accent">
                     {active.code}
                   </span>
-                  {/* Pulse dot — signals "live / in stock" without a word */}
-                  <span
-                    className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent-lime"
-                    aria-hidden
-                  />
+                  {/*
+                    The pulse dot that used to sit here claimed "live / in
+                    stock". The catalog cannot support that: availableForSale is
+                    absent on every mock product, so only sold-out is ever
+                    provable. It also used rounded-full, which the contract
+                    forbids. The pack contents are a fact we do hold, so the
+                    chip states that instead of animating an assertion.
+                  */}
+                  <span className="border border-content-inverse/25 px-2 py-1 text-[8px] font-bold uppercase tracking-[0.18em] text-content-inverse/70">
+                    {active.detail}
+                  </span>
                 </motion.div>
 
                 {/* ── Thin lime rule at the base of the image ── */}

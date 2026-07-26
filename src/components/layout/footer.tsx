@@ -1,10 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Turnstile } from "@/components/ui/turnstile";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
+import { B2B_CONFIG } from "@/lib/b2b/config";
 
 /* Brand icons removed from lucide-react v1.x.
    All four are decorative (the wrapping <a> carries the accessible name via
@@ -85,30 +86,25 @@ function PinterestIcon({ className }: { className?: string }) {
   );
 }
 
-/* Data */
-const shopLinks = [
-  { label: "Kurti Catalog", href: "/shop" },
-  { label: "Bulk Deals", href: "/bulk-order" },
-  { label: "Wishlist", href: "/wishlist" },
-  { label: "Kurti Sets", href: "/shop" },
-  { label: "New Drops", href: "/shop" },
-  { label: "WhatsApp Inquiry", href: "/contact" },
+/**
+ * LINK MODEL — one label per destination.
+ *
+ * Every entry below resolves to a distinct route that exists. Nothing is padded
+ * to balance the columns.
+ */
+const buyLinks = [
+  { label: "The Line", href: "/line", note: "Full catalogue" },
+  { label: "Collections", href: "/collections", note: "Grouped" },
+  { label: "Lookbook", href: "/lookbook", note: "Editorial" },
+  { label: "Bulk Order", href: "/bulk-order", note: "By the carton" },
+  { label: "Tray", href: "/tray", note: "Shortlist + order" },
+  { label: "Line Sheet", href: "/line-sheet", note: "Print" },
 ];
 
-const companyLinks = [
-  { label: "Our Story", href: "/about" },
-  { label: "Artisans", href: "/about" },
-  { label: "Sustainability", href: "/about" },
-  { label: "Press", href: "/contact" },
-  { label: "Careers", href: "/contact" },
-];
-
-const supportLinks = [
-  { label: "Contact Us", href: "/contact" },
-  { label: "FAQs", href: "/contact" },
-  { label: "MOQ & Pricing", href: "/shop" },
-  { label: "Invoice Support", href: "/contact" },
-  { label: "Dispatch Support", href: "/contact" },
+const studioLinks = [
+  { label: "About", href: "/about", note: "The studio" },
+  { label: "Contact", href: "/contact", note: "Trade desk" },
+  { label: "Account", href: "/account", note: "Buyer profile" },
 ];
 
 const socialLinks = [
@@ -135,32 +131,45 @@ const socialLinks = [
 ];
 
 const bottomLinks = [
-  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Privacy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
-  { label: "Cookies", href: "/privacy" },
 ];
 
-/* Reusable column component */
+/**
+ * The four trade facts, stated once, sitewide.
+ */
+const tradeFacts = [
+  { k: "MOQ", v: `${B2B_CONFIG.minimumOrderSets} sets` },
+  { k: "Set", v: `${B2B_CONFIG.setSize} pieces` },
+  { k: "Size run", v: "Per style" },
+  { k: "GST", v: "At dispatch" },
+];
+
 function FooterLinkColumn({
   title,
   links,
 }: {
   title: string;
-  links: { label: string; href: string }[];
+  links: { label: string; href: string; note: string }[];
 }) {
   return (
     <div className="flex flex-col">
-      <h3 className="mb-6 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
+      <h3 className="mb-5 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
         {title}
       </h3>
-      <ul className="flex flex-col gap-4">
+      <ul className="flex flex-col">
         {links.map((link) => (
-          <li key={link.label}>
+          <li key={link.label} className="border-t border-content-inverse/10 first:border-t-0">
             <Link
               href={link.href}
-              className="text-sm font-bold uppercase tracking-[0.02em] text-content-inverse/65 transition-colors duration-300 hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime focus-visible:ring-offset-2 focus-visible:ring-offset-surface-inverse"
+              className="group flex items-baseline justify-between gap-4 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime focus-visible:ring-offset-2 focus-visible:ring-offset-surface-inverse"
             >
-              {link.label}
+              <span className="text-[13px] font-bold uppercase tracking-[0.02em] text-content-inverse/70 transition-colors duration-300 group-hover:text-content-inverse">
+                {link.label}
+              </span>
+              <span className="shrink-0 text-[8px] font-bold uppercase tracking-[0.18em] text-content-inverse/25 transition-colors duration-300 group-hover:text-accent-lime">
+                {link.note}
+              </span>
             </Link>
           </li>
         ))}
@@ -207,18 +216,12 @@ function NewsletterForm() {
 
   return (
     <div className="space-y-3">
-      {/*
-        Always-mounted live region: a role="status" node that only mounts with
-        the message is unreliably announced. sr-only (position: absolute) and
-        first-child placement keep it out of the space-y flow — zero layout
-        shift. The visible message below stays presentational.
-      */}
       <p className="sr-only" role="status">
         {message}
       </p>
       <form
         onSubmit={handleSubmit}
-        className="group relative flex items-center border-b border-[#f1eee5]/25 pb-3 pt-4"
+        className="group relative flex items-center border-b border-content-inverse/25 pb-3 pt-4"
       >
         <Input
           type="email"
@@ -243,7 +246,6 @@ function NewsletterForm() {
         <div className="absolute bottom-[-1px] left-0 h-[2px] w-0 bg-accent-lime transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-focus-within:w-full" />
       </form>
 
-      {/* Bot protection renders only when NEXT_PUBLIC_TURNSTILE_SITE_KEY is set. */}
       <Turnstile onVerify={setToken} onExpire={() => setToken("")} theme="dark" />
 
       {message ? (
@@ -261,7 +263,26 @@ function NewsletterForm() {
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t border-[#f1eee5]/10 bg-surface-inverse pt-24 pb-24 text-content-inverse lg:pb-0">
+    <footer className="relative overflow-hidden border-t-2 border-content-inverse/15 bg-surface-inverse text-content-inverse lg:pb-0">
+      {/* TRADE STRIP — the terms, first thing, before any marketing. */}
+      <div className="relative z-10 border-b border-content-inverse/10">
+        <dl className="mx-auto grid max-w-[1400px] grid-cols-2 md:grid-cols-4">
+          {tradeFacts.map((fact) => (
+            <div
+              key={fact.k}
+              className="flex flex-col gap-1 border-content-inverse/10 px-6 py-5 [&:not(:last-child)]:border-r lg:px-12"
+            >
+              <dt className="text-[8px] font-bold uppercase tracking-[0.3em] text-content-inverse/40">
+                {fact.k}
+              </dt>
+              <dd className="text-[15px] font-black uppercase tracking-[-0.02em] tabular-nums text-content-inverse">
+                {fact.v}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
       {/* Giant faded editorial wordmark (background device) */}
       <div
         aria-hidden="true"
@@ -271,7 +292,7 @@ export function Footer() {
       </div>
 
       {/* Newsletter and brand story */}
-      <div className="relative z-10 mx-auto mb-20 grid max-w-[1400px] grid-cols-1 items-start gap-16 px-6 lg:mb-32 lg:grid-cols-2 lg:px-12">
+      <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-1 items-start gap-16 px-6 pt-20 lg:grid-cols-2 lg:px-12 lg:pt-24">
         {/* Left: Newsletter */}
         <div className="max-w-md space-y-6">
           <p className="eyebrow eyebrow--bare text-accent-lime">Fresh Drops</p>
@@ -298,12 +319,20 @@ export function Footer() {
           <p className="max-w-md text-sm leading-relaxed text-content-inverse/55">
             Rangat Pehnawa brings modern kurti drops, practical prices, and WhatsApp-first ordering for shoppers, boutiques, and online sellers across India.
           </p>
-          <a
-            href={buildCatalogRequestUrl()}
-            className="mt-6 inline-flex w-fit border border-[#f1eee5]/30 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content-inverse transition-colors hover:border-accent-lime hover:bg-accent-lime hover:text-on-accent"
-          >
-            Get WhatsApp Catalog
-          </a>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <a
+              href={buildCatalogRequestUrl()}
+              className="inline-flex w-fit border border-content-inverse/30 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content-inverse transition-colors hover:border-accent-lime hover:bg-accent-lime hover:text-on-accent"
+            >
+              Get WhatsApp Catalog
+            </a>
+            <Link
+              href="/line"
+              className="inline-flex w-fit border border-accent-lime bg-accent-lime px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-on-accent transition-colors hover:border-content-inverse/30 hover:bg-transparent hover:text-content-inverse"
+            >
+              Open The Line
+            </Link>
+          </div>
           <div className="mt-8 flex gap-6">
             {socialLinks.map((social) => {
               const Icon = social.icon;
@@ -325,16 +354,15 @@ export function Footer() {
       </div>
 
       {/* Link columns */}
-      <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-2 gap-12 border-t border-[#f1eee5]/10 px-6 pb-16 pt-16 md:grid-cols-4 lg:gap-8 lg:px-12 lg:pb-24">
-        <FooterLinkColumn title="Shop" links={shopLinks} />
-        <FooterLinkColumn title="Company" links={companyLinks} />
-        <FooterLinkColumn title="Support" links={supportLinks} />
+      <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-1 gap-10 border-t border-content-inverse/10 px-6 pb-16 pt-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12 lg:px-12 lg:pb-20">
+        <FooterLinkColumn title="Buy" links={buyLinks} />
+        <FooterLinkColumn title="Studio" links={studioLinks} />
 
         <div className="flex flex-col">
-          <h3 className="mb-6 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
-            Contact
+          <h3 className="mb-5 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
+            Trade Desk
           </h3>
-          <ul className="flex flex-col gap-4 text-sm text-content-inverse/65">
+          <ul className="flex flex-col gap-4 text-sm text-content-inverse/70">
             <li>
               <a
                 href="mailto:rangatpehnawa@gmail.com"
@@ -346,7 +374,7 @@ export function Footer() {
             <li>
               <a
                 href="tel:8660452247"
-                className="font-semibold transition-colors duration-300 hover:text-content-inverse"
+                className="font-semibold tabular-nums transition-colors duration-300 hover:text-content-inverse"
               >
                 8660452247
               </a>
@@ -366,7 +394,7 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="relative z-10 border-t border-[#f1eee5]/10">
+      <div className="relative z-10 border-t border-content-inverse/10">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row lg:px-12">
           <div className="flex items-center gap-3">
             <div className="flex h-6 w-6 items-center justify-center border border-accent-lime/40 bg-accent-lime/10 text-[10px] font-black text-accent-lime">

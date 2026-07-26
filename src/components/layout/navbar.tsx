@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/client";
 import { MessageCircle, Search, Table2 } from "lucide-react";
-import { CartDrawer } from "./cart-drawer";
+import { TrayButton } from "@/components/line/tray-button";
 import { ThemeToggle } from "./theme-toggle";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
 
@@ -80,6 +80,7 @@ function TwitterIcon({
     </svg>
   );
 }
+
 import {
   Sheet,
   SheetTrigger,
@@ -91,16 +92,30 @@ import {
 import { cn } from "@/lib/utils";
 import { SearchDialog } from "@/components/ui/search-dialog";
 
+/**
+ * IA, rebuilt around what a wholesale buyer is actually doing.
+ *
+ * `primary` = the three shown on desktop, in buying order: browse the line →
+ * see it grouped → order in bulk. The rest appear in the mobile sheet only.
+ */
 const navLinks = [
-  { label: "New Drops", href: "/shop" },
-  { label: "Kurtis", href: "/shop" },
-  { label: "Bulk Deals", href: "/bulk-order" },
-  { label: "Wishlist", href: "/wishlist" },
-  { label: "Contact", href: "/contact" },
+  { label: "The Line", href: "/line", primary: true },
+  { label: "Collections", href: "/collections", primary: true },
+  { label: "Bulk Order", href: "/bulk-order", primary: true },
+  { label: "Lookbook", href: "/lookbook", primary: false },
+  { label: "About", href: "/about", primary: false },
+  { label: "Contact", href: "/contact", primary: false },
 ];
 
-/* ── Line-book wordmark ── typographic brand lockup that matches the
-   site's oversized editorial type rather than a raster photo logo. ── */
+const primaryLinks = navLinks.filter((l) => l.primary);
+
+/** Nested routes keep their parent lit: /collections/x still reads Collections. */
+function isActive(pathname: string | null, href: string): boolean {
+  if (!pathname) return false;
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+/* ── Wordmark ── sharp typographic brand lockup. ── */
 function Wordmark({
   className,
   align = "center",
@@ -118,12 +133,12 @@ function Wordmark({
     >
       <span className="flex items-baseline gap-[0.12em] text-[1.35rem] font-black uppercase leading-[0.85] tracking-[-0.06em] text-content sm:text-[1.55rem] lg:text-[1.7rem]">
         Rangat
-        <span className="inline-block h-[0.32em] w-[0.32em] translate-y-[-0.04em] bg-accent-red" />
+        <span className="inline-block h-[0.32em] w-[0.32em] translate-y-[-0.04em] bg-accent-lime" />
       </span>
       <span className="mt-[0.28em] flex items-center gap-[0.4em] text-[7px] font-bold uppercase tracking-[0.42em] text-content/55 sm:text-[8px]">
-        <span className="h-px w-3 bg-accent-lime" />
+        <span className="h-px w-3 bg-accent-red" />
         Pehnawa
-        <span className="h-px w-3 bg-accent-lime" />
+        <span className="h-px w-3 bg-accent-red" />
       </span>
     </span>
   );
@@ -190,7 +205,7 @@ export function Navbar() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 will-change-transform">
-      {/* ── Promotional Banner (line-book: ink bar, lime accents) ── */}
+      {/* ── Promotional Banner ── */}
       {!isProductPage && (
         <div
           className={cn(
@@ -214,14 +229,14 @@ export function Navbar() {
         className={cn(
           "relative flex h-16 w-full items-center border-b bg-surface px-4 transition-[box-shadow,border-color,background-color] duration-300 ease-out lg:h-[74px] lg:px-8 xl:px-10",
           scrolled
-            ? "border-line/20 shadow-[0_20px_50px_-44px_rgba(18,19,16,0.6)]"
+            ? "border-line/20 shadow-[0_20px_50px_-44px_rgba(0,0,0,0.6)]"
             : "border-line/12",
         )}
       >
         {/* ── Left: Desktop Nav Links ── */}
         <div className="hidden flex-1 items-center justify-start gap-7 lg:flex xl:gap-9">
-          {navLinks.slice(0, 3).map((link) => {
-            const active = pathname === link.href;
+          {primaryLinks.map((link) => {
+            const active = isActive(pathname, link.href);
             return (
               <Link
                 key={link.label}
@@ -288,18 +303,12 @@ export function Navbar() {
                 Sign In
               </Link>
             ))}
-          <Link
-            href="/wishlist"
-            className="link-luxe text-[10px] font-bold uppercase tracking-[0.2em] text-content"
-          >
-            Wishlist
-          </Link>
           <span className="h-5 w-px bg-line/15" aria-hidden />
           <ThemeToggle variant="icon" />
-          <CartDrawer />
+          <TrayButton />
         </div>
 
-        {/* ── Right: Mobile Menu (line-book) ── */}
+        {/* ── Right: Mobile Menu ── */}
         <div className="flex flex-1 items-center justify-end gap-2.5 lg:hidden">
           <button
             type="button"
@@ -311,7 +320,7 @@ export function Navbar() {
           </button>
 
           <ThemeToggle variant="icon" />
-          <CartDrawer />
+          <TrayButton />
 
           {/* Mobile Menu Sheet */}
           <Sheet>
@@ -414,10 +423,10 @@ export function Navbar() {
                       </Link>
                     ))}
                   <Link
-                    href="/wishlist"
+                    href="/tray"
                     className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-content/60 transition-colors hover:text-content"
                   >
-                    <span className="h-[2px] w-5 bg-accent-lime"></span> Wishlist
+                    <span className="h-[2px] w-5 bg-accent-lime"></span> My Tray
                   </Link>
                   <Link
                     href="/contact"

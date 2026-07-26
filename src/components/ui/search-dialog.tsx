@@ -480,7 +480,7 @@ export function SearchDialog({
                     focus:outline-none
                     min-w-0
                   "
-                  style={{ caretColor: "#cc2f4a" }}
+                  style={{ caretColor: "var(--accent-red)" }}
                 />
                 {/* base underline */}
                 <div className="absolute bottom-0 left-0 right-0 h-px bg-line/15" aria-hidden />
@@ -489,7 +489,7 @@ export function SearchDialog({
                   initial={false}
                   animate={{
                     scaleX: query ? 1 : 0,
-                    backgroundColor: query ? "#cc2f4a" : "#d8ff4f",
+                    backgroundColor: query ? "var(--accent-red)" : "var(--accent-lime)",
                   }}
                   transition={{ duration: 0.3, ease: EASE }}
                   className="absolute bottom-0 left-0 right-0 h-[2px] origin-left"

@@ -255,7 +255,7 @@ export default function CartPage() {
                       </div>
 
                       {/* Money ladder: subtotal → GST → grand total (flat pricing) */}
-                      <div className="mb-6 space-y-3.5 border-t border-[#f1eee5]/25 pt-6">
+                      <div className="mb-6 space-y-3.5 border-t border-content-inverse/25 pt-6">
                         <LadderRow
                           label="Subtotal"
                           value={formatPrice(totals.subtotal)}
@@ -294,7 +294,7 @@ export default function CartPage() {
                         {moq.ok ? (
                           <Link
                             href="/checkout"
-                            className="flex min-h-12 items-center justify-center gap-3 border border-[#f1eee5]/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse transition-colors hover:bg-surface-2 hover:text-content"
+                            className="flex min-h-12 items-center justify-center gap-3 border border-content-inverse/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse transition-colors hover:bg-surface-2 hover:text-content"
                           >
                             Razorpay checkout <CreditCard className="h-3.5 w-3.5" />
                           </Link>
@@ -302,14 +302,14 @@ export default function CartPage() {
                           <button
                             type="button"
                             disabled
-                            className="flex min-h-12 items-center justify-center gap-3 border border-[#f1eee5]/10 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/35"
+                            className="flex min-h-12 items-center justify-center gap-3 border border-content-inverse/10 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/35"
                           >
                             Razorpay unlocks at MOQ
                           </button>
                         )}
                         <Link
                           href="/bulk-order"
-                          className="flex min-h-12 items-center justify-center gap-3 border border-[#f1eee5]/15 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/70 transition-colors hover:bg-surface-2/10"
+                          className="flex min-h-12 items-center justify-center gap-3 border border-content-inverse/15 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/70 transition-colors hover:bg-surface-2/10"
                         >
                           Open bulk linesheet <ArrowRight className="h-3.5 w-3.5" />
                         </Link>

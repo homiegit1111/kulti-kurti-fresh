@@ -92,7 +92,7 @@ export default function AboutPage() {
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
 
-              <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[#121310] via-[#121310]/20 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-surface-inverse via-surface-inverse/20 to-transparent" />
 
               <div className="absolute bottom-6 left-6 z-30 text-content-inverse">
                 <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
