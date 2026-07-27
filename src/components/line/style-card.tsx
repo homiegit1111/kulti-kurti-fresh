@@ -21,6 +21,7 @@ import {
   isSoldOut,
   type StyleLine,
 } from "@/lib/line/contract";
+import { claimPlateMorph, plateProps, plateScopeProps } from "@/lib/line/plate-morph";
 import { cn } from "@/lib/utils";
 import type { StyleLineActions } from "./actions";
 import { PriceBlock } from "./price-block";
@@ -50,6 +51,7 @@ export function StyleCard({
 
   return (
     <article
+      {...plateScopeProps}
       className={cn(
         "group flex h-full flex-col border border-line/15 bg-surface",
         stateRule(line),
@@ -57,17 +59,22 @@ export function StyleCard({
       )}
     >
       <div className="relative overflow-hidden bg-surface-hover">
+        {/* The name is claimed on click rather than rendered: collection pages
+            interleave plates among rows built from the same lines, so a static
+            per-product name would collide and the browser would abandon the whole
+            transition. See src/lib/line/plate-morph.ts. */}
         <Link
+          {...plateProps(product.id)}
           href={`/shop/${product.handle}`}
+          onClick={claimPlateMorph}
           className="relative block aspect-[4/5] overflow-hidden"
-          style={{ viewTransitionName: `product-plate-${product.id.replace(/[^a-zA-Z0-9]/g, "-")}` }}
         >
           <Image
             src={product.image}
             alt={product.title}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 17vw"
-            className="object-cover transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035]"
+            className="object-cover"
           />
         </Link>
         <SoldOutScrim stock={line.stock} />
@@ -97,7 +104,11 @@ export function StyleCard({
           </span>
         </div>
 
-        <Link href={`/shop/${product.handle}`} className="group/title mt-2 block">
+        <Link
+          href={`/shop/${product.handle}`}
+          onClick={claimPlateMorph}
+          className="group/title mt-2 block"
+        >
           <h3 className="line-clamp-2 text-[13px] font-bold leading-tight tracking-[-0.02em] group-hover/title:underline">
             {product.title}
           </h3>
@@ -133,7 +144,7 @@ export function StyleCard({
               onClick={() => onCommit?.(line)}
               className="flex h-8 flex-1 items-center justify-center border border-content/35 text-[9px] font-bold uppercase tracking-[0.16em] transition-colors duration-200 hover:bg-surface-inverse hover:text-accent-lime"
             >
-              Commit {COMMIT_DEFAULT_SETS} sets
+              Add {COMMIT_DEFAULT_SETS} sets
             </button>
           )}
 
@@ -141,7 +152,7 @@ export function StyleCard({
             type="button"
             onClick={() => onToggleShortlist?.(line)}
             aria-pressed={shortlisted}
-            aria-label={shortlisted ? "Remove from shortlist" : "Add to shortlist"}
+            aria-label={shortlisted ? "Remove from saved styles" : "Save style"}
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center border transition-colors duration-200",
               shortlisted

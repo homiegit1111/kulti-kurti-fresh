@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceRoleClient, isServiceRoleConfigured } from "@/lib/supabase/admin";
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
 import { calculateWholesaleTotals } from "@/lib/b2b/pricing";
+import { effectiveSetPrice } from "./sale-price";
 import type { CartItem } from "@/lib/cart-context";
 import type {
   CommerceAdapter,
@@ -44,6 +45,8 @@ type VariantRow = {
   size: string;
   sku: string | null;
   set_price_inr: number;
+  /** Optional sale price. The window that activates it lives on the product. */
+  sale_price_inr?: number | null;
   inventory_quantity: number;
   manage_inventory: boolean;
   allow_backorder: boolean;
@@ -63,10 +66,16 @@ type ProductRow = {
   is_new: boolean;
   status: string;
   collection_handle: string | null;
+  sale_starts_at?: string | null;
+  sale_ends_at?: string | null;
+  badge_label?: string | null;
   variants: VariantRow[] | null;
 };
 
 type CollectionRow = {
+  subtitle?: string | null;
+  body?: string | null;
+  status?: string | null;
   id: string;
   handle: string;
   title: string;
@@ -76,7 +85,8 @@ type CollectionRow = {
 
 const PRODUCT_SELECT =
   "id,handle,title,description,thumbnail,images,category,color_family,is_new,status,collection_handle," +
-  "variants:commerce_product_variants(id,size,sku,set_price_inr,inventory_quantity,manage_inventory,allow_backorder,position,archived_at)";
+  "sale_starts_at,sale_ends_at,badge_label," +
+  "variants:commerce_product_variants(id,size,sku,set_price_inr,sale_price_inr,inventory_quantity,manage_inventory,allow_backorder,position,archived_at)";
 
 export function isSupabaseCommerceConfigured(): boolean {
   // Server-side adapter: needs the service-role client for both catalog reads
@@ -109,6 +119,30 @@ function mapProductRow(row: ProductRow): CommerceProduct {
     .filter((n) => Number.isFinite(n) && n > 0);
   const price = priceCandidates.length ? Math.min(...priceCandidates) : 0;
 
+  // Sale pricing. The sale WINDOW is a product-level property; the sale PRICE is
+  // per variant, because a 3XL and an S do not have to be discounted equally.
+  //
+  // This must stay in step with public.create_commerce_checkout, which prices
+  // each line through the same rule (see
+  // supabase/20260726_configurable_pricing_and_sales.sql). Until that pair
+  // existed, a sale set in the admin was charged but never displayed — the
+  // buyer saw the list price and was debited less, and the two numbers on the
+  // invoice disagreed.
+  const saleWindow = {
+    startsAt: row.sale_starts_at ?? null,
+    endsAt: row.sale_ends_at ?? null,
+  };
+  const effectiveCandidates = variants
+    .filter((v) => Number.isFinite(v.set_price_inr) && v.set_price_inr > 0)
+    .map((v) => effectiveSetPrice(v.set_price_inr, v.sale_price_inr, saleWindow));
+  const lowestEffective = effectiveCandidates.length
+    ? Math.min(...effectiveCandidates)
+    : 0;
+  // salePrice stays null unless it is genuinely below the list price, because
+  // getBaseSetPrice() reads `salePrice ?? price` and a redundant value would
+  // print a struck-through "was" identical to the "now".
+  const salePrice = lowestEffective > 0 && lowestEffective < price ? lowestEffective : null;
+
   const images = [row.thumbnail, ...(row.images ?? [])].filter(
     (u): u is string => Boolean(u),
   );
@@ -117,7 +151,15 @@ function mapProductRow(row: ProductRow): CommerceProduct {
   const variantPrices: Record<string, number> = {};
   for (const v of variants) {
     if (v.size && v.id) variantIds[v.size] = v.id;
-    if (v.id) variantPrices[v.id] = v.set_price_inr;
+    // The EFFECTIVE price, so per-size re-pricing in the cart matches what
+    // checkout will charge for that exact variant.
+    if (v.id) {
+      variantPrices[v.id] = effectiveSetPrice(
+        v.set_price_inr,
+        v.sale_price_inr,
+        saleWindow,
+      );
+    }
   }
 
   const product: CommerceProduct = {
@@ -126,7 +168,7 @@ function mapProductRow(row: ProductRow): CommerceProduct {
     handle: row.handle,
     description: row.description ?? "",
     price,
-    salePrice: null,
+    salePrice,
     image: images[0] ?? PLACEHOLDER_IMAGE,
     images: images.length ? images : [PLACEHOLDER_IMAGE],
     colors: [row.color_family || "ivory"],
@@ -240,7 +282,13 @@ export const supabaseCommerceAdapter: SupabaseAdapterWithLegacy = {
     if (!db) return [];
     const { data, error } = await db
       .from("commerce_collections")
-      .select("id,handle,title,image,description")
+      .select("id,handle,title,image,description,subtitle,body,status")
+      // This client is the SERVICE ROLE client, so it bypasses RLS — the
+      // "published only" policy on commerce_collections does not apply to it.
+      // The filter therefore has to be explicit, or a collection the owner is
+      // still drafting in Admin Studio would appear on the storefront the moment
+      // it is created.
+      .eq("status", "published")
       .order("rank", { ascending: true });
     if (error || !data) return [];
 
@@ -261,6 +309,8 @@ export const supabaseCommerceAdapter: SupabaseAdapterWithLegacy = {
         image: c.image ?? "/images/collection-summer.png",
         itemCount: count ?? 0,
         description: c.description ?? "",
+        subtitle: c.subtitle ?? "",
+        body: c.body ?? "",
       });
     }
     return results;

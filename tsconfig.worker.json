@@ -1,0 +1,28 @@
+{
+  // Type-checks the Cloudflare Worker entry points against WORKER globals.
+  //
+  // These files cannot live in the app's tsconfig: custom-worker.ts references
+  // @cloudflare/workers-types, whose HTMLRewriter `Element` interface merges with
+  // lib.dom's `Element` and breaks `Element.append()` for every file in the
+  // program. Keeping them in a separate project means both sides get the globals
+  // they actually run against, and neither is left unchecked.
+  //
+  //   npx tsc --noEmit -p tsconfig.worker.json
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["esnext"],
+    "types": ["@cloudflare/workers-types"],
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["custom-worker.ts", "open-next.config.ts"]
+}

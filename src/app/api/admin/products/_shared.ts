@@ -8,6 +8,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/server/admin-auth";
+import {
+  roleHas,
+  type AdminPermission,
+  type AdminRole,
+} from "@/lib/server/admin-roles";
 import { isSameOrigin } from "@/lib/server/origin-check";
 
 export function gateError(status: number): NextResponse {
@@ -22,16 +27,25 @@ export function gateError(status: number): NextResponse {
 
 /**
  * Single guard for every admin MUTATION (POST/PATCH/DELETE): same-origin check
- * (CSRF) + admin allowlist. Returns the verified admin id when the request may
- * proceed, or a ready-to-return error response otherwise. Using one helper
- * means no mutation route can accidentally skip the CSRF or auth step.
+ * (CSRF) + admin identity + the PERMISSION this specific action requires.
+ *
+ * The permission argument is mandatory on purpose. Roles (owner / manager /
+ * staff) were introduced in src/lib/server/admin-roles.ts, and "is an admin" is
+ * no longer the same question as "may do this" — a staff member who counts stock
+ * must not be able to delete a style or change an order's status. Making the
+ * argument required means TypeScript refuses to compile a route that forgot to
+ * say what it needs, rather than letting it silently fall back to full access.
+ *
+ * New routes should prefer `guardAdmin` from src/lib/server/admin-guard.ts,
+ * which additionally applies rate limiting and hands back the database client.
  */
 export type AdminMutationGate =
-  | { ok: true; userId: string }
+  | { ok: true; userId: string; role: AdminRole }
   | { ok: false; response: NextResponse };
 
 export async function guardAdminMutation(
   req: NextRequest,
+  permission: AdminPermission,
 ): Promise<AdminMutationGate> {
   if (!isSameOrigin(req)) {
     return {
@@ -44,7 +58,44 @@ export async function guardAdminMutation(
   }
   const gate = await requireAdmin();
   if (!gate.ok) return { ok: false, response: gateError(gate.status) };
-  return { ok: true, userId: gate.userId };
+  if (!roleHas(gate.role, permission)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: `Your role (${gate.role}) cannot perform this action.`,
+          requiredPermission: permission,
+        },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true, userId: gate.userId, role: gate.role };
+}
+
+/**
+ * The read-side counterpart. No CSRF check — cross-origin JavaScript cannot read
+ * the response — but the permission still applies, so a role that may not see
+ * orders does not get them by calling the API directly.
+ */
+export async function guardAdminRead(
+  permission: AdminPermission,
+): Promise<AdminMutationGate> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { ok: false, response: gateError(gate.status) };
+  if (!roleHas(gate.role, permission)) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: `Your role (${gate.role}) cannot view this.`,
+          requiredPermission: permission,
+        },
+        { status: 403 },
+      ),
+    };
+  }
+  return { ok: true, userId: gate.userId, role: gate.role };
 }
 
 /**

@@ -4,130 +4,27 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Turnstile } from "@/components/ui/turnstile";
+import { TermsRule } from "@/components/document/terms-rule";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
-import { B2B_CONFIG } from "@/lib/b2b/config";
-
-/* Brand icons removed from lucide-react v1.x.
-   All four are decorative (the wrapping <a> carries the accessible name via
-   aria-label), so each svg is aria-hidden. */
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className={className}
-    >
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <path d="M17.5 6.5h.01" />
-    </svg>
-  );
-}
-
-function FacebookIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-    </svg>
-  );
-}
-
-function TwitterIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.7 5.5 4.4 9 4.5-.9-4.2 4-6.5 7-3.8 1.1 0 3-1.2 3-1.2z" />
-    </svg>
-  );
-}
-
-function PinterestIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M8 20l4-9" />
-      <path d="M10.7 14c.437 1.263 1.43 2 2.55 2 2.071 0 3.75-1.554 3.75-4.07C17 9.2 14.98 7 12 7c-3.22 0-5.5 2.116-5.5 4.93 0 1.13.393 2.196 1.25 2.75" />
-      <circle cx="12" cy="12" r="10" />
-    </svg>
-  );
-}
 
 /**
- * LINK MODEL — one label per destination.
- *
- * Every entry below resolves to a distinct route that exists. Nothing is padded
- * to balance the columns.
+ * Footer (Chapter 4) — a quiet letterhead on paper: the trade terms, link
+ * columns on the grid, the wordmark, contact facts. Every label is a word a
+ * wholesale buyer uses; every link resolves to a route that exists.
  */
-const buyLinks = [
-  { label: "The Line", href: "/line", note: "Full catalogue" },
-  { label: "Collections", href: "/collections", note: "Grouped" },
-  { label: "Lookbook", href: "/lookbook", note: "Editorial" },
-  { label: "Bulk Order", href: "/bulk-order", note: "By the carton" },
-  { label: "Tray", href: "/tray", note: "Shortlist + order" },
-  { label: "Line Sheet", href: "/line-sheet", note: "Print" },
+const shopLinks = [
+  { label: "Styles", href: "/shop" },
+  { label: "Collections", href: "/collections" },
+  { label: "Lookbook", href: "/lookbook" },
+  { label: "Bulk order", href: "/bulk-order" },
+  { label: "Your order", href: "/tray" },
+  { label: "Print price list", href: "/line-sheet" },
 ];
 
-const studioLinks = [
-  { label: "About", href: "/about", note: "The studio" },
-  { label: "Contact", href: "/contact", note: "Trade desk" },
-  { label: "Account", href: "/account", note: "Buyer profile" },
-];
-
-const socialLinks = [
-  {
-    label: "Instagram",
-    href: "https://instagram.com/rangatpehnawa",
-    icon: InstagramIcon,
-  },
-  {
-    label: "Facebook",
-    href: "https://facebook.com/rangatpehnawa",
-    icon: FacebookIcon,
-  },
-  {
-    label: "Twitter",
-    href: "https://twitter.com/rangatpehnawa",
-    icon: TwitterIcon,
-  },
-  {
-    label: "Pinterest",
-    href: "https://pinterest.com/rangatpehnawa",
-    icon: PinterestIcon,
-  },
+const companyLinks = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "Account", href: "/account" },
 ];
 
 const bottomLinks = [
@@ -135,41 +32,26 @@ const bottomLinks = [
   { label: "Terms", href: "/terms" },
 ];
 
-/**
- * The four trade facts, stated once, sitewide.
- */
-const tradeFacts = [
-  { k: "MOQ", v: `${B2B_CONFIG.minimumOrderSets} sets` },
-  { k: "Set", v: `${B2B_CONFIG.setSize} pieces` },
-  { k: "Size run", v: "Per style" },
-  { k: "GST", v: "At dispatch" },
-];
-
 function FooterLinkColumn({
   title,
   links,
 }: {
   title: string;
-  links: { label: string; href: string; note: string }[];
+  links: { label: string; href: string }[];
 }) {
   return (
     <div className="flex flex-col">
-      <h3 className="mb-5 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
+      <h3 className="mb-4 text-[9px] font-extrabold uppercase tracking-[0.28em] text-content/45">
         {title}
       </h3>
-      <ul className="flex flex-col">
+      <ul className="flex flex-col gap-2.5">
         {links.map((link) => (
-          <li key={link.label} className="border-t border-content-inverse/10 first:border-t-0">
+          <li key={link.label}>
             <Link
               href={link.href}
-              className="group flex items-baseline justify-between gap-4 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime focus-visible:ring-offset-2 focus-visible:ring-offset-surface-inverse"
+              className="text-[13px] font-medium text-content/70 transition-colors duration-200 hover:text-content hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
             >
-              <span className="text-[13px] font-bold uppercase tracking-[0.02em] text-content-inverse/70 transition-colors duration-300 group-hover:text-content-inverse">
-                {link.label}
-              </span>
-              <span className="shrink-0 text-[8px] font-bold uppercase tracking-[0.18em] text-content-inverse/25 transition-colors duration-300 group-hover:text-accent-lime">
-                {link.note}
-              </span>
+              {link.label}
             </Link>
           </li>
         ))}
@@ -200,7 +82,7 @@ function NewsletterForm() {
       if (res.ok) {
         setStatus("done");
         setEmail("");
-        setMessage("You are subscribed to wholesale updates.");
+        setMessage("You are subscribed to catalog updates.");
       } else {
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
@@ -221,7 +103,7 @@ function NewsletterForm() {
       </p>
       <form
         onSubmit={handleSubmit}
-        className="group relative flex items-center border-b border-content-inverse/25 pb-3 pt-4"
+        className="relative flex items-center border-b border-line/25 pb-2 focus-within:border-content"
       >
         <Input
           type="email"
@@ -231,27 +113,25 @@ function NewsletterForm() {
           placeholder="Your email address"
           aria-label="Email address"
           autoComplete="email"
-          className="w-full rounded-none border-none bg-transparent px-0 text-base text-content-inverse outline-none placeholder:text-content-inverse/35 focus-visible:ring-0"
+          className="w-full rounded-none border-none bg-transparent px-0 text-sm text-content outline-none placeholder:text-content/35 focus-visible:ring-0"
           required
           disabled={status === "loading"}
         />
         <button
           type="submit"
-          aria-label="Subscribe"
           disabled={status === "loading"}
-          className="absolute right-0 rounded-none px-2 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-accent-lime transition-colors duration-300 hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime disabled:opacity-50"
+          className="shrink-0 rounded-none px-2 py-2 text-[10px] font-bold uppercase tracking-[0.22em] text-content/60 transition-colors duration-200 hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime disabled:opacity-50"
         >
           {status === "loading" ? "..." : "Subscribe"}
         </button>
-        <div className="absolute bottom-[-1px] left-0 h-[2px] w-0 bg-accent-lime transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-focus-within:w-full" />
       </form>
 
-      <Turnstile onVerify={setToken} onExpire={() => setToken("")} theme="dark" />
+      <Turnstile onVerify={setToken} onExpire={() => setToken("")} />
 
       {message ? (
         <p
           className={`text-xs font-semibold ${
-            status === "error" ? "text-accent-red" : "text-accent-lime"
+            status === "error" ? "text-accent-red" : "text-content/70"
           }`}
         >
           {message}
@@ -263,110 +143,51 @@ function NewsletterForm() {
 
 export function Footer() {
   return (
-    <footer className="relative overflow-hidden border-t-2 border-content-inverse/15 bg-surface-inverse text-content-inverse lg:pb-0">
-      {/* TRADE STRIP — the terms, first thing, before any marketing. */}
-      <div className="relative z-10 border-b border-content-inverse/10">
-        <dl className="mx-auto grid max-w-[1400px] grid-cols-2 md:grid-cols-4">
-          {tradeFacts.map((fact) => (
-            <div
-              key={fact.k}
-              className="flex flex-col gap-1 border-content-inverse/10 px-6 py-5 [&:not(:last-child)]:border-r lg:px-12"
-            >
-              <dt className="text-[8px] font-bold uppercase tracking-[0.3em] text-content-inverse/40">
-                {fact.k}
-              </dt>
-              <dd className="text-[15px] font-black uppercase tracking-[-0.02em] tabular-nums text-content-inverse">
-                {fact.v}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-
-      {/* Giant faded editorial wordmark (background device) */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-[3vw] left-0 select-none text-[26vw] font-black uppercase leading-[0.7] tracking-[-0.06em] text-content-inverse/[0.04]"
-      >
-        Rangat
-      </div>
-
-      {/* Newsletter and brand story */}
-      <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-1 items-start gap-16 px-6 pt-20 lg:grid-cols-2 lg:px-12 lg:pt-24">
-        {/* Left: Newsletter */}
-        <div className="max-w-md space-y-6">
-          <p className="eyebrow eyebrow--bare text-accent-lime">Fresh Drops</p>
-          <h2 className="text-[clamp(2.4rem,5vw,3.4rem)] font-black uppercase leading-[0.92] tracking-[-0.055em] text-content-inverse">
-            Fresh kurti drops, price-smart picks, and catalog alerts.
-          </h2>
-          <p className="text-sm leading-relaxed text-content-inverse/55">
-            New kurti drops, reseller notes, and catalog updates for shoppers, boutique owners, and online sellers.
-          </p>
-
-          <NewsletterForm />
+    <footer className="border-t border-line/25 bg-surface text-content">
+      {/* The trade terms — first thing, before anything else. */}
+      <div className="border-b border-line/15">
+        <div className="mx-auto max-w-[1400px] px-5 md:px-10 lg:px-16">
+          <TermsRule className="border-y-0 py-3" />
         </div>
+      </div>
 
-        {/* Right: Brand Mini-Manifesto */}
-        <div className="flex h-full flex-col justify-center lg:pl-20">
-          <div className="mb-6 inline-flex items-baseline gap-3">
-            <h2 className="text-3xl font-black uppercase tracking-[-0.03em] text-content-inverse">
+      {/* Letterhead grid */}
+      <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-5 pb-14 pt-12 sm:grid-cols-2 md:px-10 lg:grid-cols-[2fr_1fr_1fr_1.4fr] lg:gap-10 lg:px-16">
+        {/* Wordmark + one plain line + WhatsApp */}
+        <div className="flex flex-col items-start">
+          <p className="flex flex-col leading-none">
+            <span className="text-[1.55rem] font-black uppercase leading-[0.85] tracking-[-0.05em] text-content">
               Rangat
-            </h2>
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
-              Pehnawa Studio
             </span>
-          </div>
-          <p className="max-w-md text-sm leading-relaxed text-content-inverse/55">
-            Rangat Pehnawa brings modern kurti drops, practical prices, and WhatsApp-first ordering for shoppers, boutiques, and online sellers across India.
+            <span className="mt-[0.35em] text-[8px] font-bold uppercase tracking-[0.42em] text-content/55">
+              Pehnawa
+            </span>
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href={buildCatalogRequestUrl()}
-              className="inline-flex w-fit border border-content-inverse/30 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content-inverse transition-colors hover:border-accent-lime hover:bg-accent-lime hover:text-on-accent"
-            >
-              Get WhatsApp Catalog
-            </a>
-            <Link
-              href="/line"
-              className="inline-flex w-fit border border-accent-lime bg-accent-lime px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-on-accent transition-colors hover:border-content-inverse/30 hover:bg-transparent hover:text-content-inverse"
-            >
-              Open The Line
-            </Link>
-          </div>
-          <div className="mt-8 flex gap-6">
-            {socialLinks.map((social) => {
-              const Icon = social.icon;
-              return (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="text-content-inverse/45 transition-all duration-300 hover:-translate-y-1 hover:text-accent-lime"
-                >
-                  <Icon className="h-5 w-5" />
-                </a>
-              );
-            })}
-          </div>
+          <p className="mt-5 max-w-[36ch] text-sm leading-relaxed text-content/60">
+            Wholesale kurtis for boutiques and resellers. Browse the styles,
+            build your order, send it on WhatsApp.
+          </p>
+          <a
+            href={buildCatalogRequestUrl()}
+            className="mt-6 inline-flex border border-line/40 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content transition-colors duration-200 hover:border-line hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+          >
+            WhatsApp catalog
+          </a>
         </div>
-      </div>
 
-      {/* Link columns */}
-      <div className="relative z-10 mx-auto grid max-w-[1400px] grid-cols-1 gap-10 border-t border-content-inverse/10 px-6 pb-16 pt-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12 lg:px-12 lg:pb-20">
-        <FooterLinkColumn title="Buy" links={buyLinks} />
-        <FooterLinkColumn title="Studio" links={studioLinks} />
+        <FooterLinkColumn title="Shop" links={shopLinks} />
+        <FooterLinkColumn title="Company" links={companyLinks} />
 
+        {/* Contact facts + catalog updates */}
         <div className="flex flex-col">
-          <h3 className="mb-5 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-lime">
-            Trade Desk
+          <h3 className="mb-4 text-[9px] font-extrabold uppercase tracking-[0.28em] text-content/45">
+            Contact
           </h3>
-          <ul className="flex flex-col gap-4 text-sm text-content-inverse/70">
+          <ul className="flex flex-col gap-2.5 text-[13px] text-content/70">
             <li>
               <a
                 href="mailto:rangatpehnawa@gmail.com"
-                className="font-semibold transition-colors duration-300 hover:text-content-inverse"
+                className="font-medium transition-colors duration-200 hover:text-content hover:underline"
               >
                 rangatpehnawa@gmail.com
               </a>
@@ -374,15 +195,12 @@ export function Footer() {
             <li>
               <a
                 href="tel:8660452247"
-                className="font-semibold tabular-nums transition-colors duration-300 hover:text-content-inverse"
+                className="ledger font-medium transition-colors duration-200 hover:text-content hover:underline"
               >
                 8660452247
               </a>
             </li>
-            <li className="pt-2">
-              <span className="mb-1 block text-[9px] font-bold uppercase tracking-[0.24em] text-accent-red">
-                Studio
-              </span>
+            <li className="pt-1 leading-relaxed">
               3rd Floor, NR Complex, 36,
               <br />
               Siddanna Ln, Cubbonpete,
@@ -390,27 +208,30 @@ export function Footer() {
               Bengaluru 560002
             </li>
           </ul>
+
+          <div className="mt-8">
+            <h3 className="mb-3 text-[9px] font-extrabold uppercase tracking-[0.28em] text-content/45">
+              Catalog updates
+            </h3>
+            <NewsletterForm />
+          </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="relative z-10 border-t border-content-inverse/10">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row lg:px-12">
-          <div className="flex items-center gap-3">
-            <div className="flex h-6 w-6 items-center justify-center border border-accent-lime/40 bg-accent-lime/10 text-[10px] font-black text-accent-lime">
-              R
-            </div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
-              Copyright {new Date().getFullYear()} Rangat Pehnawa. All rights reserved.
-            </p>
-          </div>
+      {/* Bottom rule */}
+      <div className="border-t border-line/15">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-between gap-4 px-5 py-6 md:flex-row md:px-10 lg:px-16">
+          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/45">
+            Copyright {new Date().getFullYear()} Rangat Pehnawa. All rights
+            reserved.
+          </p>
 
-          <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
+          <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-[0.2em] text-content/45">
             {bottomLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
-                className="transition-colors duration-300 hover:text-accent-lime"
+                className="transition-colors duration-200 hover:text-content hover:underline"
               >
                 {link.label}
               </Link>

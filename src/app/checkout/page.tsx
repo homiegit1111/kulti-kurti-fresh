@@ -3,7 +3,6 @@
 import { useEffect, useState, useId, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   Loader2,
   MessageCircle,
@@ -12,8 +11,8 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { MoqProgress } from "@/components/b2b/moq-progress";
-import { WholesaleTrustBar } from "@/components/b2b/wholesale-trust-bar";
+import { SetBlocks } from "@/components/b2b/set-blocks";
+import { TermsRule } from "@/components/document/terms-rule";
 import { useCart } from "@/lib/cart-context";
 import { isAuthEnabled } from "@/lib/auth/client";
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
@@ -446,129 +445,117 @@ export default function CheckoutPage() {
       <Navbar />
       <main className="flex-1 pt-28 pb-24 lg:pt-36">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-          <motion.header
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-10 border-b-2 border-line pb-8"
-          >
-            <p className="eyebrow mb-4">Wholesale checkout</p>
+          <header className="mb-10 border-b-2 border-line pb-8">
+            <p className="mb-4 text-[9px] font-extrabold uppercase tracking-[0.3em] text-content/55">
+              Checkout
+            </p>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <h1 className="text-[clamp(3rem,9vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
-                  Checkout
+                <h1 className="text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+                  Wholesale checkout
                 </h1>
                 <p className="mt-6 max-w-2xl text-sm leading-6 text-content/60">
-                  WhatsApp confirmation is always available. Razorpay checkout
-                  works when payment keys are configured, while mock/keyless
-                  mode falls back cleanly to a payment-link request.
+                  WhatsApp confirms stock fastest. GST invoice at dispatch.
                 </p>
               </div>
               <a href={buildPaymentHelpUrl()} className="btn-luxe-outline w-fit">
                 Payment help <MessageCircle className="h-3.5 w-3.5" />
               </a>
             </div>
-          </motion.header>
+          </header>
 
-          <WholesaleTrustBar className="mb-10" />
+          <TermsRule className="mb-10" />
 
           {items.length === 0 ? (
-            <section className="mx-auto max-w-2xl border border-line/20 bg-surface-2 px-6 py-20 text-center">
-              <ShoppingBag className="mx-auto mb-6 h-10 w-10 text-content/30" strokeWidth={1} />
-              <p className="eyebrow eyebrow--bare mb-4 justify-center">No sets yet</p>
-              <h2 className="text-[clamp(2rem,6vw,3.5rem)] font-black uppercase leading-[0.85] tracking-[-0.05em]">
-                Build a cart
-                <br />
-                before checkout
+            <section className="mx-auto max-w-2xl border border-line/25 px-6 py-16 text-center">
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-content/55">
+                No sets yet
+              </p>
+              <h2 className="mx-auto mt-4 max-w-[18ch] text-3xl font-black uppercase leading-[0.95] tracking-[-0.03em]">
+                Build an order before checkout
               </h2>
               <p className="mx-auto mt-6 max-w-md text-sm leading-6 text-content/60">
-                MOQ starts at {B2B_CONFIG.minimumOrderSets} sets. Add styles
-                from the catalog or use the bulk linesheet for faster entry.
+                The minimum order is {B2B_CONFIG.minimumOrderSets} sets — mix
+                any styles. Add styles from the catalog, or use the bulk order
+                page for faster entry.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link href="/shop" className="btn-luxe">Open catalog</Link>
+                <Link href="/shop" className="btn-luxe">Browse styles</Link>
                 <Link href="/bulk-order" className="btn-luxe-outline">Bulk order</Link>
               </div>
             </section>
           ) : (
             <div className="grid gap-10 lg:grid-cols-12">
               <section className="lg:col-span-7">
-                <div className="border border-line/20 bg-surface-2">
-                  <div className="flex items-baseline justify-between gap-4 border-b border-line/20 p-6">
-                    <div>
-                      <p className="eyebrow eyebrow--bare mb-3">Order summary</p>
-                      <h2 className="text-3xl font-black uppercase leading-[0.9] tracking-[-0.03em] sm:text-4xl">
-                        {totals.totalSets} sets
-                      </h2>
-                    </div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">
-                      {totals.totalPieces} pieces
-                    </p>
-                  </div>
-                  <div className="divide-y divide-line/15">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex gap-4 p-4 sm:p-6">
-                        <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-[#d4d0c5]">
-                          <Image src={item.image} alt={item.title} fill className="object-cover" sizes="80px" />
-                        </div>
-                        <div className="flex flex-1 flex-col gap-2">
-                          <div className="flex justify-between gap-4">
-                            <div>
-                              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-accent-red">
-                                {getStyleCode(item)}
-                              </p>
-                              <h3 className="mt-1 text-lg font-bold leading-tight tracking-[-0.02em] text-content">
-                                {item.title}
-                              </h3>
-                            </div>
-                            <p className="text-lg font-black tracking-[-0.02em] text-content">
-                              {formatPrice(calculateLineTotal(item, totals.totalSets))}
-                            </p>
-                          </div>
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content/45">
-                            {item.quantity} sets - {item.quantity * B2B_CONFIG.setSize} pcs - {SIZE_RATIO_LABEL}
-                          </p>
-                          <p className="text-xs text-content/55">
-                            {formatPrice(item.salePrice ?? item.price)}/set
-                          </p>
-                        </div>
+                <div className="entry-rule flex items-baseline justify-between gap-4 pb-3 pt-4">
+                  <h2 className="text-[10px] font-extrabold uppercase tracking-[0.22em]">
+                    Your order
+                  </h2>
+                  <p className="ledger text-[10px] font-extrabold uppercase tracking-[0.2em] text-content/55">
+                    {totals.totalSets} sets · {totals.totalPieces} pieces
+                  </p>
+                </div>
+                <div className="divide-y divide-line/15 border-b border-line/15">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex gap-4 py-5 sm:gap-5">
+                      <div className="relative h-24 w-20 shrink-0 overflow-hidden bg-surface-hover">
+                        <Image src={item.image} alt={item.title} fill className="object-cover" sizes="80px" />
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex flex-1 flex-col gap-2">
+                        <div className="flex justify-between gap-4">
+                          <div>
+                            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-content/55">
+                              {getStyleCode(item)}
+                            </p>
+                            <h3 className="mt-1 text-lg font-bold leading-tight tracking-[-0.02em] text-content">
+                              {item.title}
+                            </h3>
+                          </div>
+                          <p className="ledger text-lg font-black tracking-[-0.02em] text-content">
+                            {formatPrice(calculateLineTotal(item, totals.totalSets))}
+                          </p>
+                        </div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content/45">
+                          {item.quantity} sets · {item.quantity * B2B_CONFIG.setSize} pcs · {SIZE_RATIO_LABEL}
+                        </p>
+                        <p className="ledger text-xs text-content/55">
+                          {formatPrice(item.salePrice ?? item.price)}/set
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </section>
 
               <aside className="lg:col-span-5">
-                <form onSubmit={beginRazorpayPayment} className="sticky top-32 space-y-6">
-                  <div className="border border-line/20 bg-surface-inverse p-6 text-content-inverse sm:p-8">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-lime">
-                      Order status
-                    </p>
-                    <h2 className="mt-3 text-3xl font-black uppercase leading-[0.9] tracking-[-0.03em]">
-                      {moq.ok ? "Ready to order" : "MOQ pending"}
-                    </h2>
-                    <div className="mt-6">
-                      <MoqProgress totals={totals} tone="dark" />
+                <form onSubmit={beginRazorpayPayment} className="sticky top-32 space-y-10">
+                  <div className="text-content">
+                    <div className="entry-rule pb-3 pt-4">
+                      <h2 className="text-[10px] font-extrabold uppercase tracking-[0.22em]">
+                        Order status
+                      </h2>
                     </div>
-                    <div className="mt-8 space-y-3 border-t border-content-inverse/20 pt-6">
-                      {totals.discountAmount > 0 && (
-                        <>
-                          <Summary
-                            label="Gross"
-                            value={formatPrice(totals.baseSubtotal)}
-                          />
-                          <Summary
-                            label={`Tier discount ${totals.discountPercent}%`}
-                            value={`−${formatPrice(totals.discountAmount)}`}
-                          />
-                        </>
-                      )}
+                    <p className="mt-4 text-2xl font-black uppercase leading-[0.9] tracking-[-0.03em]">
+                      {moq.ok
+                        ? "Ready to order"
+                        : `${moq.remainingSets} more ${
+                            moq.remainingSets === 1 ? "set" : "sets"
+                          } to minimum`}
+                    </p>
+                    <div className="mt-5">
+                      <SetBlocks size="md" />
+                    </div>
+                    <div className="mt-6 space-y-3 border-t border-line/25 pt-5">
                       <Summary label="Final total" value={formatPrice(totals.subtotal)} strong />
                     </div>
                   </div>
 
-                  <div className="border border-line/20 bg-surface-2 p-6 sm:p-8">
-                    <p className="eyebrow mb-6">Buyer details</p>
+                  <div>
+                    <div className="entry-rule mb-6 pb-3 pt-4">
+                      <h2 className="text-[10px] font-extrabold uppercase tracking-[0.22em]">
+                        Delivery details
+                      </h2>
+                    </div>
                     <div className="grid gap-5">
                       <Field label="Buyer name" value={buyer.buyerName} onChange={(value) => updateBuyer("buyerName", value)} />
                       <Field label="Business name" value={buyer.businessName} onChange={(value) => updateBuyer("businessName", value)} />
@@ -608,12 +595,17 @@ export default function CheckoutPage() {
                     </div>
 
                     {status && (
-                      <p className="mt-6 border border-line/20 border-l-2 border-l-accent-red bg-surface px-4 py-3 text-xs leading-6 text-content/65">
+                      <p className="mt-6 border border-line/20 border-l-2 border-l-content/60 bg-surface px-4 py-3 text-xs leading-6 text-content/65">
                         {status}
                       </p>
                     )}
 
-                    <div className="mt-8 grid gap-3">
+                    <div className="entry-rule mt-10 pb-3 pt-4">
+                      <h2 className="text-[10px] font-extrabold uppercase tracking-[0.22em]">
+                        Payment
+                      </h2>
+                    </div>
+                    <div className="mt-6 grid gap-3">
                       <button
                         type="submit"
                         disabled={loadingPayment || !moq.ok}
@@ -758,15 +750,15 @@ function Summary({
   strong?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4">
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
+    <div className="ledger flex items-baseline justify-between gap-4">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/55">
         {label}
       </span>
       <span
         className={
           strong
-            ? "text-3xl font-black tracking-[-0.03em] text-accent-lime"
-            : "text-lg font-bold tracking-[-0.02em] text-content-inverse/80"
+            ? "text-3xl font-black tracking-[-0.03em] text-content"
+            : "text-lg font-bold tracking-[-0.02em] text-content/80"
         }
       >
         {value}

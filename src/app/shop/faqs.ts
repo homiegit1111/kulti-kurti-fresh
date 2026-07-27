@@ -18,11 +18,11 @@ export const SHOP_FAQS: Faq[] = [
   },
   {
     q: "How does wholesale pricing work?",
-    a: "Prices are shown per set with a per-piece equivalent. Orders of 8-19 sets unlock a 5% discount, and 20+ sets unlock a 10% discount.",
+    a: "Prices are shown per set with a per-piece equivalent. Every order past the 4-set minimum is priced at the same flat wholesale rate — the rate you see is the rate you pay.",
   },
   {
     q: "How do I place a wholesale order?",
-    a: "Add styles as sets, review your MOQ progress, and send the order on WhatsApp. The team confirms availability, GST invoice details, dispatch city, and Razorpay payment link before shipping.",
+    a: "Add styles as sets, review your order, and send the order on WhatsApp. The team confirms availability, GST invoice details, dispatch city, and Razorpay payment link before shipping.",
   },
   {
     q: "Do you provide GST invoices and all-India dispatch?",

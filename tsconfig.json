@@ -30,10 +30,22 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
+  // custom-worker.ts opens with `/// <reference types="@cloudflare/workers-types" />`.
+  // Because `include` is `**/*.ts`, that reference was loading Cloudflare's
+  // globals into the WHOLE program, where its HTMLRewriter `Element` interface
+  // merged with lib.dom's and replaced `Element.append(...nodes)` with
+  // `append(content: string | ReadableStream | Response)`. Effect: every DOM
+  // `.append()` anywhere in the app failed to compile. Excluded for the same
+  // reason open-next.config.ts already is — both are Cloudflare-runtime files,
+  // not app files.
+  //
+  // The worker is still type-checked, just against the right globals:
+  //   npx tsc --noEmit -p tsconfig.worker.json
   "exclude": [
     "node_modules",
     "sanity",
     "apps/rangat-commerce",
-    "open-next.config.ts"
+    "open-next.config.ts",
+    "custom-worker.ts"
   ]
 }

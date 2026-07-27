@@ -4,9 +4,9 @@ import { Footer } from "@/components/layout/footer";
 import { TrayClient } from "./tray-client";
 
 export const metadata: Metadata = {
-  title: "Tray — Shortlist & Order",
+  title: "Your order",
   description:
-    "One surface for the styles you're working on. Shortlist without a set count, add sets when you're ready, and see sets, pieces, blended per-piece rate and minimum order in one place.",
+    "The order you're building — saved styles, set counts, sets, pieces, blended per-piece rate and the minimum order, all on one sheet. Send it on WhatsApp when ready.",
 };
 
 export default function TrayPage() {

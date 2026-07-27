@@ -22,6 +22,7 @@ import {
   type StyleLine,
 } from "@/lib/line/contract";
 import { GST_CONFIG } from "@/lib/b2b/config";
+import { claimPlateMorph, plateProps, plateScopeProps } from "@/lib/line/plate-morph";
 import { cn } from "@/lib/utils";
 import type { StyleLineActions } from "./actions";
 import { PriceBlock } from "./price-block";
@@ -49,6 +50,7 @@ export function StylePlate({
 
   return (
     <article
+      {...plateScopeProps}
       className={cn(
         "group flex flex-col border border-line/15 bg-surface sm:flex-row",
         stateRule(line),
@@ -57,7 +59,9 @@ export function StylePlate({
     >
       {/* Plate */}
       <Link
+        {...plateProps(product.id)}
         href={`/shop/${product.handle}`}
+        onClick={claimPlateMorph}
         className="relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-surface-hover sm:w-[46%]"
       >
         <Image
@@ -66,7 +70,7 @@ export function StylePlate({
           fill
           priority={priority}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 46vw, 30vw"
-          className="object-cover transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.035]"
+          className="object-cover"
         />
         <SoldOutScrim stock={line.stock} />
       </Link>
@@ -97,7 +101,7 @@ export function StylePlate({
 
         <div className="mt-5">
           <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-content/40">
-            Ships this run
+            Size run
           </p>
           <SizeRun sizes={line.sizeRun} form="chips" className="mt-2" />
         </div>
@@ -121,7 +125,7 @@ export function StylePlate({
                 size="md"
               />
               <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-accent-lime">
-                In tray
+                On order
               </span>
             </div>
           ) : (
@@ -130,7 +134,7 @@ export function StylePlate({
               onClick={() => onCommit?.(line)}
               className="flex h-10 flex-1 items-center justify-center gap-2 bg-surface-inverse px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-content-inverse transition-colors duration-200 hover:text-accent-lime"
             >
-              Commit {COMMIT_DEFAULT_SETS} sets
+              Add {COMMIT_DEFAULT_SETS} sets
               <ArrowRight className="h-3 w-3" strokeWidth={2} />
             </button>
           )}
@@ -154,7 +158,7 @@ export function StylePlate({
             type="button"
             onClick={() => onToggleShortlist?.(line)}
             aria-pressed={shortlisted}
-            aria-label={shortlisted ? "Remove from shortlist" : "Add to shortlist"}
+            aria-label={shortlisted ? "Remove from saved styles" : "Save style"}
             className={cn(
               "flex h-10 w-10 items-center justify-center border transition-colors duration-200",
               shortlisted

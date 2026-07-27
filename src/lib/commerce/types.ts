@@ -13,7 +13,12 @@ export interface CommerceCollection {
   handle: string;
   image: string;
   itemCount: number;
+  /** One-line note shown in listings. */
   description: string;
+  /** Standfirst under the collection heading. Empty when unset. */
+  subtitle: string;
+  /** Longer editorial copy for the collection page. Empty when unset. */
+  body: string;
 }
 
 export interface CommerceCartLine {

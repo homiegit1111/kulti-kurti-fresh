@@ -33,7 +33,7 @@ export async function PATCH(
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const mutationGate = await guardAdminMutation(req);
+  const mutationGate = await guardAdminMutation(req, "catalog:write");
   if (!mutationGate.ok) return mutationGate.response;
 
   const supabase = createServiceRoleClient();
@@ -179,7 +179,7 @@ export async function DELETE(
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const mutationGate = await guardAdminMutation(req);
+  const mutationGate = await guardAdminMutation(req, "catalog:delete");
   if (!mutationGate.ok) return mutationGate.response;
 
   const supabase = createServiceRoleClient();

@@ -9,9 +9,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/server/admin-auth";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
-import { gateError, serviceUnavailable } from "../products/_shared";
+import { guardAdminRead, serviceUnavailable } from "../products/_shared";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,8 +30,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const gate = await requireAdmin();
-  if (!gate.ok) return gateError(gate.status);
+  const gate = await guardAdminRead("orders:read");
+  if (!gate.ok) return gate.response;
 
   const supabase = createServiceRoleClient();
   if (!supabase) return serviceUnavailable();

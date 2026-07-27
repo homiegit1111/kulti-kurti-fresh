@@ -1,16 +1,31 @@
-import { permanentRedirect } from "next/navigation";
+import type { Metadata } from "next";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
+import { WishlistClient } from "./wishlist-client";
+
+export const metadata: Metadata = {
+  title: "Saved styles",
+  description:
+    "Styles you saved while browsing the line — style code, set rate and per-piece rate in one ruled list. Add sets to your order when you're ready.",
+};
 
 /**
- * /wishlist retires into /tray.
+ * /wishlist — "Saved styles".
  *
- * The old page was half of a split workflow: saved styles here, set counts in
- * the cart drawer, with no single screen showing both. /tray merges them, and
- * TrayProvider migrates the legacy `rangat-pehnawa-wishlist` localStorage key on
- * first read — so a buyer's saved list survives the move without a prompt.
- *
- * permanentRedirect (308) rather than redirect (307): the route is gone for
- * good, and bookmarks/search engines should update rather than keep asking.
+ * Reinstated as a real page (it was briefly a 308 into /tray): the PDP's Save
+ * control still writes wishlist-context (localStorage + server sync for
+ * signed-in buyers), and the wishlist-nudge emails link here — so this page is
+ * where those saves surface. Adding sets hands the style to the tray via the
+ * existing commit contract; nothing here touches cart, pricing or checkout.
  */
 export default function WishlistPage() {
-  permanentRedirect("/tray");
+  return (
+    <>
+      <Navbar />
+      <main>
+        <WishlistClient />
+      </main>
+      <Footer />
+    </>
+  );
 }

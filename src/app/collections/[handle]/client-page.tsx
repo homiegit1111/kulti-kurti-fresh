@@ -1,302 +1,334 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+/**
+ * Collection detail — an orderable chapter of the line book.
+ *
+ * Data arrives entirely as server props (the route fetched once for JSON-LD
+ * and the page alike). No client refetch, no mock flash: empty means empty.
+ *
+ * Body is instrument-register: LedgerHead + tray-wired StyleRows, with two
+ * plates interleaved per the entry grammar. A prev/next chapter folio footer
+ * closes the document. Zero entrance animation (style-row law).
+ */
+
+import { Fragment, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, MessageCircle } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
-import {
-  MOCK_COLLECTIONS,
-  MOCK_PRODUCTS,
-  getCollections,
-  getProductsByCollection,
-  type MockProduct,
-} from "@/lib/commerce/catalog";
-import { useWishlist } from "@/lib/wishlist-context";
-import { LivingProductCard } from "@/components/ui/living-product-card";
+import { TermsRule } from "@/components/document/terms-rule";
+import { LedgerHead, StyleRow } from "@/components/line/style-row";
+import { markTradeBuyer } from "@/lib/line/density";
+import { toStyleLine, type StyleLine } from "@/lib/line/contract";
+import { useTray } from "@/lib/line/tray-context";
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
+import {
+  formatPrice,
+  type CommerceCollection,
+  type MockProduct,
+} from "@/lib/commerce/catalog";
 
-type Collection = (typeof MOCK_COLLECTIONS)[number];
+export interface ChapterSpec {
+  styleCount: number;
+  perPieceMin: number;
+  perPieceMax: number;
+  colors: string[];
+}
 
-const EASE = [0.16, 1, 0.3, 1] as const;
-
-const pad = (n: number) => String(n).padStart(2, "0");
-
-const CollectionHero = ({
-  collection,
-  handle,
-}: {
-  collection: Collection;
+interface ChapterLink {
   handle: string;
-}) => {
-  const reduceMotion = useReducedMotion();
-  const chapter =
-    MOCK_COLLECTIONS.findIndex((c) => c.handle === handle) + 1 || 1;
+  title: string;
+}
 
+/** Plate + caption in the fixed R3 grammar: code / title / pack / rate. */
+function ChapterPlate({ line }: { line: StyleLine }) {
+  const { product } = line;
   return (
-    <section className="relative overflow-hidden bg-surface-inverse px-4 pb-14 pt-28 text-content-inverse sm:px-6 lg:px-10 lg:pb-20 lg:pt-40">
-      {/* giant faded chapter numeral — editorial backdrop device */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-6 bottom-0 select-none text-[38vw] font-black leading-[0.75] text-content-inverse/5 lg:text-[24vw]"
+    <div className="grid gap-x-6 gap-y-4 border-b border-line/20 py-8 lg:grid-cols-12">
+      <Link
+        href={`/shop/${product.handle}`}
+        className="block lg:col-span-5"
+        tabIndex={-1}
+        aria-hidden
       >
-        {pad(chapter)}
-      </div>
-
-      <div className="relative mx-auto grid max-w-[1600px] items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* Typography */}
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, ease: EASE }}
-        >
-          <Link
-            href="/collections"
-            className="group mb-7 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-content-inverse/50 transition-colors hover:text-accent-lime"
-          >
-            <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-            All chapters
-          </Link>
-          <p className="eyebrow text-accent-lime">
-            Chapter {pad(chapter)} / Collection
+        <div className="plate-frame relative aspect-[4/5] overflow-hidden bg-surface-hover">
+          <Image
+            src={product.image}
+            alt={product.title}
+            fill
+            sizes="(max-width: 1024px) 100vw, 480px"
+            className="object-cover"
+          />
+        </div>
+      </Link>
+      <div className="ledger lg:col-span-3">
+        <p className="font-mono text-[11px] tracking-[0.08em] text-content/70">
+          {line.code}
+        </p>
+        <Link href={`/shop/${product.handle}`} className="group/title block">
+          <p className="mt-2 text-sm font-bold leading-tight tracking-[-0.02em] group-hover/title:underline sm:text-base">
+            {product.title}
           </p>
-          <h1 className="mt-5 max-w-[13ch] text-[clamp(3rem,9vw,8rem)] font-black uppercase leading-[0.82] tracking-[-0.075em]">
-            {collection.title}
-          </h1>
-          <p className="mt-7 max-w-[42ch] border-l-2 border-accent-lime pl-5 text-sm leading-6 text-content-inverse/65">
-            {collection.description}
-          </p>
-
-          {/* trade terms strip — cream micro-labels with lime ticks */}
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-[0.22em] text-content-inverse/45">
-            {[
-              `MOQ ${B2B_CONFIG.minimumOrderSets} sets`,
-              `${SIZE_RATIO_LABEL} ratio packs`,
-              "WhatsApp ordering",
-            ].map((spec) => (
-              <span key={spec} className="flex items-center gap-2">
-                <span className="h-1 w-1 bg-accent-lime" aria-hidden="true" />
-                {spec}
-              </span>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Hero image with lime corner chip */}
-        <motion.div
-          initial={reduceMotion ? false : { opacity: 0, scale: 1.035 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.48, ease: EASE }}
-          className="relative"
-        >
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-content-inverse/10 lg:aspect-[3/4]">
-            <Image
-              src={collection.image}
-              alt={collection.title}
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 1024px) 100vw, 45vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" />
-            <span className="absolute left-0 top-0 bg-accent-lime px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-on-accent">
-              {collection.handle}
-            </span>
-            <span className="absolute right-4 top-4 border border-white/40 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white">
-              Chapter {pad(chapter)}
-            </span>
-          </div>
-        </motion.div>
+        </Link>
+        <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.18em] text-content/55">
+          set of {B2B_CONFIG.setSize} · {SIZE_RATIO_LABEL}
+        </p>
+        <p className="mt-2 text-sm font-black tabular-nums tracking-[-0.02em]">
+          {formatPrice(line.setPrice)}
+          <span className="ml-1 text-[8px] font-bold uppercase tracking-[0.14em] text-content/45">
+            set
+          </span>
+          <span className="mx-1.5 text-content/40">·</span>
+          {formatPrice(line.perPiece)}
+          <span className="ml-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-content/45">
+            /pc
+          </span>
+        </p>
       </div>
-    </section>
+    </div>
   );
-};
+}
 
 export default function CollectionDetailClient({
-  params,
+  collection,
+  products,
+  chapterIndex,
+  spec,
+  prevChapter,
+  nextChapter,
 }: {
-  params: Promise<{ handle: string }>;
+  collection: CommerceCollection;
+  products: MockProduct[];
+  chapterIndex: number;
+  spec: ChapterSpec;
+  prevChapter: ChapterLink | null;
+  nextChapter: ChapterLink | null;
 }) {
-  const { handle } = use(params);
-  const [collection, setCollection] = useState<
-    (typeof MOCK_COLLECTIONS)[number] | undefined
-  >(MOCK_COLLECTIONS.find((c) => c.handle === handle));
-  const [products, setProducts] = useState<MockProduct[]>(MOCK_PRODUCTS);
-  const { isWishlisted, toggleWishlist } = useWishlist();
-  const reduceMotion = useReducedMotion();
+  const tray = useTray();
+  const letter = String.fromCharCode(65 + (chapterIndex % 26));
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async () => {
-      const allCollections = await getCollections();
-      const found = allCollections.find((c) => c.handle === handle);
-      if (mounted && found) {
-        setCollection(found);
-        const prods = await getProductsByCollection(found.id);
-        if (mounted) setProducts(prods);
-      }
-    };
-    void load();
-    return () => {
-      mounted = false;
-    };
-  }, [handle]);
+  // Rows carry live tray state — a committed style shows its set count with
+  // no row-owned state (line-client pattern).
+  const lines = useMemo(
+    () =>
+      products.map((product) => {
+        const entry = tray.lines.find((l) => l.product.id === product.id);
+        return toStyleLine(
+          product,
+          entry?.sets ?? 0,
+          tray.isComparing(product.id),
+        );
+      }),
+    [products, tray],
+  );
 
-  if (!collection) {
-    return (
-      <>
-        <Navbar />
-        <main className="flex flex-1 flex-col items-center justify-center bg-surface px-6 pt-32 text-center text-content lg:px-10">
-          <p className="eyebrow eyebrow--bare text-accent-red">404 / Not found</p>
-          <h1 className="mt-4 text-5xl font-black uppercase leading-[0.85] tracking-[-0.06em] sm:text-7xl">
-            Collection not found.
-          </h1>
-          <p className="mt-5 max-w-sm text-sm leading-6 text-content/60">
-            The collection you are looking for does not exist.
-          </p>
-          <Link href="/shop" className="btn-luxe mt-10">
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to shop
-          </Link>
-        </main>
-        <Footer />
-      </>
-    );
-  }
+  const actions = useMemo(
+    () => ({
+      onCommit: (line: StyleLine) => {
+        tray.commit(line.product);
+        markTradeBuyer();
+      },
+      onSetsChange: (line: StyleLine, sets: number) =>
+        tray.setSets(line.product.id, sets),
+      onDemote: (line: StyleLine) => tray.demote(line.product.id),
+      onToggleShortlist: (line: StyleLine) =>
+        tray.toggleShortlist(line.product),
+      onToggleCompare: (line: StyleLine) => tray.toggleCompare(line.product),
+    }),
+    [tray],
+  );
+
+  // Two plates interleaved through the ledger (entry grammar).
+  const plateA = lines.length >= 2 ? lines[0] : null;
+  const plateAfterA = Math.min(3, lines.length - 1);
+  const plateB = lines.length >= 8 ? lines[Math.floor(lines.length / 2)] : null;
+  const plateAfterB = Math.min(9, lines.length - 1);
 
   return (
-    <>
-      <Navbar />
-      <main className="flex-1 bg-surface text-content">
-        <CollectionHero collection={collection} handle={handle} />
-
-        {/* ── The rail — curated product grid ─────────────────────────── */}
-        <div className="bg-surface px-4 pb-20 pt-14 sm:px-6 lg:px-10 lg:pb-24 lg:pt-20">
-          <div className="mx-auto max-w-[1600px]">
-            {/* rail head — section-scale, not a throwaway count line */}
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.65, ease: EASE }}
-              className="mb-10 border-b-2 border-line pb-5"
-            >
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <p className="eyebrow">The rail / Curated styles</p>
-                  <h2 className="mt-3 max-w-[14ch] text-4xl font-black uppercase leading-[0.85] tracking-[-0.05em] sm:text-6xl">
-                    Inside this chapter.
-                  </h2>
-                </div>
-                <div className="flex items-center gap-6 md:pb-1">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-content/45 lg:text-[10px]">
-                    {products.length} piece{products.length !== 1 ? "s" : ""} on
-                    the rail
-                  </p>
-                  <Link
-                    href="/shop"
-                    className="text-[9px] font-bold uppercase tracking-[0.2em] text-content underline decoration-accent-red decoration-2 underline-offset-4"
-                  >
-                    All inventory
-                  </Link>
-                </div>
-              </div>
-              <p className="mt-4 max-w-[52ch] text-sm leading-6 text-content/55">
-                Every style ships as a {SIZE_RATIO_LABEL} ratio set — mix
-                chapters to reach MOQ and keep the rack varied.
-              </p>
-            </motion.div>
-
-            <motion.div
-              layout
-              className="grid grid-cols-2 gap-3 pb-8 sm:gap-4 lg:grid-cols-4 lg:gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {products.map((product, idx) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-60px" }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{
-                      duration: 0.6,
-                      ease: EASE,
-                      delay: (idx % 8) * 0.05,
-                    }}
-                    className="w-full"
-                  >
-                    <LivingProductCard
-                      product={product}
-                      isWishlisted={isWishlisted(product.id)}
-                      onToggleWishlist={() => toggleWishlist(product)}
-                      heightClass="aspect-[3/4] h-auto"
-                    />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* ── Chapter CTA band ────────────────────────────────────────── */}
-        <section className="relative overflow-hidden bg-accent-red px-4 py-12 text-white sm:px-6 lg:px-10 lg:py-16">
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-8 -top-12 select-none text-[28vw] font-black uppercase leading-none text-black/8"
+    <section className="bg-surface px-5 pb-24 pt-28 text-content sm:px-10 lg:px-16 lg:pt-36">
+      <div className="mx-auto max-w-[1400px]">
+        {/* Text block with the folio rail at lg+ (R2). */}
+        <div className="relative lg:ml-[72px] lg:border-l lg:border-line/25 lg:pl-6">
+          <Link
+            href="/collections"
+            className="text-[10px] font-extrabold uppercase tracking-[0.22em] text-content/55 hover:text-content"
           >
-            {collection.title.trim().charAt(0).toUpperCase() || "R"}
-          </div>
-          <div className="relative mx-auto grid max-w-[1600px] gap-8 lg:grid-cols-12 lg:items-end">
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.65, ease: EASE }}
-              className="lg:col-span-8"
-            >
-              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/60">
-                Chapter to checkout
+            ← All collections
+          </Link>
+
+          {/* Folio head — entry anatomy with the chapter letter in the rail. */}
+          <header className="entry-rule relative mt-6">
+            <span className="hidden text-[10px] font-extrabold uppercase tracking-[0.22em] lg:absolute lg:-left-[72px] lg:top-5 lg:block lg:w-[72px]">
+              {letter}
+            </span>
+            <p className="pt-5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-content/55">
+              Collection {letter} · wholesale kurti sets
+            </p>
+            <h1 className="mt-3 max-w-[16ch] text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+              {collection.title}
+            </h1>
+            {/* Standfirst — a larger line than the note, so an owner who fills
+                both gets a hierarchy rather than two identical paragraphs. */}
+            {collection.subtitle && (
+              <p className="mt-4 max-w-[46ch] font-editorial text-[clamp(1rem,1.6vw,1.25rem)] font-light italic leading-[1.4] text-content/80">
+                {collection.subtitle}
               </p>
-              <h2 className="mt-4 max-w-[13ch] text-[clamp(2.8rem,7vw,7rem)] font-black uppercase leading-[0.78] tracking-[-0.075em]">
-                Rack this chapter.
-              </h2>
-            </motion.div>
-            <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.65, delay: 0.1, ease: EASE }}
-              className="lg:col-span-4"
-            >
-              <p className="max-w-md text-sm leading-7 text-white/70">
-                Add sets straight from the rail, or send the chapter to the
-                bulk desk for mixed-style pricing and dispatch timelines.
+            )}
+            {collection.description && (
+              <p className="mt-4 max-w-[52ch] text-sm leading-[21px] text-content/70">
+                {collection.description}
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-                <Link
-                  href="/bulk-order"
-                  className="linebook-button border-white bg-white text-on-accent hover:bg-accent-lime"
+            )}
+            {/* Long copy. Blank lines in the editor become paragraphs; the text is
+                rendered as React children, never as HTML. */}
+            {collection.body &&
+              collection.body.split(/\n{2,}/).map((para, i) => (
+                <p
+                  key={i}
+                  className="mt-4 max-w-[58ch] text-sm leading-[22px] text-content/65"
                 >
-                  Open bulk desk <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+                  {para}
+                </p>
+              ))}
+
+            {/* Chapter spec — computed server-side from the live products. */}
+            <dl className="ledger mt-8 grid grid-cols-2 gap-x-8 gap-y-4 border-t border-line/25 pt-4 sm:grid-cols-3">
+              <div>
+                <dt className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                  Styles
+                </dt>
+                <dd className="mt-1 text-sm font-black tabular-nums">
+                  {spec.styleCount}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                  Per pc
+                </dt>
+                <dd className="mt-1 text-sm font-black tabular-nums">
+                  {spec.styleCount > 0
+                    ? spec.perPieceMin === spec.perPieceMax
+                      ? formatPrice(spec.perPieceMin)
+                      : `${formatPrice(spec.perPieceMin)}–${formatPrice(spec.perPieceMax)}`
+                    : "—"}
+                </dd>
+              </div>
+              {spec.colors.length > 0 && (
+                <div className="col-span-2 sm:col-span-1">
+                  <dt className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                    Colours
+                  </dt>
+                  <dd className="mt-1.5 flex flex-wrap gap-1.5">
+                    {spec.colors.map((color) => (
+                      <span
+                        key={color}
+                        className="border border-content/35 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em]"
+                      >
+                        {color}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <TermsRule className="mt-6" />
+          </header>
+
+          {/* Chapter body — the orderable ledger. */}
+          <div className="mt-8">
+            {lines.length > 0 ? (
+              <>
+                <LedgerHead />
+                {lines.map((line, index) => (
+                  <Fragment key={line.product.id}>
+                    <StyleRow
+                      line={line}
+                      shortlisted={tray.isShortlisted(line.product.id)}
+                      {...actions}
+                    />
+                    {plateA && index === plateAfterA && (
+                      <ChapterPlate line={plateA} />
+                    )}
+                    {plateB && index === plateAfterB && (
+                      <ChapterPlate line={plateB} />
+                    )}
+                  </Fragment>
+                ))}
+              </>
+            ) : (
+              /* Honest empty chapter — never mock rows. */
+              <div className="max-w-xl">
+                <p className="border-b border-line/20 py-3 text-sm leading-6 text-content/70">
+                  Collection updating — WhatsApp for today&apos;s price list.
+                </p>
                 <a
                   href={buildCatalogRequestUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="linebook-button border-white/50 text-white hover:border-white"
+                  className="mt-6 inline-flex h-11 items-center border border-content px-6 text-[10px] font-extrabold uppercase tracking-[0.2em] transition-colors hover:bg-surface-inverse hover:text-content-inverse"
                 >
-                  WhatsApp catalogue <MessageCircle className="h-3.5 w-3.5" />
+                  WhatsApp catalog
                 </a>
               </div>
-            </motion.div>
+            )}
           </div>
-        </section>
-      </main>
-      <Footer />
-    </>
+
+          {/* Prev / next chapter folio footer. */}
+          <nav
+            aria-label="Collections"
+            className="mt-16 grid grid-cols-2 gap-4 border-t border-line/25 pt-6"
+          >
+            <div>
+              {prevChapter ? (
+                <Link
+                  href={`/collections/${prevChapter.handle}`}
+                  className="group block"
+                >
+                  <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                    Previous collection
+                  </span>
+                  <span className="mt-1 block text-sm font-bold tracking-[-0.02em] group-hover:underline">
+                    ← {prevChapter.title}
+                  </span>
+                </Link>
+              ) : (
+                <Link href="/collections" className="group block">
+                  <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                    Index
+                  </span>
+                  <span className="mt-1 block text-sm font-bold tracking-[-0.02em] group-hover:underline">
+                    ← All collections
+                  </span>
+                </Link>
+              )}
+            </div>
+            <div className="text-right">
+              {nextChapter ? (
+                <Link
+                  href={`/collections/${nextChapter.handle}`}
+                  className="group block"
+                >
+                  <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                    Next collection
+                  </span>
+                  <span className="mt-1 block text-sm font-bold tracking-[-0.02em] group-hover:underline">
+                    {nextChapter.title} →
+                  </span>
+                </Link>
+              ) : (
+                <Link href="/shop" className="group block">
+                  <span className="text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                    The line
+                  </span>
+                  <span className="mt-1 block text-sm font-bold tracking-[-0.02em] group-hover:underline">
+                    Open the full line →
+                  </span>
+                </Link>
+              )}
+            </div>
+          </nav>
+        </div>
+      </div>
+    </section>
   );
 }

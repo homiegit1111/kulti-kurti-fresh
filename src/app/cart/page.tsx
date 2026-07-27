@@ -1,12 +1,31 @@
 "use client";
 
+/**
+ * §7.1 — the wholesale cart as a ruled order document. No entrance animation
+ * (§1.6), no ghost letters, no percent meter: SetBlocks is the site's one MOQ
+ * gauge and the PO pane renders the exact WhatsApp order (secondary mount).
+ */
+
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, CreditCard, MessageCircle, Minus, Plus, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CreditCard,
+  MessageCircle,
+  Minus,
+  Plus,
+  X,
+} from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { TermsRule } from "@/components/document/terms-rule";
+import { POPane } from "@/components/document/po-pane";
+import { SetBlocks } from "@/components/b2b/set-blocks";
 import { useCart } from "@/lib/cart-context";
+import { useTray } from "@/lib/line/tray-context";
+import { useTrayHandoff } from "@/lib/line/tray-handoff";
 import { formatPrice, COLOR_MAP } from "@/lib/commerce/catalog";
 import { B2B_CONFIG, GST_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
 import {
@@ -18,16 +37,37 @@ import {
 import { validateCartMOQ } from "@/lib/b2b/validation";
 import { buildWholesaleWhatsAppUrl } from "@/lib/b2b/whatsapp";
 import { getStyleCode } from "@/lib/b2b/style-code";
-import { MoqProgress } from "@/components/b2b/moq-progress";
 import {
   trackBeginWhatsappOrder,
   trackMoqBlockedCheckout,
 } from "@/lib/analytics";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
+import { useWholesaleBuyer } from "../bulk-order/use-wholesale-buyer";
 
 export default function CartPage() {
-  const { items, itemCount, removeItem, updateQuantity, clearCart } = useCart();
+  const {
+    items,
+    itemCount,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    hydrated: cartHydrated,
+  } = useCart();
+  const buyer = useWholesaleBuyer();
+
+  /**
+   * The cart page must show the order the buyer built while browsing (the
+   * tray), not a mysteriously empty sheet. Reconcile tray → cart once, after
+   * both stores hydrate; the handoff is raise-only and idempotent, and running
+   * it once (not per items change) keeps it from fighting reductions made here.
+   */
+  const { hydrated: trayHydrated } = useTray();
+  const loadTrayOrder = useTrayHandoff();
+  const loadedTrayOrder = useRef(false);
+  useEffect(() => {
+    if (!cartHydrated || !trayHydrated || loadedTrayOrder.current) return;
+    loadedTrayOrder.current = true;
+    loadTrayOrder();
+  }, [cartHydrated, trayHydrated, loadTrayOrder]);
   const totals = calculateWholesaleTotals(items);
   const gst = calculateGstBreakdown(items, totals.totalSets);
   const moq = validateCartMOQ(items);
@@ -47,72 +87,57 @@ export default function CartPage() {
       value: totals.subtotal,
       discount_percent: totals.discountPercent,
     });
-    window.location.assign(buildWholesaleWhatsAppUrl(items));
+    window.location.assign(buildWholesaleWhatsAppUrl(items, buyer));
   };
 
   return (
     <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
       <Navbar />
 
-      <main className="relative z-10 flex-1 px-4 pb-24 pt-28 sm:px-6 lg:px-10 lg:pt-36">
-        <div className="mx-auto max-w-[1600px]">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: EASE }}
-            className="mb-12 flex flex-wrap items-end justify-between gap-6 border-b-2 border-line pb-6 md:mb-16"
-          >
+      <main className="relative z-10 flex-1 pb-24 pt-24 lg:pt-28">
+        <div className="mx-auto w-full max-w-[1400px] px-5 sm:px-10 lg:px-16">
+          <header className="flex flex-wrap items-end justify-between gap-6 border-b-2 border-line pb-6">
             <div>
-              <p className="eyebrow text-accent-red">Wholesale order builder</p>
-              <h1 className="mt-4 text-6xl font-black uppercase leading-[0.82] tracking-[-0.065em] sm:text-7xl lg:text-8xl">
-                Your order
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-content/55">
+                Wholesale cart
+              </p>
+              <h1 className="mt-4 text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+                Your wholesale order
               </h1>
             </div>
             {items.length > 0 && (
-              <p className="pb-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-content/45">
-                {itemCount} sets / {totals.totalPieces} pcs
+              <p className="ledger pb-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-content/55">
+                {itemCount} sets · {totals.totalPieces} pcs
               </p>
             )}
-          </motion.div>
+          </header>
 
           {items.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE }}
-              className="relative mx-auto flex max-w-2xl flex-col items-center justify-center overflow-hidden border border-line/20 bg-surface-2 px-6 py-20 text-center"
-            >
-              <p className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none text-[30vw] font-black uppercase leading-none tracking-[-0.08em] text-content/[0.04] sm:text-[16rem]">
-                Cart
-              </p>
-              <p className="eyebrow eyebrow--bare relative text-accent-red">
+            <div className="mx-auto mt-12 max-w-2xl border border-line/25 px-6 py-16 text-center">
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-content/55">
                 Wholesale cart
               </p>
-              <h2 className="relative mt-4 max-w-[14ch] text-4xl font-black uppercase leading-[0.85] tracking-[-0.05em] sm:text-5xl">
+              <h2 className="mx-auto mt-4 max-w-[18ch] text-3xl font-black uppercase leading-[0.95] tracking-[-0.03em]">
                 Start with {B2B_CONFIG.minimumOrderSets} wholesale sets.
               </h2>
-              <p className="relative mt-5 max-w-sm text-sm leading-6 text-content/60">
-                Build a reseller-ready order in size-ratio packs. 1 set has{" "}
-                {B2B_CONFIG.setSize} pcs in {SIZE_RATIO_LABEL}.
+              <p className="mx-auto mt-5 max-w-sm text-sm leading-6 text-content/60">
+                1 set has {B2B_CONFIG.setSize} pcs in {SIZE_RATIO_LABEL}. Mix
+                any styles to reach {B2B_CONFIG.minimumOrderSets} sets.
               </p>
-              <Link href="/shop" className="btn-luxe group relative mt-10">
-                <span>Explore wholesale catalog</span>
-                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              <Link href="/shop" className="btn-luxe group mt-8 inline-flex">
+                <span>Browse styles</span>
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
-            </motion.div>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
+            <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
               <div className="flex flex-col lg:col-span-7 xl:col-span-8">
-                <AnimatePresence mode="popLayout">
-                  {items.map((item) => (
-                    <motion.div
+                {items.map((item) => {
+                  const dotColor = COLOR_MAP[item.color];
+                  return (
+                    <div
                       key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.97 }}
-                      transition={{ duration: 0.4, ease: EASE }}
-                      className="group relative flex gap-5 border-b border-line/20 py-7 md:gap-8"
+                      className="relative flex gap-5 border-b border-line/20 py-7 md:gap-8"
                     >
                       <Link
                         href={`/shop/${item.handle}`}
@@ -122,7 +147,7 @@ export default function CartPage() {
                           src={item.image}
                           alt={item.title}
                           fill
-                          className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
+                          className="object-cover"
                           sizes="130px"
                         />
                       </Link>
@@ -130,11 +155,11 @@ export default function CartPage() {
                       <div className="flex flex-1 flex-col justify-between py-1">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-accent-red">
+                            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-content/55">
                               {getStyleCode(item)}
                             </p>
                             <Link href={`/shop/${item.handle}`}>
-                              <h3 className="text-xl font-black uppercase leading-[0.95] tracking-[-0.03em] line-clamp-2 md:text-2xl">
+                              <h3 className="line-clamp-2 text-xl font-black uppercase leading-[0.95] tracking-[-0.03em] underline-offset-2 hover:underline md:text-2xl">
                                 {item.title}
                               </h3>
                             </Link>
@@ -148,13 +173,12 @@ export default function CartPage() {
                               </p>
 
                               <div className="flex items-center gap-2">
-                                <span
-                                  className="h-2.5 w-2.5 rounded-full border border-line/20"
-                                  style={{
-                                    backgroundColor:
-                                      COLOR_MAP[item.color] ?? "#ccc",
-                                  }}
-                                />
+                                {dotColor && (
+                                  <span
+                                    className="h-2.5 w-2.5 border border-line/20"
+                                    style={{ backgroundColor: dotColor }}
+                                  />
+                                )}
                                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/45">
                                   {item.color} style
                                 </span>
@@ -184,7 +208,7 @@ export default function CartPage() {
                               >
                                 <Minus className="h-3 w-3" strokeWidth={1.5} />
                               </button>
-                              <span className="w-10 border-x border-line/25 text-center text-xs font-bold leading-9 tabular-nums">
+                              <span className="ledger w-10 border-x border-line/25 text-center text-xs font-bold leading-9">
                                 {item.quantity}
                               </span>
                               <button
@@ -198,13 +222,13 @@ export default function CartPage() {
                               </button>
                             </div>
                             <p className="mt-2 text-[10px] uppercase tracking-[0.16em] text-content/40">
-                              Sets / {item.quantity * B2B_CONFIG.setSize} pcs
+                              Sets · {item.quantity * B2B_CONFIG.setSize} pcs
                             </p>
                           </div>
 
-                          <div className="text-right">
+                          <div className="ledger text-right">
                             <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-content/45">
-                              {formatPrice(item.salePrice ?? item.price)}/set -{" "}
+                              {formatPrice(item.salePrice ?? item.price)}/set ·{" "}
                               {formatPrice(
                                 getPerPiecePrice(item.salePrice ?? item.price),
                               )}
@@ -216,21 +240,21 @@ export default function CartPage() {
                           </div>
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                    </div>
+                  );
+                })}
 
                 <div className="mt-10 flex items-center justify-between">
                   <Link
                     href="/shop"
                     className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-content/60 transition-colors hover:text-content"
                   >
-                    <ArrowLeft className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-1" />
+                    <ArrowLeft className="h-3 w-3" />
                     <span className="link-luxe">Add more styles</span>
                   </Link>
                   <button
                     onClick={clearCart}
-                    className="border border-line/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-red/70 transition-colors hover:border-accent-red hover:text-accent-red focus-visible:outline-none focus-visible:border-accent-red"
+                    className="border border-line/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-accent-red/70 transition-colors hover:border-accent-red hover:text-accent-red focus-visible:border-accent-red focus-visible:outline-none"
                   >
                     Clear cart
                   </button>
@@ -238,101 +262,87 @@ export default function CartPage() {
               </div>
 
               <div className="relative mt-8 lg:col-span-5 lg:mt-0 xl:col-span-4">
-                <div className="sticky top-32 z-20">
-                  <div className="relative bg-surface-inverse px-7 py-9 text-content-inverse md:px-8 md:py-10">
-                    <div className="relative z-10">
-                      <div className="mb-8 flex items-baseline justify-between gap-4">
-                        <h3 className="text-3xl font-black uppercase leading-[0.85] tracking-[-0.05em]">
-                          Order summary
-                        </h3>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/45">
-                          {totals.totalSets} / {totals.totalPieces} pcs
-                        </span>
-                      </div>
+                <div className="lg:sticky lg:top-24">
+                  <div className="border border-line/25 bg-surface px-6 py-8 md:px-7">
+                    <div className="mb-6 flex items-baseline justify-between gap-4 border-b-2 border-line pb-4">
+                      <h2 className="text-[10px] font-extrabold uppercase tracking-[0.22em]">
+                        Order summary
+                      </h2>
+                      <span className="ledger text-[10px] font-extrabold uppercase tracking-[0.2em] text-content/55">
+                        {totals.totalSets} sets · {totals.totalPieces} pcs
+                      </span>
+                    </div>
 
-                      <div className="mb-8">
-                        <MoqProgress totals={totals} tone="dark" />
-                      </div>
+                    <div className="mb-6">
+                      <SetBlocks size="md" />
+                    </div>
 
-                      {/* Money ladder: subtotal → GST → grand total (flat pricing) */}
-                      <div className="mb-6 space-y-3.5 border-t border-content-inverse/25 pt-6">
-                        <LadderRow
-                          label="Subtotal"
-                          value={formatPrice(totals.subtotal)}
-                        />
-                        <LadderRow
-                          label={`GST ${gst.gstRateLabel}${gst.isMixed ? " (mixed)" : ""}`}
-                          value={formatPrice(gst.gstAmount)}
-                        />
-                      </div>
+                    {/* Money ladder: subtotal → GST → est. invoice total. */}
+                    <div className="ledger mb-6 space-y-3.5 border-t border-line/25 pt-5">
+                      <LadderRow
+                        label="Subtotal"
+                        value={formatPrice(totals.subtotal)}
+                      />
+                      <LadderRow
+                        label={`GST ${gst.gstRateLabel}${gst.isMixed ? " (mixed)" : ""}`}
+                        value={formatPrice(gst.gstAmount)}
+                      />
+                    </div>
 
-                      {/* Labeled as an estimate: the online charge is the
-                          ex-GST subtotal (see checkout); GST lands on the
-                          dispatch invoice per GST_CONFIG.note below. */}
-                      <div className="mb-6 flex items-end justify-between border-t-2 border-accent-lime/70 pt-5">
-                        <span className="pb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-content-inverse/70">
-                          Est. invoice total
-                        </span>
-                        <span className="text-4xl font-black tracking-[-0.03em]">
-                          {formatPrice(gst.grandTotal)}
-                        </span>
-                      </div>
+                    {/* Labeled as an estimate: the online charge is the ex-GST
+                        subtotal (see checkout); GST lands on the dispatch
+                        invoice per GST_CONFIG.note below. */}
+                    <div className="ledger mb-6 flex items-end justify-between border-t-2 border-line pt-4">
+                      <span className="pb-1 text-[10px] font-extrabold uppercase tracking-[0.22em] text-content/70">
+                        Est. invoice total
+                      </span>
+                      <span className="text-3xl font-black tracking-[-0.03em]">
+                        {formatPrice(gst.grandTotal)}
+                      </span>
+                    </div>
 
-                      <button
-                        onClick={beginWhatsappOrder}
-                        className="group mb-6 flex min-h-14 w-full items-center justify-center gap-3 bg-accent-lime px-4 py-4 text-[10px] font-bold uppercase tracking-[0.22em] text-on-accent transition-colors duration-300 hover:bg-surface-2 hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime/70"
-                      >
-                        <span>{moq.ok ? "Send WhatsApp order" : "MOQ pending"}</span>
-                        <MessageCircle className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-                      </button>
+                    <button
+                      onClick={beginWhatsappOrder}
+                      disabled={!moq.ok}
+                      className="group mb-4 flex min-h-14 w-full items-center justify-center gap-3 bg-accent-lime px-4 py-4 text-[10px] font-bold uppercase tracking-[0.22em] text-on-accent transition-colors duration-300 hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime/70 disabled:cursor-not-allowed disabled:bg-surface-hover disabled:text-content/55"
+                    >
+                      <span>
+                        {moq.ok
+                          ? "Send order on WhatsApp"
+                          : `${moq.remainingSets} more ${
+                              moq.remainingSets === 1 ? "set" : "sets"
+                            } to minimum`}
+                      </span>
+                      <MessageCircle className="h-3.5 w-3.5" />
+                    </button>
 
-                      <p className="text-center text-[9px] uppercase leading-relaxed tracking-[0.2em] text-content-inverse/40">
-                        {GST_CONFIG.note}
-                      </p>
+                    <p className="text-center text-[9px] uppercase leading-relaxed tracking-[0.16em] text-content/45">
+                      {GST_CONFIG.note}
+                    </p>
 
-                      <div className="mt-4 grid gap-3">
-                        {moq.ok ? (
-                          <Link
-                            href="/checkout"
-                            className="flex min-h-12 items-center justify-center gap-3 border border-content-inverse/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse transition-colors hover:bg-surface-2 hover:text-content"
-                          >
-                            Razorpay checkout <CreditCard className="h-3.5 w-3.5" />
-                          </Link>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled
-                            className="flex min-h-12 items-center justify-center gap-3 border border-content-inverse/10 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/35"
-                          >
-                            Razorpay unlocks at MOQ
-                          </button>
-                        )}
+                    <div className="mt-4 grid gap-3">
+                      {moq.ok && (
                         <Link
-                          href="/bulk-order"
-                          className="flex min-h-12 items-center justify-center gap-3 border border-content-inverse/15 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/70 transition-colors hover:bg-surface-2/10"
+                          href="/checkout"
+                          className="flex min-h-12 items-center justify-center gap-3 border border-line/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content transition-colors hover:bg-surface-inverse hover:text-content-inverse"
                         >
-                          Open bulk linesheet <ArrowRight className="h-3.5 w-3.5" />
+                          Razorpay checkout <CreditCard className="h-3.5 w-3.5" />
                         </Link>
-                      </div>
+                      )}
+                      <Link
+                        href="/bulk-order"
+                        className="flex min-h-12 items-center justify-center gap-3 border border-line/25 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-content/70 transition-colors hover:text-content"
+                      >
+                        Open the bulk desk <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 divide-x divide-line/15 border-x border-b border-line/20 bg-surface-2 text-center">
-                    {[
-                      ["MOQ", "4 Sets"],
-                      ["GST", "Invoice"],
-                      ["Dispatch", "All India"],
-                    ].map(([key, value]) => (
-                      <div key={key} className="px-2 py-4">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-content">
-                          {key}
-                        </p>
-                        <p className="mt-1 text-[9px] uppercase tracking-[0.14em] text-content/45">
-                          {value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
+                  <TermsRule className="mt-4 border-x border-b" />
+
+                  {/* The PO, verbatim — secondary mount (§7.1). */}
+                  <POPane items={items} buyer={buyer} className="mt-8" />
+                  <div className="mt-8 lg:hidden" />
                 </div>
               </div>
             </div>
@@ -344,25 +354,13 @@ export default function CartPage() {
   );
 }
 
-function LadderRow({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function LadderRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/55">
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/55">
         {label}
       </span>
-      <span
-        className={`text-right text-base font-bold tabular-nums tracking-[-0.01em] ${
-          accent ? "text-accent-lime" : "text-content-inverse"
-        }`}
-      >
+      <span className="text-right text-base font-bold tracking-[-0.01em] text-content">
         {value}
       </span>
     </div>

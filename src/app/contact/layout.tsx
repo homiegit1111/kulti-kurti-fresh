@@ -1,3 +1,4 @@
+import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -59,7 +60,7 @@ export default function ContactLayout({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(localBusinessLd) }}
       />
       {children}
     </>

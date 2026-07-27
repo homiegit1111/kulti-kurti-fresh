@@ -2,6 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import {
+  allowedOrderTransitions,
+  orderTransitionLabel,
+} from "@/lib/commerce/order-transitions";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -56,14 +60,9 @@ const STATUS_FILTERS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-// Which transitions the UI offers, mirroring the API's ALLOWED_TRANSITIONS.
-const NEXT_STATUSES: Record<string, string[]> = {
-  pending_payment: ["fulfilled", "cancelled", "paid"],
-  paid: ["fulfilled", "cancelled"],
-  fulfilled: ["paid"],
-  draft: ["cancelled"],
-  cancelled: [],
-};
+// Transitions come from @/lib/commerce/order-transitions — the same list the API
+// enforces. This file used to keep its own copy, and the two had drifted: four of
+// the buttons it rendered were rejected with a 409.
 
 function statusTone(status: string): string {
   switch (status) {
@@ -308,7 +307,7 @@ export default function AdminOrdersPage() {
                     </span>
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {(NEXT_STATUSES[selected.status] ?? []).map((s) => (
+                    {allowedOrderTransitions(selected.status).map((s) => (
                       <Button
                         key={s}
                         variant={s === "cancelled" ? "destructive" : "default"}
@@ -317,12 +316,14 @@ export default function AdminOrdersPage() {
                         onClick={() => setStatus(selected, s)}
                       >
                         {updating ? <Loader2 className="animate-spin" /> : null}
-                        Mark {s.replace("_", " ")}
+                        {orderTransitionLabel(s)}
                       </Button>
                     ))}
-                    {(NEXT_STATUSES[selected.status] ?? []).length === 0 && (
+                    {allowedOrderTransitions(selected.status).length === 0 && (
                       <p className="text-sm text-charcoal/40">
-                        No further transitions available.
+                        {selected.status === "payment_review"
+                          ? "A payment could not be matched to this order. Check the payment ledger before changing anything."
+                          : "This order is complete — there is nothing further to change."}
                       </p>
                     )}
                   </div>

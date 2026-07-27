@@ -1,47 +1,44 @@
 "use client";
 
+/**
+ * Loading register (§4): a scan line over a ghost ledger — no animate-pulse,
+ * role tokens only, reduced-motion gated via the `.ledger-scan` keyframes.
+ */
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 
 export default function CartLoading() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
       <Navbar />
-      <main className="flex-1 relative z-10 bg-warm-white pt-28 lg:pt-32 pb-24 min-h-screen">
-        <div className="px-6 lg:px-20">
-          {/* Header Skeleton */}
-          <div className="mb-12 flex flex-col">
-            <div className="w-12 h-[2px] bg-accent-red mb-4 animate-pulse" />
-            <div className="w-64 h-12 md:h-16 bg-charcoal/5 animate-pulse" />
+      <main className="flex-1 pb-24 pt-24 lg:pt-28" aria-busy="true">
+        <div className="mx-auto w-full max-w-[1400px] px-5 sm:px-10 lg:px-16">
+          <div className="border-b-2 border-line pb-6">
+            <div className="h-3 w-40 bg-surface-hover" />
+            <div className="mt-4 h-14 w-full max-w-md bg-surface-hover" />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            {/* Items Skeleton */}
-            <div className="lg:col-span-2">
-              <div className="hidden md:block h-6 w-full bg-charcoal/5 mb-6 animate-pulse" />
-
-              <div className="space-y-6">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex gap-4 border-b border-charcoal/5 pb-6">
-                    <div className="w-20 h-24 bg-charcoal/5 animate-pulse shrink-0" />
-                    <div className="flex-1 flex flex-col gap-2 justify-center">
-                      <div className="w-48 h-5 bg-charcoal/5 animate-pulse" />
-                      <div className="w-24 h-3 bg-charcoal/5 animate-pulse" />
-                      <div className="w-32 h-4 bg-charcoal/5 animate-pulse mt-2" />
-                    </div>
-                  </div>
-                ))}
+          <div className="relative mt-10 overflow-hidden" aria-hidden="true">
+            <div className="ledger-scan pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-content/5 to-transparent" />
+            {Array.from({ length: 4 }, (_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-5 border-b border-line/15 py-7"
+              >
+                <div className="h-24 w-24 shrink-0 bg-surface-hover" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="h-3 w-24 bg-surface-hover" />
+                  <div className="h-5 w-48 bg-surface-hover" />
+                  <div className="mt-2 h-3 w-32 bg-surface-hover" />
+                </div>
+                <div className="h-5 w-24 bg-surface-hover" />
               </div>
-            </div>
-
-            {/* Order Summary Skeleton */}
-            <div className="lg:col-span-1">
-              <div className="bg-charcoal/5 p-8 animate-pulse h-96" />
-            </div>
+            ))}
           </div>
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

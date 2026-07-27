@@ -1,108 +1,125 @@
-import Link from "next/link";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { jsonLdScript } from "@/lib/json-ld";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { StickyMobileB2BCta } from "@/components/b2b/sticky-mobile-b2b-cta";
-import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
-import { getProducts } from "@/lib/commerce/catalog";
-import { HeroCinematic } from "@/components/sections/hero-cinematic";
-import { ManifestoTypography } from "@/components/sections/manifesto-typography";
-import { HorizontalRack } from "@/components/sections/horizontal-rack";
-import { CollectionCollage } from "@/components/sections/collection-collage";
-import { InstagramGallery } from "@/components/sections/instagram-gallery";
-import { Reveal } from "@/components/ui/reveal";
+import {
+  buildCatalogRequestUrl,
+  buildWholesaleWhatsAppMessage,
+} from "@/lib/b2b/whatsapp";
+import type { CartItem } from "@/lib/cart-context";
+import { getCollections, getProducts } from "@/lib/commerce/catalog";
+import type { CommerceProduct } from "@/lib/commerce/types";
+import { seasonLabel } from "@/lib/line/season";
 import { buildProductItemListLd } from "@/lib/seo";
+import { B2B_CONFIG, GST_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
+import { getHomeContent } from "@/lib/content/home";
+import { Cover } from "@/components/sections/cover";
+import { HomeEntries } from "@/components/sections/home-entries";
+
+/** Rows Entry A renders; ItemList JSON-LD positions mirror exactly this slice. */
+const LEDGER_ROWS = 8;
 
 /**
- * HOMEPAGE — third architecture.
+ * The page is re-rendered at most once a minute.
  *
- * The first version stacked branded sections; the second split text and image
- * into columns. Both read as templates. This one is composed like a spread:
- *
- *   1. HERO       — full-bleed collection film, type printed over it,
- *                   masked line reveals, floating product plate.
- *   2. MANIFESTO  — one oversized sentence with the cloth inside it.
- *   3. RACK       — the collection moves sideways as you scroll down.
- *   4. COLLAGE    — three collections as an asymmetric editorial grid.
- *   5. SOCIAL     — the Instagram rail, quiet.
- *   6. CLOSE      — one vermilion field, one ask.
+ * This is required, not tuning. Without it Next prerenders `/` once and serves
+ * that HTML until the next deploy, so an owner editing the cover in Admin Studio
+ * would publish into a void. Sixty seconds is the promise the studio makes after
+ * a publish ("live within a minute"); if you change it, change that copy too.
  */
+export const revalidate = 60;
+
+/** 1-based day of the year — drives Today's Plate (§3.3). */
+function dayOfYear(date: Date): number {
+  const start = Date.UTC(date.getUTCFullYear(), 0, 0);
+  return Math.floor((date.getTime() - start) / 86_400_000);
+}
+
+/** A sample cart line for the Entry D purchase order — real catalog data. */
+function toSampleCartItem(product: CommerceProduct, sets: number): CartItem {
+  return {
+    id: `sample-${product.id}`,
+    productId: product.id,
+    title: product.title,
+    handle: product.handle,
+    image: product.image,
+    price: product.price,
+    salePrice: product.salePrice,
+    size: "Set",
+    color: product.colors[0] ?? "",
+    quantity: sets,
+  };
+}
+
 export default async function HomePage() {
-  const products = await getProducts(12);
-  const heroProduct = products[0] ?? null;
+  const [products, collections] = await Promise.all([
+    getProducts(12),
+    getCollections(),
+  ]);
   const catalogRequestUrl = buildCatalogRequestUrl();
-  const itemListLd = buildProductItemListLd(products, {
+  const season = seasonLabel(new Date());
+
+  // Owner-editable copy and media. Resolved AFTER the catalogue so live counts
+  // can fill the {tokens} in the copy — "Price list · 24 styles live" stays true
+  // without anyone retyping the number.
+  const content = await getHomeContent({
+    season,
+    styleCount: products.length,
+    collectionCount: collections.length,
+    setSize: B2B_CONFIG.setSize,
+    sizeRatio: SIZE_RATIO_LABEL,
+    minSets: B2B_CONFIG.minimumOrderSets,
+    gstLow: GST_CONFIG.lowRate,
+    gstHigh: GST_CONFIG.highRate,
+  });
+
+  // Today's Plate — computed here, outside any render memo, so the pick is
+  // deterministic for the whole request (§3.3).
+  const todayIndex =
+    products.length > 0 ? dayOfYear(new Date()) % products.length : 0;
+
+  // Entry A renders the first 8 rows; the ItemList mirrors that order 1-based.
+  const ledgerProducts = products.slice(0, LEDGER_ROWS);
+  const itemListLd = buildProductItemListLd(ledgerProducts, {
     name: "Featured Wholesale Kurtis",
     path: "/",
   });
+
+  // Entry D — the real WhatsApp builder output for a two-line example cart
+  // (2 sets + 2 sets = MOQ met), priced from the live catalog.
+  const sampleItems = products.slice(0, 2).map((p) => toSampleCartItem(p, 2));
+  const samplePo =
+    sampleItems.length === 2
+      ? buildWholesaleWhatsAppMessage(sampleItems)
+      : null;
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(itemListLd) }}
       />
       <Navbar />
-      <main className="overflow-hidden bg-surface text-content max-lg:pb-[76px]">
-        <HeroCinematic
+      {/* No page-level container: this is a bound book, so every section owns
+          its own full-bleed field (dyed or paper) and holds the 1400px text
+          block inside itself. The cover runs under the fixed chrome on purpose
+          — cloth to the very top edge. */}
+      <main className="overflow-x-clip bg-surface text-content max-lg:pb-[76px]">
+        <Cover
           products={products}
-          heroProduct={heroProduct}
           catalogRequestUrl={catalogRequestUrl}
+          season={season}
+          content={content.cover}
         />
-
-        <ManifestoTypography />
-
-        <HorizontalRack products={products} />
-
-        <CollectionCollage />
-
-        <InstagramGallery />
-
-        {/* ── CLOSE: one field, one ask ── */}
-        <section className="relative overflow-hidden bg-accent-red px-5 py-20 text-white sm:px-8 lg:px-12 lg:py-28">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-[10vw] right-0 select-none font-serif text-[30vw] italic leading-[0.7] text-black/10"
-          >
-            R
-          </div>
-          <div className="relative mx-auto grid max-w-[1600px] gap-10 lg:grid-cols-12 lg:items-end">
-            <div className="lg:col-span-8">
-              <Reveal y={24}>
-                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/60">
-                  For boutiques, resellers and online sellers
-                </p>
-                <h2 className="mt-5 text-[clamp(3rem,9vw,9rem)] font-black uppercase leading-[0.8] tracking-[-0.07em]">
-                  Build a rail
-                  <br />
-                  that moves.
-                </h2>
-              </Reveal>
-            </div>
-            <div className="lg:col-span-4">
-              <p className="max-w-md text-sm leading-7 text-white/75">
-                Start with four sets. Mix styles. Review the catalogue on
-                WhatsApp, then place the order through the bulk desk.
-              </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
-                <Link
-                  href="/bulk-order"
-                  className="linebook-button border-white bg-white text-on-accent hover:bg-accent-lime"
-                >
-                  Open bulk desk <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-                <a
-                  href={catalogRequestUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="linebook-button border-white/50 text-white hover:border-white"
-                >
-                  WhatsApp catalogue <MessageCircle className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
+        <HomeEntries
+          products={products}
+          ledgerProducts={ledgerProducts}
+          collections={collections}
+          todayIndex={todayIndex}
+          samplePo={samplePo}
+          catalogRequestUrl={catalogRequestUrl}
+          content={content}
+        />
       </main>
       <StickyMobileB2BCta />
       <Footer />

@@ -44,12 +44,12 @@ export function TrayButton({
       href="/tray"
       aria-label={
         empty
-          ? "Open tray — empty"
+          ? "Open your order — empty"
           : onOrder
-            ? `Open tray — ${totalSets} sets on order across ${committedCount} styles${
+            ? `Open your order — ${totalSets} ${totalSets === 1 ? "set" : "sets"} on order across ${committedCount} ${committedCount === 1 ? "style" : "styles"}${
                 shortlistedCount > 0 ? `, ${shortlistedCount} saved` : ""
               }`
-            : `Open tray — ${shortlistedCount} styles saved, none on order`
+            : `Open your order — ${shortlistedCount} ${shortlistedCount === 1 ? "style" : "styles"} saved, none on order`
       }
       className={cn(
         "group relative flex h-9 items-center border transition-colors duration-300",
@@ -68,7 +68,7 @@ export function TrayButton({
             !onOrder && "text-content/60 group-hover:text-content/85",
           )}
         >
-          Tray
+          Your order
         </span>
       )}
 

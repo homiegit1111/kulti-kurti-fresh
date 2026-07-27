@@ -5,6 +5,9 @@ import { getProducts, formatPrice } from "@/lib/commerce/catalog";
 import { getStyleCode } from "@/lib/b2b/style-code";
 import { getPerPiecePrice } from "@/lib/b2b/pricing";
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
+import { seasonLabel } from "@/lib/line/season";
+import { loadCurrentWholesaleBuyer } from "@/lib/server/wholesale-profile";
+import { PrintSheetStyles } from "@/components/document/print-sheet-styles";
 import { PrintButton } from "./print-button";
 
 export const metadata: Metadata = {
@@ -21,18 +24,14 @@ const CONTACT = {
   address: "3rd Floor, NR Complex, 36, Siddanna Ln, Cubbonpete, Bengaluru 560002",
 };
 
-/* ── Season label — derived server-side so it's fixed at render time ── */
-function seasonLabel(date: Date): string {
-  const m = date.getMonth(); // 0-indexed
-  const y = date.getFullYear();
-  if (m >= 2 && m <= 4) return `Spring/Summer ${y}`;
-  if (m >= 5 && m <= 7) return `Monsoon ${y}`;
-  if (m >= 8 && m <= 10) return `Autumn/Winter ${y}`;
-  return `Winter ${y}`;
-}
-
 export default async function LineSheetPage() {
   const products = await getProducts(50);
+
+  // Saved wholesale profile → the print letterhead's "Prepared for" line.
+  const buyerProfile = await loadCurrentWholesaleBuyer();
+  const preparedFor = buyerProfile?.businessName
+    ? [buyerProfile.businessName, buyerProfile.city].filter(Boolean).join(" · ")
+    : undefined;
 
   const issueDate = new Date();
   const dateStr = issueDate.toLocaleDateString("en-IN", {
@@ -44,87 +43,10 @@ export default async function LineSheetPage() {
 
   return (
     <>
-      {/* ── Print CSS, co-located with the route (globals.css untouched).
-             Hardcoded colors are allowed here: print is always paper. ── */}
-      <style>{`
-        @page {
-          margin: 14mm;
-          size: A4 portrait;
-        }
-
-        @media print {
-          /* Force the paper (light) palette regardless of stored theme —
-             the .dark override block sets these without !important, so the
-             !important declarations here win in both themes. */
-          :root,
-          html.dark {
-            --surface: #ffffff !important;
-            --surface-2: #ffffff !important;
-            --surface-inverse: #111111 !important;
-            --surface-hover: #f2f2f0 !important;
-            --content: #111111 !important;
-            --content-inverse: #f5f5f3 !important;
-            --line: #111111 !important;
-            --accent-lime: #b8d900 !important;
-            --accent-red: #c02040 !important;
-          }
-
-          /* The theme boot script sets color-scheme: dark inline on <html>;
-             Chromium paints the PDF canvas (page margins included) per
-             color-scheme, so a dark-theme "Save as PDF" gets a black frame
-             without this. */
-          html {
-            background: #ffffff !important;
-            color-scheme: light !important;
-          }
-
-          body {
-            background: #ffffff !important;
-            color: #111111 !important;
-          }
-
-          /* Verified leakers on this route (the root layout mounts them on
-             every page): ScrollProgress (fixed lime rail — would repeat on
-             every printed sheet), ConsentBanner (fixed bottom card) and
-             ThemeProgressBar (fixed top rail). All are position:fixed via
-             Tailwind classes, so one substring rule suppresses the lot —
-             plus any nav/sticky chrome this route might gain later. The
-             sheet's own document footer opts out via .ls-keep. */
-          nav,
-          footer:not(.ls-keep),
-          [class*="fixed"],
-          [class*="sticky"] {
-            display: none !important;
-          }
-
-          /* Hairlines, accent squares and the style-code chips are part of
-             the document — print them even when "background graphics" is
-             unticked. */
-          .ls-doc,
-          .ls-doc * {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-
-          /* A card must never split across pages */
-          .ls-card {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-
-          /* Keep the letterhead attached to the first grid row */
-          .ls-letterhead {
-            break-after: avoid;
-            page-break-after: avoid;
-          }
-
-          /* Motion is screen furniture */
-          * {
-            transition: none !important;
-            animation: none !important;
-          }
-        }
-      `}</style>
+      {/* ── The A4 print contract (§1.7) — corrected accent pins, chrome
+             suppression, "Prepared for" letterhead line when a wholesale
+             profile exists, CSS-counter sheet numbering. ── */}
+      <PrintSheetStyles preparedFor={preparedFor} />
 
       {/* ── Screen wrapper — paper preview constrained to A4-ish width ── */}
       <div className="ls-doc min-h-screen bg-surface px-4 py-10 text-content sm:px-8 lg:px-10 print:bg-white print:p-0 print:text-black">
@@ -138,7 +60,7 @@ export default async function LineSheetPage() {
               <div>
                 {/* Micro-label */}
                 <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.32em] text-accent-red">
-                  Wholesale Line Sheet
+                  Wholesale Price List
                 </p>
                 {/* Masthead */}
                 <h1 className="text-4xl font-black uppercase leading-[0.85] tracking-[-0.055em] sm:text-5xl">
@@ -157,7 +79,7 @@ export default async function LineSheetPage() {
                   href="/shop"
                   className="text-[9px] font-bold uppercase tracking-[0.22em] text-content/45 transition-colors hover:text-accent-red"
                 >
-                  Back to shop
+                  Back to styles
                 </Link>
               </div>
             </div>
@@ -165,7 +87,7 @@ export default async function LineSheetPage() {
             {/* Terms strip */}
             <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-line/20 pt-4 text-[9px] font-bold uppercase tracking-[0.22em] text-content/55 print:border-black/20">
               {[
-                `MOQ ${B2B_CONFIG.minimumOrderSets} sets`,
+                `Minimum order ${B2B_CONFIG.minimumOrderSets} sets`,
                 `1 set = ${B2B_CONFIG.setSize} pcs (${SIZE_RATIO_LABEL})`,
                 "GST at invoice",
                 `Issue date: ${dateStr}`,
@@ -175,6 +97,8 @@ export default async function LineSheetPage() {
                   {item}
                 </span>
               ))}
+              {/* Print-only "Sheet 1" via the CSS counter contract. */}
+              <span className="ls-sheet-counter" aria-hidden="true" />
             </div>
 
             {/* Contact row — the footer's public facts */}

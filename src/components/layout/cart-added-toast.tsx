@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/lib/cart-context";
+import { MOCK_PRODUCTS, formatPrice } from "@/lib/commerce/catalog";
+import { getStyleCode } from "@/lib/b2b/style-code";
 
 const AUTO_DISMISS_MS = 4200;
 
 /**
- * Single “added to bag” popup — replaces confusing hover mini-cart + auto-open drawer.
+ * "Added to order" confirmation (Chapter 4) — a small order-slip row on role
+ * tokens: mono style code, sets added, set rate, "View order". No entrance
+ * animation (motion doctrine §1.6); it appears, reports, and dismisses.
  */
 export function CartAddedToast() {
   const { addedNotice, dismissAddedNotice, itemCount } = useCart();
@@ -21,72 +23,69 @@ export function CartAddedToast() {
     return () => window.clearTimeout(t);
   }, [addedNotice, dismissAddedNotice]);
 
+  if (!addedNotice) return null;
+
+  const product = MOCK_PRODUCTS.find((p) => p.handle === addedNotice.handle);
+  const setPrice = product ? (product.salePrice ?? product.price) : null;
+
   return (
-    <AnimatePresence>
-      {addedNotice && (
-        <motion.div
-          role="status"
-          aria-live="polite"
-          initial={{ opacity: 0, y: 16, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.98 }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 z-[320] w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2 sm:bottom-8 sm:left-auto sm:right-6 sm:translate-x-0"
-        >
-          <div className="overflow-hidden border border-line/20 bg-surface-2 shadow-[0_20px_50px_-18px_rgba(18,19,16,0.4)] dark:border-white/12 dark:bg-[var(--surface-raised)] dark:shadow-[0_20px_50px_-16px_rgba(0,0,0,0.65)]">
-            <div className="h-0.5 w-full bg-accent-lime" />
-            <div className="flex gap-3 p-3.5">
-              <div className="relative h-14 w-11 shrink-0 overflow-hidden bg-surface-hover dark:bg-white/5">
-                <Image
-                  src={addedNotice.image}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="44px"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-red">
-                  {addedNotice.setsAdded === 1
-                    ? "1 set added"
-                    : `${addedNotice.setsAdded} sets added`}
-                </p>
-                <p className="mt-0.5 truncate text-[13px] font-medium text-charcoal dark:text-white">
-                  {addedNotice.title}
-                </p>
-                <p className="mt-0.5 text-[11px] text-charcoal/45 dark:text-white/40">
-                  Bag · {itemCount} {itemCount === 1 ? "set" : "sets"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={dismissAddedNotice}
-                className="flex h-8 w-8 shrink-0 items-center justify-center text-charcoal/30 transition-colors hover:text-charcoal dark:text-white/30 dark:hover:text-white"
-                aria-label="Dismiss"
-              >
-                <X className="h-4 w-4" strokeWidth={1.6} />
-              </button>
-            </div>
-            <div className="flex border-t border-charcoal/8 dark:border-white/10">
-              <Link
-                href="/cart"
-                onClick={dismissAddedNotice}
-                className="flex h-10 flex-1 items-center justify-center text-[12px] font-semibold text-charcoal transition-colors hover:bg-charcoal/[0.03] dark:text-white dark:hover:bg-white/[0.04]"
-              >
-                View cart
-              </Link>
-              <div className="w-px bg-charcoal/8 dark:bg-white/10" />
-              <button
-                type="button"
-                onClick={dismissAddedNotice}
-                className="flex h-10 flex-1 items-center justify-center text-[12px] font-medium text-charcoal/50 transition-colors hover:bg-charcoal/[0.03] dark:text-white/45 dark:hover:bg-white/[0.04]"
-              >
-                Keep shopping
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed bottom-[max(5.5rem,calc(4.75rem+env(safe-area-inset-bottom)))] left-1/2 z-[60] w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2 sm:bottom-8 sm:left-auto sm:right-6 sm:translate-x-0 lg:bottom-14"
+    >
+      <div className="ledger border border-line/25 bg-surface text-content">
+        <div className="flex items-baseline justify-between gap-3 border-b border-line/15 px-3.5 py-2">
+          <p className="text-[9px] font-extrabold uppercase tracking-[0.22em] text-content/55">
+            {addedNotice.setsAdded === 1
+              ? "1 set added"
+              : `${addedNotice.setsAdded} sets added`}
+          </p>
+          <button
+            type="button"
+            onClick={dismissAddedNotice}
+            className="-mr-1.5 flex h-6 w-6 shrink-0 items-center justify-center self-center text-content/40 transition-colors hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+            aria-label="Dismiss"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={1.8} />
+          </button>
+        </div>
+
+        <div className="flex items-baseline gap-3 px-3.5 py-3">
+          {product && (
+            <span className="shrink-0 font-mono text-[11px] tracking-[0.08em] text-content/55">
+              {getStyleCode(product)}
+            </span>
+          )}
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium">
+            {addedNotice.title}
+          </span>
+          {setPrice !== null && (
+            <span className="shrink-0 text-[12px] font-bold tabular-nums">
+              {formatPrice(setPrice)}
+              <span className="font-semibold text-content/50"> / set</span>
+            </span>
+          )}
+        </div>
+
+        <div className="flex border-t border-line/15">
+          <Link
+            href="/cart"
+            onClick={dismissAddedNotice}
+            className="flex h-10 flex-1 items-center justify-center text-[12px] font-semibold text-content transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+          >
+            View order · {itemCount} {itemCount === 1 ? "set" : "sets"}
+          </Link>
+          <div className="w-px bg-line/15" />
+          <button
+            type="button"
+            onClick={dismissAddedNotice}
+            className="flex h-10 flex-1 items-center justify-center text-[12px] font-medium text-content/55 transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+          >
+            Keep browsing
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

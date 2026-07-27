@@ -1,8 +1,10 @@
+import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
-import { getProductByHandle } from "@/lib/commerce/catalog";
+import { getProductByHandle, getProducts } from "@/lib/commerce/catalog";
 import { getPublishedReviews, summarize } from "@/lib/server/reviews";
 import ClientProductDetail from "./client-page";
 import { B2B_CONFIG } from "@/lib/b2b/config";
+import { getStyleCode } from "@/lib/b2b/style-code";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ handle: string }> }
@@ -58,6 +60,18 @@ export default async function ProductPage({
   if (!product) {
     return <ClientProductDetail params={params} />;
   }
+
+  // Real siblings for the "Same run" rail: live catalog products sharing this
+  // style's code-category prefix (e.g. RP-COTTON-*). Empty means the rail is
+  // absent — never mock data (§1.1.7).
+  const codePrefix = getStyleCode(product).split("-").slice(0, 2).join("-");
+  const relatedProducts = (await getProducts(24))
+    .filter(
+      (candidate) =>
+        candidate.id !== product.id &&
+        getStyleCode(candidate).startsWith(`${codePrefix}-`),
+    )
+    .slice(0, 8);
 
   const inStock = product.availableForSale !== false;
   // Google recommends priceValidUntil; default to ~1 year out.
@@ -156,13 +170,17 @@ export default async function ProductPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }}
       />
-      <ClientProductDetail params={params} initialProduct={product} />
+      <ClientProductDetail
+        params={params}
+        initialProduct={product}
+        relatedProducts={relatedProducts}
+      />
     </>
   );
 }

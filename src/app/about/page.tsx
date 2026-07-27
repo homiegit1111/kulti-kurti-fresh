@@ -1,3 +1,4 @@
+import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -47,7 +48,7 @@ export default function AboutPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(aboutLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(aboutLd) }}
       />
       <Navbar />
 
@@ -78,7 +79,7 @@ export default function AboutPage() {
                 <span className="ml-1 text-[52px] font-black uppercase leading-[0.85] tracking-[-0.04em] text-content-inverse/[0.08] sm:text-[70px] lg:text-[92px]">
                   PEHNAWA
                 </span>
-                <span className="ml-1 text-[36px] font-black uppercase leading-[0.85] tracking-[0.1em] text-transparent [-webkit-text-stroke:1px_rgba(241,238,229,0.18)] sm:text-[48px] lg:text-[60px]">
+                <span className="ml-1 text-[36px] font-black uppercase leading-[0.85] tracking-[0.1em] text-content-inverse/[0.08] sm:text-[48px] lg:text-[60px]">
                   RANGAT
                 </span>
               </div>
@@ -88,7 +89,7 @@ export default function AboutPage() {
                 src="/images/foundernew.png"
                 alt="Harsh Jangid - Founder of Rangat Pehnawa"
                 fill
-                className="relative z-10 object-cover object-bottom grayscale transition-transform duration-[1.5s] ease-out group-hover:scale-105"
+                className="relative z-10 object-cover object-bottom grayscale"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
 

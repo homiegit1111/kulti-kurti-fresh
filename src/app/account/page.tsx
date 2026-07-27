@@ -1,15 +1,27 @@
 "use client";
 
+/**
+ * §7.3 — the buyer profile as a ledger: real rows only (saved profile facts,
+ * saved-linesheet count, MOQ from config), on-blur b2b validation with the
+ * vermilion rail, and a pre-addressed PO — the saved profile feeds
+ * `buildWholesaleWhatsAppUrl` so a repeat buyer's order opens addressed.
+ */
+
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, Loader2, LogOut, User } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, Loader2, LogOut, MessageCircle, User } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useClerk, useUser, isAuthEnabled } from "@/lib/auth/client";
+import { useCart } from "@/lib/cart-context";
+import { useWishlist } from "@/lib/wishlist-context";
 import { B2B_CONFIG, type BusinessType } from "@/lib/b2b/config";
-import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
+import { isValidGSTIN, isValidWhatsappPhone } from "@/lib/b2b/validation";
+import {
+  buildCatalogRequestUrl,
+  buildWholesaleWhatsAppUrl,
+} from "@/lib/b2b/whatsapp";
 
 type ProfileForm = {
   business_name: string;
@@ -35,6 +47,8 @@ export default function AccountPage() {
 function AccountInner() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const { items } = useCart();
+  const { count: linesheetCount } = useWishlist();
   const [form, setForm] = useState<ProfileForm>(emptyProfile);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -57,7 +71,7 @@ function AccountInner() {
         }
       })
       .catch(() => {
-        setMessage("Wholesale profile will be available once Supabase is configured.");
+        setMessage("Could not load the saved profile.");
       })
       .finally(() => setLoading(false));
   }, [isLoaded, user]);
@@ -89,6 +103,15 @@ function AccountInner() {
     }
   };
 
+  // The saved profile, in the frozen WhatsApp-builder shape — a repeat buyer's
+  // PO opens pre-addressed.
+  const preAddressedPoUrl = buildWholesaleWhatsAppUrl(items, {
+    businessName: form.business_name || undefined,
+    city: form.city || undefined,
+    whatsappPhone: form.whatsapp_phone || undefined,
+    gstin: form.gstin || undefined,
+  });
+
   if (!isLoaded || !user) {
     return (
       <PageShell>
@@ -101,23 +124,20 @@ function AccountInner() {
 
   return (
     <PageShell>
-      <main className="flex-1 pt-28 pb-24 lg:pt-36">
-        <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="mb-12 border-b-2 border-line pb-8"
-          >
-            <p className="eyebrow mb-4">Wholesale account</p>
-            <h1 className="text-[clamp(3rem,9vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
-              Buyer profile
+      <main className="flex-1 pb-24 pt-24 lg:pt-28">
+        <div className="mx-auto w-full max-w-[1400px] px-5 sm:px-10 lg:px-16">
+          <div className="mb-12 border-b-2 border-line pb-6">
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.3em] text-content/55">
+              Wholesale account
+            </p>
+            <h1 className="mt-4 text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+              Wholesale buyer profile
             </h1>
             <p className="mt-6 max-w-2xl text-sm leading-6 text-content/60">
               Save your business details for faster WhatsApp inquiries, GST
               invoice confirmation, and repeat wholesale ordering.
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-4">
             <aside className="lg:col-span-1">
@@ -144,7 +164,7 @@ function AccountInner() {
                     href="/wishlist"
                     className="flex w-full items-center gap-3 border-l-2 border-transparent px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-content-inverse/50 transition-colors hover:border-content-inverse/40 hover:text-content-inverse"
                   >
-                    Buyer Linesheet
+                    Saved styles
                   </Link>
                   <button
                     onClick={() => signOut({ redirectUrl: "/" })}
@@ -159,51 +179,73 @@ function AccountInner() {
             <section className="lg:col-span-3">
               <form
                 onSubmit={saveProfile}
-                className="border border-line/20 bg-surface-2 p-6 sm:p-8 lg:p-12"
+                className="border border-line/25 p-6 sm:p-8 lg:p-12"
               >
-                <div className="mb-8 grid gap-3 sm:grid-cols-3">
-                  {[
-                    ["Profile", form.business_name && form.city && form.whatsapp_phone ? "Complete" : "Needs details"],
-                    ["Linesheet", "Saved styles"],
-                    ["MOQ", `${B2B_CONFIG.minimumOrderSets} sets`],
-                  ].map(([label, value]) => (
-                    <div key={label} className="border border-line/20 px-4 py-3">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-content/45">
-                        {label}
-                      </p>
-                      <p className="mt-1 text-lg font-black uppercase tracking-[-0.02em] text-content">
-                        {value}
-                      </p>
-                    </div>
-                  ))}
+                {/* The account ledger — real registers only. */}
+                <div className="ledger mb-10 divide-y divide-line/20 border-t border-line/25">
+                  <AccountRow
+                    label="Business"
+                    value={form.business_name || "—"}
+                  />
+                  <AccountRow label="City" value={form.city || "—"} />
+                  <AccountRow
+                    label="Saved styles"
+                    value={`${linesheetCount} ${
+                      linesheetCount === 1 ? "style" : "styles"
+                    }`}
+                  />
+                  <AccountRow
+                    label="Minimum order"
+                    value={`${B2B_CONFIG.minimumOrderSets} sets`}
+                  />
                 </div>
+
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                   <Field
+                    id="account-business-name"
                     label="Business Name"
                     value={form.business_name}
                     onChange={(value) => updateField("business_name", value)}
                     required
                   />
                   <Field
+                    id="account-city"
                     label="City"
                     value={form.city}
                     onChange={(value) => updateField("city", value)}
                     required
                   />
                   <Field
+                    id="account-whatsapp"
                     label="WhatsApp Phone"
                     value={form.whatsapp_phone}
                     onChange={(value) => updateField("whatsapp_phone", value)}
+                    validate={(value) =>
+                      value && !isValidWhatsappPhone(value)
+                        ? "Enter a 10-digit Indian WhatsApp number"
+                        : ""
+                    }
                     required
                   />
                   <Field
+                    id="account-gstin"
                     label="GSTIN Optional"
                     value={form.gstin}
-                    onChange={(value) => updateField("gstin", value)}
+                    onChange={(value) =>
+                      updateField("gstin", value.toUpperCase())
+                    }
+                    validate={(value) =>
+                      value && !isValidGSTIN(value)
+                        ? "Enter a 15-character GSTIN or leave it blank"
+                        : ""
+                    }
                   />
                   <div>
-                    <label className="field-label">Business Type</label>
+                    <label htmlFor="account-business-type" className="field-label">
+                      Business Type
+                    </label>
                     <select
+                      id="account-business-type"
                       value={form.business_type}
                       onChange={(event) =>
                         updateField(
@@ -232,8 +274,11 @@ function AccountInner() {
                   <button type="submit" disabled={saving || loading} className="btn-luxe">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Profile"}
                   </button>
+                  <a href={preAddressedPoUrl} className="btn-luxe-outline">
+                    Send a pre-addressed PO <MessageCircle className="h-3.5 w-3.5" />
+                  </a>
                   <Link href="/bulk-order" className="btn-luxe-outline">
-                    Start Bulk Order <ArrowRight className="h-3.5 w-3.5" />
+                    Open the bulk desk <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                   <Link href="/wishlist" className="btn-luxe-outline">
                     Saved Linesheet <ArrowRight className="h-3.5 w-3.5" />
@@ -251,26 +296,68 @@ function AccountInner() {
   );
 }
 
+/** Label/value ruled row — real registers only (no decorative stats). */
+function AccountRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-6 py-3.5">
+      <span className="text-[9px] font-extrabold uppercase tracking-[0.24em] text-content/45">
+        {label}
+      </span>
+      <span className="text-right text-sm font-bold text-content">{value}</span>
+    </div>
+  );
+}
+
 function Field({
+  id,
   label,
   value,
   onChange,
+  validate,
   required,
 }: {
+  id: string;
   label: string;
   value: string;
   onChange: (value: string) => void;
+  validate?: (value: string) => string;
   required?: boolean;
 }) {
+  const [error, setError] = useState("");
+
   return (
-    <div>
-      <label className="field-label">{label}</label>
+    <div className={error ? "border-l-2 border-l-accent-red pl-3" : ""}>
+      <label htmlFor={id} className="field-label">
+        {label}
+      </label>
       <input
+        id={id}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => {
+          onChange(event.target.value);
+          if (error && validate) {
+            setError(validate(event.target.value));
+          }
+        }}
+        onBlur={() => {
+          if (validate) setError(validate(value));
+        }}
         required={required}
-        className="field-luxe"
+        aria-invalid={error ? "true" : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
+        className={`field-luxe ${
+          error ? "border-b-accent-red focus:border-b-accent-red" : ""
+        }`}
       />
+      {error && (
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-red"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -278,17 +365,18 @@ function Field({
 function AccountUnavailable() {
   return (
     <PageShell>
-      <main className="flex flex-1 flex-col items-center justify-center px-6 pt-32 pb-24 text-center">
-        <p className="eyebrow eyebrow--bare mb-5">Wholesale accounts</p>
-        <h1 className="text-[clamp(3rem,9vw,7rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
-          Register soon
+      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-24 pt-32 text-center">
+        <p className="mb-5 text-[9px] font-extrabold uppercase tracking-[0.3em] text-content/55">
+          Wholesale accounts
+        </p>
+        <h1 className="text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+          Wholesale accounts open soon
         </h1>
         <p className="mt-6 max-w-md text-sm leading-6 text-content/60">
-          Buyer accounts need Clerk keys. You can still build a wholesale cart
-          and send your order on WhatsApp.
+          You can still build a wholesale cart and send your order on WhatsApp.
         </p>
         <Link href="/bulk-order" className="btn-luxe mt-10">
-          Bulk Order <ArrowRight className="h-3.5 w-3.5" />
+          Open the bulk desk <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </main>
     </PageShell>

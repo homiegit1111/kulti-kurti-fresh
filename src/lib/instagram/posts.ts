@@ -4,6 +4,10 @@
  * Images are loaded via `/api/instagram/media/{code}` which streams the
  * public media from Instagram (instagram.com/p/{code}/media/). Not AI.
  * Each tile links to the live post. Visitors never log in.
+ *
+ * Honest count only: every entry below is a distinct confirmed post. No
+ * duplicate tiles, no padding schemes — a 3-up rail of real posts beats a
+ * padded 8-up grid.
  */
 
 export const INSTAGRAM_PROFILE =
@@ -33,18 +37,8 @@ export const CURATED_REAL_POSTS: InstagramFeedItem[] = [
     mediaUrl: "/api/instagram/media/DaYdTMtktlz",
     caption: "Linen dori work co-ords",
   },
-  {
-    id: "DaaE1TSyb22",
-    permalink: "https://www.instagram.com/reel/DaaE1TSyb22/",
-    mediaUrl: "/api/instagram/media/DaaE1TSyb22",
-    caption: "Designer cotton kurta",
-  },
-  {
-    id: "DXryvhjknSv",
-    permalink: "https://www.instagram.com/p/DXryvhjknSv/",
-    mediaUrl: "/api/instagram/media/DXryvhjknSv",
-    caption: "Soma designs · rayon",
-  },
+  // FOUNDER-VERIFY: the photo shows a third-party garment tag on the fabric
+  // roll — confirm this is Rangat-owned sourcing before it stays in the rail.
   {
     id: "DXPdU4jElhY",
     permalink: "https://www.instagram.com/p/DXPdU4jElhY/",
@@ -56,25 +50,6 @@ export const CURATED_REAL_POSTS: InstagramFeedItem[] = [
     permalink: "https://www.instagram.com/p/DZj8uunkqgH/",
     mediaUrl: "/api/instagram/media/DZj8uunkqgH",
     caption: "Rayon cord set",
-  },
-  // Repeat strongest tiles for 8-up grid until more shortcodes are added
-  {
-    id: "DaYdTMtktlz-b",
-    permalink: "https://www.instagram.com/p/DaYdTMtktlz/",
-    mediaUrl: "/api/instagram/media/DaYdTMtktlz",
-    caption: "Linen dori work co-ords",
-  },
-  {
-    id: "DXPdU4jElhY-b",
-    permalink: "https://www.instagram.com/p/DXPdU4jElhY/",
-    mediaUrl: "/api/instagram/media/DXPdU4jElhY",
-    caption: "Grace in every stitch",
-  },
-  {
-    id: "DaaE1TSyb22-b",
-    permalink: "https://www.instagram.com/reel/DaaE1TSyb22/",
-    mediaUrl: "/api/instagram/media/DaaE1TSyb22",
-    caption: "Designer cotton kurta",
   },
 ];
 

@@ -1,6 +1,13 @@
+import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter, Playfair_Display } from "next/font/google";
+import {
+  Fraunces,
+  Inter,
+  Noto_Serif_Devanagari,
+  Playfair_Display,
+  Space_Mono,
+} from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,6 +19,34 @@ const inter = Inter({
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
+  display: "swap",
+});
+
+/**
+ * The masthead face. रंगत is the brand mark set at display scale, so the
+ * Devanagari subset is required, not optional — without it the word falls back
+ * to a system face and the whole identity collapses.
+ */
+const devanagari = Noto_Serif_Devanagari({
+  subsets: ["devanagari", "latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-devanagari",
+  display: "swap",
+});
+
+/** Editorial serif for headlines — lighter and warmer than Playfair at size. */
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  axes: ["SOFT", "WONK", "opsz"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
+/** Style codes and trade data — a real monospace reads as inventory, not decor. */
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono-trade",
   display: "swap",
 });
 
@@ -126,7 +161,7 @@ export default function RootLayout({
   const app = (
     <html
       lang="en"
-      className={`h-full antialiased ${inter.variable} ${playfair.variable}`}
+      className={`h-full antialiased ${inter.variable} ${playfair.variable} ${devanagari.variable} ${fraunces.variable} ${spaceMono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -167,7 +202,7 @@ export default function RootLayout({
         </a>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
         />
         <GoogleAnalytics />
         <WebVitals />

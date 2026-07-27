@@ -6,81 +6,12 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/client";
 import { MessageCircle, Search, Table2 } from "lucide-react";
 import { TrayButton } from "@/components/line/tray-button";
+import { SetBlocks } from "@/components/b2b/set-blocks";
+import { TermsRule } from "@/components/document/terms-rule";
 import { ThemeToggle } from "./theme-toggle";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
-
-/* ── Brand icons (removed from lucide-react v1.x) ── */
-function InstagramIcon({
-  className,
-  strokeWidth = 2,
-}: {
-  className?: string;
-  strokeWidth?: number;
-}) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <path d="M17.5 6.5h.01" />
-    </svg>
-  );
-}
-
-function FacebookIcon({
-  className,
-  strokeWidth = 2,
-}: {
-  className?: string;
-  strokeWidth?: number;
-}) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-    </svg>
-  );
-}
-
-function TwitterIcon({
-  className,
-  strokeWidth = 2,
-}: {
-  className?: string;
-  strokeWidth?: number;
-}) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.7 5.5 4.4 9 4.5-.9-4.2 4-6.5 7-3.8 1.1 0 3-1.2 3-1.2z" />
-    </svg>
-  );
-}
-
+import { MOCK_PRODUCTS } from "@/lib/commerce/catalog";
+import { getStyleCode } from "@/lib/b2b/style-code";
 import {
   Sheet,
   SheetTrigger,
@@ -90,16 +21,17 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { SearchDialog } from "@/components/ui/search-dialog";
+import { SearchDialog, recordRecentCode } from "@/components/ui/search-dialog";
 
 /**
- * IA, rebuilt around what a wholesale buyer is actually doing.
+ * Chrome (Chapter 4) — the navbar is quality stationery, not a dashboard.
  *
- * `primary` = the three shown on desktop, in buying order: browse the line →
- * see it grouped → order in bulk. The rest appear in the mobile sheet only.
+ * `primary` = the three shown on desktop, in buying order: browse the styles →
+ * see them grouped → order in bulk. The rest appear in the mobile sheet only.
+ * Every label is a word a wholesale buyer uses.
  */
 const navLinks = [
-  { label: "The Line", href: "/line", primary: true },
+  { label: "Styles", href: "/shop", primary: true },
   { label: "Collections", href: "/collections", primary: true },
   { label: "Bulk Order", href: "/bulk-order", primary: true },
   { label: "Lookbook", href: "/lookbook", primary: false },
@@ -115,7 +47,7 @@ function isActive(pathname: string | null, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
-/* ── Wordmark ── sharp typographic brand lockup. ── */
+/* ── Wordmark ── the sole brand mark in chrome: plain ink type, no devices. ── */
 function Wordmark({
   className,
   align = "center",
@@ -131,14 +63,11 @@ function Wordmark({
         className,
       )}
     >
-      <span className="flex items-baseline gap-[0.12em] text-[1.35rem] font-black uppercase leading-[0.85] tracking-[-0.06em] text-content sm:text-[1.55rem] lg:text-[1.7rem]">
+      <span className="text-[1.3rem] font-black uppercase leading-[0.85] tracking-[-0.05em] text-content sm:text-[1.45rem] lg:text-[1.55rem]">
         Rangat
-        <span className="inline-block h-[0.32em] w-[0.32em] translate-y-[-0.04em] bg-accent-lime" />
       </span>
-      <span className="mt-[0.28em] flex items-center gap-[0.4em] text-[7px] font-bold uppercase tracking-[0.42em] text-content/55 sm:text-[8px]">
-        <span className="h-px w-3 bg-accent-red" />
+      <span className="mt-[0.3em] text-[7px] font-bold uppercase tracking-[0.42em] text-content/55 sm:text-[8px]">
         Pehnawa
-        <span className="h-px w-3 bg-accent-red" />
       </span>
     </span>
   );
@@ -186,7 +115,7 @@ export function Navbar() {
     };
   }, []);
 
-  /* ⌘K / Ctrl+K — open the search command desk from anywhere */
+  /* ⌘K / Ctrl+K — open search from anywhere */
   useEffect(() => {
     const handleShortcut = (e: KeyboardEvent) => {
       if (
@@ -203,23 +132,29 @@ export function Navbar() {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
+  /* Recent style codes — a visited style page records its code so repeat
+     buyers can reorder from search ("Recent style codes", max 6). */
+  useEffect(() => {
+    const match = pathname?.match(/^\/shop\/([^/]+)$/);
+    if (!match) return;
+    const handle = decodeURIComponent(match[1]);
+    const product = MOCK_PRODUCTS.find((p) => p.handle === handle);
+    if (product) recordRecentCode(getStyleCode(product));
+  }, [pathname]);
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 will-change-transform">
-      {/* ── Promotional Banner ── */}
+      {/* ── Running head: the trade facts, static (R7) ── */}
       {!isProductPage && (
         <div
           className={cn(
-            "flex items-center justify-center overflow-hidden bg-surface-inverse text-content-inverse transition-all duration-300 ease-out",
-            bannerHidden ? "h-0 opacity-0" : "h-9 opacity-100",
+            "flex items-center justify-center overflow-hidden border-b border-line/25 bg-surface transition-all duration-300 ease-out",
+            bannerHidden ? "h-0 border-b-0 opacity-0" : "h-9 opacity-100",
           )}
           aria-hidden={bannerHidden}
         >
-          <div className="px-4 text-center text-[9px] font-bold uppercase tracking-[0.24em] sm:text-[10px]">
-            Fresh kurti drops
-            <span className="mx-2 text-accent-lime">/</span>
-            Price-smart styles
-            <span className="mx-2 text-accent-lime">/</span>
-            WhatsApp orders open
+          <div className="mx-auto w-full max-w-[1400px] px-4 lg:px-8 xl:px-10">
+            <TermsRule className="flex-nowrap justify-center gap-y-0 overflow-hidden border-0 py-0" />
           </div>
         </div>
       )}
@@ -227,10 +162,8 @@ export function Navbar() {
       {/* ── Main Navigation ── */}
       <nav
         className={cn(
-          "relative flex h-16 w-full items-center border-b bg-surface px-4 transition-[box-shadow,border-color,background-color] duration-300 ease-out lg:h-[74px] lg:px-8 xl:px-10",
-          scrolled
-            ? "border-line/20 shadow-[0_20px_50px_-44px_rgba(0,0,0,0.6)]"
-            : "border-line/12",
+          "relative flex h-16 w-full items-center border-b bg-surface px-4 transition-[border-color,background-color] duration-300 ease-out lg:h-[74px] lg:px-8 xl:px-10",
+          scrolled ? "border-line/25" : "border-line/12",
         )}
       >
         {/* ── Left: Desktop Nav Links ── */}
@@ -241,14 +174,19 @@ export function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
-                className="group relative py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-content transition-opacity hover:opacity-100"
+                className="group relative py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-content"
               >
-                <span className={cn("transition-opacity", active ? "opacity-100" : "opacity-70 group-hover:opacity-100")}>
+                <span
+                  className={cn(
+                    "transition-opacity",
+                    active ? "opacity-100" : "opacity-70 group-hover:opacity-100",
+                  )}
+                >
                   {link.label}
                 </span>
                 <span
                   className={cn(
-                    "absolute inset-x-0 -bottom-0.5 h-[2px] origin-left bg-accent-lime transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    "absolute inset-x-0 -bottom-0.5 h-px origin-left bg-content transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
                   )}
                 />
@@ -261,7 +199,8 @@ export function Navbar() {
         <div className="flex shrink-0 items-center justify-start lg:justify-center">
           <Link
             href="/"
-            className="group relative z-10 inline-flex items-center transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-[1px] active:translate-y-0"
+            className="relative z-10 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+            style={{ viewTransitionName: "brand-wordmark" }}
           >
             <Wordmark align="left" className="lg:items-center" />
           </Link>
@@ -276,13 +215,14 @@ export function Navbar() {
             aria-keyshortcuts="Meta+K Control+K"
             className="group flex h-9 items-center gap-2.5 border border-line/20 bg-transparent pl-3 pr-4 text-left transition-colors duration-300 hover:border-line/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime xl:w-44 xl:pr-2.5"
           >
-            <Search className="h-3.5 w-3.5 shrink-0 text-content/55 transition-colors group-hover:text-accent-red" strokeWidth={2} />
+            <Search
+              className="h-3.5 w-3.5 shrink-0 text-content/55 transition-colors group-hover:text-content"
+              strokeWidth={2}
+            />
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-content/45 transition-colors group-hover:text-content/70">
               Search
             </span>
-            <kbd
-              className="ml-auto hidden h-[18px] items-center border border-line/20 px-1 font-sans text-[8px] font-bold tracking-[0.12em] text-content/40 transition-colors group-hover:border-line/40 group-hover:text-content/65 xl:inline-flex"
-            >
+            <kbd className="ml-auto hidden h-[18px] items-center border border-line/20 px-1 font-sans text-[8px] font-bold tracking-[0.12em] text-content/40 transition-colors group-hover:border-line/40 group-hover:text-content/65 xl:inline-flex">
               ⌘K
             </kbd>
           </button>
@@ -305,7 +245,11 @@ export function Navbar() {
             ))}
           <span className="h-5 w-px bg-line/15" aria-hidden />
           <ThemeToggle variant="icon" />
-          <TrayButton />
+          {/* Order gauge + tray — the only live numbers in chrome */}
+          <SetBlocks size="sm" />
+          <span style={{ viewTransitionName: "tray-button" }}>
+            <TrayButton />
+          </span>
         </div>
 
         {/* ── Right: Mobile Menu ── */}
@@ -314,7 +258,7 @@ export function Navbar() {
             type="button"
             onClick={() => setIsSearchOpen(true)}
             aria-label="Open search"
-            className="flex h-9 w-9 items-center justify-center border border-line/20 text-content transition-colors hover:border-accent-red hover:bg-accent-red hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
+            className="flex h-9 w-9 items-center justify-center border border-line/20 text-content transition-colors hover:border-line hover:bg-surface-inverse hover:text-content-inverse focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-lime"
           >
             <Search className="h-4 w-4" strokeWidth={1.9} />
           </button>
@@ -360,7 +304,10 @@ export function Navbar() {
                   onClick={() => setIsSearchOpen(true)}
                   className="group flex min-h-11 w-full items-center gap-3 border border-line/20 px-4 text-left transition-colors hover:border-line/45"
                 >
-                  <Search className="h-4 w-4 shrink-0 text-content/55 transition-colors group-hover:text-accent-red" strokeWidth={2} />
+                  <Search
+                    className="h-4 w-4 shrink-0 text-content/55"
+                    strokeWidth={2}
+                  />
                   <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-content/45">
                     Search styles
                   </span>
@@ -370,10 +317,10 @@ export function Navbar() {
               <div className="relative z-10 grid gap-3 border-b border-line/12 px-6 py-5">
                 <Link
                   href="/bulk-order"
-                  className="flex min-h-12 items-center justify-center gap-2 border border-line bg-surface-inverse px-4 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content-inverse transition-colors hover:border-accent-red hover:bg-accent-red"
+                  className="flex min-h-12 items-center justify-center gap-2 border border-line bg-surface-inverse px-4 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-content-inverse transition-colors hover:bg-content"
                 >
                   <Table2 className="h-3.5 w-3.5" />
-                  Open Bulk Deals
+                  Bulk Order
                 </Link>
                 <a
                   href={buildCatalogRequestUrl()}
@@ -385,21 +332,13 @@ export function Navbar() {
               </div>
 
               <nav className="relative z-10 flex flex-1 flex-col px-6 py-4">
-                {navLinks.map((link, i) => (
+                {navLinks.map((link) => (
                   <Link
                     key={link.label}
                     href={link.href}
-                    className="group flex items-center justify-between border-b border-line/12 py-5 text-3xl font-black uppercase leading-[0.9] tracking-[-0.045em] text-content transition-colors sm:text-4xl"
-                    style={{
-                      animationDelay: `${i * 100 + 100}ms`,
-                    }}
+                    className="group flex items-center justify-between border-b border-line/12 py-5 text-3xl font-black uppercase leading-[0.9] tracking-[-0.045em] text-content sm:text-4xl"
                   >
-                    <span className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-2">
-                      {link.label}
-                    </span>
-                    <span className="text-[10px] font-bold tracking-[0.18em] text-content/35 transition-colors group-hover:text-accent-red">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                    <span>{link.label}</span>
                   </Link>
                 ))}
               </nav>
@@ -412,57 +351,32 @@ export function Navbar() {
                         href="/account"
                         className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-content/60 transition-colors hover:text-content"
                       >
-                        <span className="h-[2px] w-5 bg-accent-lime"></span> My Account
+                        <span className="h-px w-5 bg-line" /> My Account
                       </Link>
                     ) : (
                       <Link
                         href="/login"
                         className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-content/60 transition-colors hover:text-content"
                       >
-                        <span className="h-[2px] w-5 bg-accent-lime"></span> Sign In
+                        <span className="h-px w-5 bg-line" /> Sign In
                       </Link>
                     ))}
                   <Link
                     href="/tray"
                     className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-content/60 transition-colors hover:text-content"
                   >
-                    <span className="h-[2px] w-5 bg-accent-lime"></span> My Tray
+                    <span className="h-px w-5 bg-line" /> Your Order
                   </Link>
                   <Link
                     href="/contact"
                     className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-content/60 transition-colors hover:text-content"
                   >
-                    <span className="h-[2px] w-5 bg-accent-lime"></span> Style Help
+                    <span className="h-px w-5 bg-line" /> How to Order
                   </Link>
                 </div>
 
-                <div className="flex items-center justify-between border-t border-line/12 pt-8">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-content/45">
-                    Connect
-                  </p>
-                  <div className="flex items-center gap-6">
-                    <a
-                      href="https://instagram.com"
-                      aria-label="Instagram"
-                      className="text-content/60 transition-colors hover:text-accent-red"
-                    >
-                      <InstagramIcon className="h-4 w-4" />
-                    </a>
-                    <a
-                      href="https://facebook.com"
-                      aria-label="Facebook"
-                      className="text-content/60 transition-colors hover:text-accent-red"
-                    >
-                      <FacebookIcon className="h-4 w-4" />
-                    </a>
-                    <a
-                      href="https://twitter.com"
-                      aria-label="Twitter"
-                      className="text-content/60 transition-colors hover:text-accent-red"
-                    >
-                      <TwitterIcon className="h-4 w-4" />
-                    </a>
-                  </div>
+                <div className="border-t border-line/12 pt-6">
+                  <TermsRule className="border-0 py-0" />
                 </div>
               </div>
             </SheetContent>

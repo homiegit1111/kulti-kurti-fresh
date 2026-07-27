@@ -70,6 +70,13 @@ interface CartContextType {
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  /**
+   * True once localStorage has been read into `items`. Anything that writes the
+   * cart programmatically on mount (e.g. the bulk desk's tray reconcile) must
+   * wait for this — the hydrate effect REPLACES `items`, so earlier writes are
+   * silently clobbered.
+   */
+  hydrated: boolean;
   /** Last add-to-cart toast; null when dismissed */
   addedNotice: CartAddedNotice | null;
   dismissAddedNotice: () => void;
@@ -491,6 +498,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
+      hydrated,
       addedNotice,
       dismissAddedNotice,
       cartId,
@@ -513,6 +521,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem,
       updateQuantity,
       clearCart,
+      hydrated,
       addedNotice,
       dismissAddedNotice,
       cartId,

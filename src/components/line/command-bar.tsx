@@ -11,7 +11,7 @@
  * that height is a pixel fact I verify on the dev server, not guess at here.
  */
 
-import { Filter, Search, X } from "lucide-react";
+import { Filter, Printer, Search, X } from "lucide-react";
 import { SORTS, type LineQuery, type SortValue } from "@/lib/line/facets";
 import { COMPARE_MAX } from "@/lib/line/contract";
 import type { Density } from "@/lib/line/density";
@@ -32,6 +32,7 @@ export function CommandBar({
   committedCount,
   onOpenTray,
   onOpenFilters,
+  onPrint,
   activeFacets,
 }: {
   total: number;
@@ -47,13 +48,15 @@ export function CommandBar({
   committedCount: number;
   onOpenTray: () => void;
   onOpenFilters: () => void;
+  /** "Print this sheet" — the filtered URL prints as the A4 line sheet (§5.3). */
+  onPrint?: () => void;
   activeFacets: number;
 }) {
   const filtering = shown !== total;
 
   return (
     <div className="sticky top-0 z-40 border-b-2 border-line bg-surface">
-      <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-3 px-5 md:px-10 lg:px-16">
         {/* Count — the catalog's own label, no page title needed */}
         <p className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[0.28em] text-content/45 lg:block">
           Line /{" "}
@@ -125,6 +128,18 @@ export function CommandBar({
 
         <DensityToggle value={density} onChange={onDensity} className="shrink-0" />
 
+        {/* Print this sheet — the filtered URL IS the line sheet (§5.3) */}
+        {onPrint && (
+          <button
+            type="button"
+            onClick={onPrint}
+            className="hidden h-9 shrink-0 items-center gap-1.5 border border-line/25 px-2.5 text-[9px] font-bold uppercase tracking-[0.16em] text-content/60 transition-colors duration-200 hover:border-content hover:text-content lg:flex"
+          >
+            <Printer className="h-3.5 w-3.5" strokeWidth={2} />
+            Print price list
+          </button>
+        )}
+
         {/* Compare — appears only once a pick exists, never holds space speculatively */}
         {compareCount > 0 && (
           <button
@@ -132,7 +147,7 @@ export function CommandBar({
             onClick={onOpenCompare}
             className="hidden h-9 shrink-0 items-center gap-1.5 border border-accent-red px-2.5 text-[9px] font-bold uppercase tracking-[0.16em] text-accent-red transition-colors hover:bg-accent-red hover:text-white sm:flex"
           >
-            Cmp{" "}
+            Compare{" "}
             <span className="tabular-nums">
               {compareCount}/{COMPARE_MAX}
             </span>
@@ -157,7 +172,7 @@ export function CommandBar({
           {shortlistCount > 0 && committedCount === 0 && (
             <span className="tabular-nums">{shortlistCount}</span>
           )}
-          <span className="hidden sm:inline">Tray</span>
+          <span className="hidden sm:inline">Your order</span>
         </button>
       </div>
     </div>

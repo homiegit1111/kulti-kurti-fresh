@@ -41,6 +41,12 @@ const DYNAMIC_ROUTE_PREFIXES = [
   "/collections/", // detail pages are dynamic; /collections index is static
   "/login",
   "/sign-up",
+  // Admin Studio. Its layout is `dynamic = "force-dynamic"` and every page under
+  // it is a client component, so the whole tree can carry a nonce. Without this
+  // entry /admin fell back to the `'unsafe-inline'` base policy — the one place
+  // in the app where an injected inline script would actually run, and the place
+  // where a session can change prices and stock.
+  "/admin",
 ];
 
 export function isNonceCapableRoute(pathname: string): boolean {
@@ -90,8 +96,13 @@ export function buildCsp(nonce?: string): string {
     "style-src 'self' 'unsafe-inline'",
     // http: in dev so LAN phone origin can load /_next/image + local media
     `img-src 'self' data: blob: https:${dev ? " http:" : ""}`,
-    // Hero film / product video on homepage
-    `media-src 'self' blob:${dev ? " http:" : ""}`,
+    // Hero film / product video. Supabase Storage is listed because the media
+    // library uploads video there: once the owner replaces the hero film from
+    // Admin Studio, its <source> points at the storage host, and a bare
+    // `'self' blob:` would block it — silently, and only in production, which is
+    // the worst place to discover it. `img-src` already allows https: wholesale,
+    // so this only brings media into line with images.
+    `media-src 'self' blob: https://*.supabase.co${dev ? " http:" : ""}`,
     "font-src 'self' data:",
     // ws: / http: for Turbopack HMR when opening dev from a phone on LAN
     `connect-src 'self'${dev ? " http: https: ws: wss:" : ""} https://*.clerk.accounts.dev https://*.clerk.com https://clerk-telemetry.com https://*.myshopify.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.sanity.io https://cdn.sanity.io https://*.supabase.co`,

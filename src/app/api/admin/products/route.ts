@@ -13,11 +13,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
-import { requireAdmin } from "@/lib/server/admin-auth";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
 import {
-  gateError,
   guardAdminMutation,
+  guardAdminRead,
   parseProductPayload,
   recordAdminAudit,
   serviceUnavailable,
@@ -34,8 +33,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const gate = await requireAdmin();
-  if (!gate.ok) return gateError(gate.status);
+  const gate = await guardAdminRead("catalog:read");
+  if (!gate.ok) return gate.response;
 
   const supabase = createServiceRoleClient();
   if (!supabase) return serviceUnavailable();
@@ -66,7 +65,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const mutationGate = await guardAdminMutation(req);
+  const mutationGate = await guardAdminMutation(req, "catalog:write");
   if (!mutationGate.ok) return mutationGate.response;
 
   const supabase = createServiceRoleClient();

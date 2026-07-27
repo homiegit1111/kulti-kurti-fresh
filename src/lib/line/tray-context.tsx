@@ -102,7 +102,16 @@ const TrayContext = createContext<TrayContextValue | undefined>(undefined);
 
 const EMPTY: TrayEntry[] = [];
 
-let snapshot: TrayEntry[] = EMPTY;
+/**
+ * Pre-hydration sentinel — same shape as EMPTY, distinct identity. The snapshot
+ * starts here on both server and first client render; the first subscribe swaps
+ * it for the storage read. Because the reference ALWAYS changes at that swap
+ * (EMPTY !== UNHYDRATED even when storage is empty), React re-renders and
+ * `hydrated` flips — an empty tray must not look like an unhydrated one.
+ */
+const UNHYDRATED: TrayEntry[] = [];
+
+let snapshot: TrayEntry[] = UNHYDRATED;
 let didHydrate = false;
 const listeners = new Set<() => void>();
 
@@ -187,6 +196,9 @@ function subscribe(listener: () => void): () => void {
   if (!didHydrate) {
     didHydrate = true;
     snapshot = readFromStorage();
+    // Reference changed (UNHYDRATED → EMPTY or data): wake every subscriber so
+    // components that rendered pre-hydration re-read and flip `hydrated`.
+    emit();
   }
   return () => {
     listeners.delete(listener);
@@ -194,8 +206,8 @@ function subscribe(listener: () => void): () => void {
 }
 
 const getSnapshot = () => snapshot;
-/** SSR and the first client render must agree — always empty. */
-const getServerSnapshot = () => EMPTY;
+/** SSR and the first client render must agree — always the sentinel. */
+const getServerSnapshot = () => UNHYDRATED;
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
@@ -204,7 +216,7 @@ export function TrayProvider({ children }: { children: ReactNode }) {
   // Compare is session-only by design: a shortlist survives a reload, a
   // comparison does not.
   const [compareIds, setCompareIds] = useState<string[]>([]);
-  const hydrated = entries !== EMPTY || didHydrate;
+  const hydrated = entries !== UNHYDRATED;
 
   const upsert = useCallback((product: MockProduct, sets: number) => {
     const prev = snapshot;

@@ -439,9 +439,6 @@ function UnifiedAuthInner() {
           className="object-cover object-center"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(18,19,16,0.45)_0%,rgba(18,19,16,0.15)_40%,rgba(18,19,16,0.85)_100%)]" />
-        <div className="pointer-events-none absolute -right-8 -top-16 select-none text-[26vw] font-black uppercase leading-none text-content-inverse/[0.06]">
-          R
-        </div>
         <div className="absolute inset-0 flex flex-col justify-between p-12 xl:p-16">
           <div className="flex items-center gap-3">
             <span className="h-px w-10 bg-accent-lime" />
@@ -807,9 +804,6 @@ export default function UnifiedAuthPage() {
   if (!isAuthEnabled) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface px-6 text-center font-sans text-content">
-        <div className="pointer-events-none absolute -right-8 -top-16 select-none text-[30vw] font-black uppercase leading-none text-content/[0.05]">
-          R
-        </div>
         <div className="relative panel-luxe frame-luxe w-full max-w-lg px-10 py-16">
           <p className="mb-5 text-[9px] font-bold uppercase tracking-[0.3em] text-accent-red">Sign in</p>
           <h1 className="mb-5 text-[clamp(2.8rem,6vw,4.5rem)] font-black uppercase leading-[0.85] tracking-[-0.06em]">

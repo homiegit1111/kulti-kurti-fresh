@@ -1,3 +1,4 @@
+import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import { absoluteUrl } from "@/lib/seo";
 import { B2B_CONFIG, SIZE_RATIO_LABEL } from "@/lib/b2b/config";
@@ -6,7 +7,7 @@ import BulkOrderClient from "./bulk-order-client";
 export const metadata: Metadata = {
   title: "Bulk Kurti Order - Wholesale Rates for Boutiques & Resellers",
   description:
-    "Build a wholesale kurti bulk order across multiple styles. MOQ 4 sets, tier discounts up to 10%, GST invoices, and all-India dispatch from Bangalore. Order on WhatsApp or online.",
+    "Build a wholesale kurti bulk order across multiple styles. MOQ 4 sets, flat wholesale rates, GST invoices, and all-India dispatch from Bangalore. Order on WhatsApp or online.",
   keywords: [
     "bulk kurti order",
     "wholesale kurti bulk order online",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Bulk Kurti Order | Rangat Pehnawa",
     description:
-      "Wholesale kurti bulk ordering for boutiques and resellers. MOQ 4 sets, tier discounts up to 10%, GST invoices, all-India dispatch.",
+      "Wholesale kurti bulk ordering for boutiques and resellers. MOQ 4 sets, flat wholesale rates, GST invoices, all-India dispatch.",
     url: "/bulk-order",
     type: "website",
     locale: "en_IN",
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bulk Kurti Order | Rangat Pehnawa",
     description:
-      "Wholesale kurti bulk ordering for boutiques and resellers. MOQ 4 sets, tier discounts up to 10%.",
+      "Wholesale kurti bulk ordering for boutiques and resellers. MOQ 4 sets at flat wholesale rates.",
     images: ["/images/hero.png"],
   },
 };
@@ -43,7 +44,7 @@ const BULK_FAQS = [
   },
   {
     q: "Do bulk kurti orders get wholesale discounts?",
-    a: "Yes. Orders of 8-19 sets unlock a 5% discount and 20+ sets unlock a 10% discount, applied automatically as you build the bulk cart.",
+    a: "Every order past the 4-set minimum is priced at flat wholesale rates — the per-piece rate shown is the rate you pay, with no volume ladder to climb. GST is calculated separately at invoicing.",
   },
   {
     q: "Do you provide GST invoices and all-India dispatch on bulk orders?",
@@ -51,7 +52,7 @@ const BULK_FAQS = [
   },
   {
     q: "How do I place a bulk kurti order?",
-    a: "Add styles as sets to reach your minimum order quantity, review the MOQ and discount tier, then confirm on WhatsApp or checkout online once payment is enabled.",
+    a: "Add styles as sets to reach your minimum order quantity, review your order summary, then confirm on WhatsApp or checkout online once payment is enabled.",
   },
 ];
 
@@ -64,7 +65,7 @@ export default function BulkOrderPage() {
     provider: { "@id": absoluteUrl("/#organization") },
     areaServed: { "@type": "Country", name: "India" },
     description:
-      "Bulk kurti ordering for boutiques, resellers, online sellers, and distributors. MOQ 4 sets with tier discounts up to 10%, GST invoices, and all-India dispatch.",
+      "Bulk kurti ordering for boutiques, resellers, online sellers, and distributors. MOQ 4 sets at flat wholesale rates, GST invoices, and all-India dispatch.",
     url: absoluteUrl("/bulk-order"),
     offers: {
       "@type": "Offer",
@@ -100,15 +101,15 @@ export default function BulkOrderPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(serviceLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(faqLd) }}
       />
       <BulkOrderClient />
     </>

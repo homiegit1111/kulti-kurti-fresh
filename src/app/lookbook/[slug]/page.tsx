@@ -1,103 +1,33 @@
+import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import {
   getEditorialBySlug,
+  getEditorialEntries,
   getEditorialSlugs,
-  type EditorialDetail,
 } from "@/lib/sanity/queries";
 import { sanityImageUrl, isSanityConfigured } from "@/lib/sanity/client";
 import { LookbookPortableText } from "@/components/lookbook/portable-text";
-import { LbReveal } from "@/components/lookbook/motion";
+import { EntryClose } from "@/components/document/entry";
+import { getProducts, formatPrice } from "@/lib/commerce/catalog";
+import { getBaseSetPrice, getPerPiecePrice } from "@/lib/b2b/pricing";
+import { getStyleCode } from "@/lib/b2b/style-code";
+import {
+  buildCatalogRequestUrl,
+  buildProductInquiryUrl,
+} from "@/lib/b2b/whatsapp";
+import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/seo";
 import type { PortableTextBlock } from "@portabletext/react";
-
-// Tiny helpers to author the built-in fallback bodies as valid Portable Text
-// (so the rich renderer is showcased before Sanity is connected).
-let keySeq = 0;
-const k = () => `k${(keySeq += 1)}`;
-const span = (text: string, marks: string[] = []) => ({
-  _type: "span",
-  _key: k(),
-  text,
-  marks,
-});
-const block = (
-  children: ReturnType<typeof span>[],
-  style = "normal",
-  markDefs: { _key: string; _type: string; href: string }[] = [],
-): PortableTextBlock =>
-  ({ _type: "block", _key: k(), style, markDefs, children }) as PortableTextBlock;
 
 export const revalidate = 3600;
 
-// Built-in fallback entries (mirror the lookbook index) so the route works
-// before Sanity is connected.
-const FALLBACK: Record<string, EditorialDetail> = {
-  "threads-of-heritage": {
-    _id: "f1",
-    title: "Threads of Heritage",
-    slug: "threads-of-heritage",
-    category: "craft",
-    excerpt:
-      "A journey through the handlooms and dyeing traditions that shape every Rangat piece.",
-    body: [
-      block([
-        span("Every Rangat Pehnawa piece begins not on a sketchpad, but at a "),
-        span("handloom", ["strong"]),
-        span(
-          " - where a weaving cluster may spend days coaxing a length of cloth into being. We work with craft partners across Bhuj, Bagru and Chanderi so wholesale buyers can source styles with a real material story.",
-        ),
-      ]),
-      block([span("The colour of memory")], "h2"),
-      block([
-        span(
-          "Our dye and print direction is built for small-batch wholesale drops: rich enough for boutique displays, practical enough for repeat buying, and varied enough that each lot keeps its hand-finished character.",
-        ),
-      ]),
-      block(
-        [span("A garment should carry the fingerprints of the hands that made it.")],
-        "blockquote",
-      ),
-      block([
-        span("What that means for trade buyers", ["em"]),
-        span(
-          " is a catalog with provenance: style codes, size-ratio packs, and product stories your customers can understand. Explore the current wholesale catalog in the ",
-        ),
-        span("catalog", ["L1"]),
-        span("."),
-      ], "normal", [{ _key: "L1", _type: "link", href: "/shop" }]),
-    ],
-  },
-  "the-festive-edit": {
-    _id: "f2",
-    title: "The Festive Edit",
-    slug: "the-festive-edit",
-    category: "campaign",
-    excerpt:
-      "A festive wholesale drop built around colour, occasion buying, and quick boutique merchandising.",
-  },
-  "quiet-luxury-loud-roots": {
-    _id: "f3",
-    title: "Quiet Luxury, Loud Roots",
-    slug: "quiet-luxury-loud-roots",
-    category: "journal",
-    excerpt:
-      "How restrained craft details become reseller-friendly catalog stories.",
-  },
-};
-
-async function resolveEntry(slug: string): Promise<EditorialDetail | null> {
-  const fromCms = await getEditorialBySlug(slug);
-  if (fromCms) return fromCms;
-  return FALLBACK[slug] ?? null;
-}
-
 export async function generateStaticParams() {
-  if (!isSanityConfigured()) return Object.keys(FALLBACK).map((slug) => ({ slug }));
+  // CMS entries only — the ghost fallback editorials are cut, not restyled.
+  if (!isSanityConfigured()) return [];
   const slugs = await getEditorialSlugs();
   return slugs.map((slug) => ({ slug }));
 }
@@ -108,7 +38,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const entry = await resolveEntry(slug);
+  const entry = await getEditorialBySlug(slug);
   if (!entry) return { title: "Editorial" };
   return {
     title: entry.title,
@@ -160,134 +90,242 @@ export default async function EditorialDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const entry = await resolveEntry(slug);
+  const entry = await getEditorialBySlug(slug);
   if (!entry) notFound();
 
-  const cover = sanityImageUrl(entry.coverImageRef, 1600) ?? "/images/hero.png";
+  const cover = sanityImageUrl(entry.coverImageRef, 1600);
   const body = Array.isArray(entry.body)
     ? (entry.body as PortableTextBlock[])
     : [];
+  const gallery = (entry.gallery ?? [])
+    .map((ref) => sanityImageUrl(ref, 1200))
+    .filter((src): src is string => Boolean(src));
   const published = formatDate(entry.publishedAt);
-  const initial = entry.title.trim().charAt(0).toUpperCase() || "R";
+
+  // Entry number = position in the published journal — a real count.
+  const siblings = await getEditorialEntries(24);
+  const entryNumber = siblings.findIndex((e) => e.slug === entry.slug) + 1;
+
+  // Every story ends at the rail: live styles with real codes.
+  const styles = await getProducts(4);
+
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      { "@type": "ListItem", position: 2, name: "The Lookbook", item: absoluteUrl("/lookbook") },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: entry.title,
+        item: absoluteUrl(`/lookbook/${entry.slug}`),
+      },
+    ],
+  };
+
+  const articleLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: entry.title,
+    ...(entry.excerpt ? { description: entry.excerpt } : {}),
+    ...(cover ? { image: [cover] } : {}),
+    ...(entry.publishedAt ? { datePublished: entry.publishedAt } : {}),
+    mainEntityOfPage: absoluteUrl(`/lookbook/${entry.slug}`),
+    author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumbLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(articleLd) }}
+      />
       <Navbar />
 
-      <main className="relative flex-1 bg-surface pt-28 pb-24 text-content lg:pt-36 min-h-screen">
-        <article className="w-full">
-          {/* ── Editorial masthead ─────────────────────────────────────── */}
-          <header className="relative overflow-hidden">
-            {/* giant faded backdrop letter — line-book editorial device */}
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-6 -top-14 select-none text-[42vw] font-black uppercase leading-none text-content/5 lg:text-[26vw]"
-            >
-              {initial}
-            </span>
-
-            <div className="relative mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10">
-              <LbReveal>
-                <Link
-                  href="/lookbook"
-                  className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-content/50 transition-colors hover:text-accent-red"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-                  The Lookbook
-                </Link>
-
-                <div className="mt-8 border-b-2 border-line pb-6">
-                  <p className="eyebrow">
-                    {entry.category ?? "journal"} / Journal entry
-                  </p>
-                  <h1 className="mt-4 max-w-[14ch] text-[clamp(2.8rem,7.5vw,6.75rem)] font-black uppercase leading-[0.84] tracking-[-0.06em]">
-                    {entry.title}
-                  </h1>
-                  {entry.excerpt && (
-                    <p className="mt-6 max-w-[52ch] border-l-2 border-accent-lime pl-5 text-sm leading-6 text-content/65 sm:text-base sm:leading-7">
-                      {entry.excerpt}
-                    </p>
-                  )}
-                </div>
-
-                {/* meta rail — table-like, micro-label columns */}
-                <dl className="grid grid-cols-2 gap-px bg-line/15 border-b border-line/20 sm:grid-cols-4">
-                  {[
-                    ["Filed under", entry.category ?? "Journal"],
-                    ["Published", published ?? "Studio archive"],
-                    [
-                      "Reading time",
-                      body.length > 0 ? `${readingMinutes(body)} min` : "—",
-                    ],
-                    ["Series", "The Lookbook"],
-                  ].map(([label, value]) => (
-                    <div key={label} className="bg-surface px-1 py-4 sm:px-3">
-                      <dt className="text-[9px] font-bold uppercase tracking-[0.24em] text-content/40">
-                        {label}
-                      </dt>
-                      <dd className="mt-1.5 text-xs font-bold uppercase tracking-[0.08em] text-content">
-                        {value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </LbReveal>
-            </div>
-          </header>
-
-          {/* ── Cover plate ────────────────────────────────────────────── */}
-          <div className="mx-auto mt-12 w-full max-w-5xl px-4 sm:px-6 lg:px-10">
-            <LbReveal scaleFrom={1.035} y={0} duration={0.48}>
-              <div className="relative aspect-[16/9] overflow-hidden border border-line/20 bg-surface-hover">
-                <Image
-                  src={cover}
-                  alt={entry.title}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 1024px"
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-                <span className="absolute left-0 top-0 bg-accent-lime px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-on-accent">
-                  {entry.category ?? "journal"}
+      <main className="min-h-screen flex-1 bg-surface pb-24 pt-16 text-content">
+        {/* Printed-journal running head — category + entry number, sticky. */}
+        <div className="ledger sticky top-16 z-30 border-b border-line/25 bg-surface">
+          <div className="mx-auto flex max-w-[1400px] items-baseline gap-3 px-5 py-2 text-[9px] font-extrabold uppercase tracking-[0.24em] text-content/55 sm:px-10 lg:px-16">
+            <span>{entry.category ?? "journal"}</span>
+            {entryNumber > 0 && (
+              <>
+                <span aria-hidden="true" className="text-content/35">
+                  ·
                 </span>
-              </div>
-            </LbReveal>
+                <span className="tabular-nums">Story {entryNumber}</span>
+              </>
+            )}
+            <Link
+              href="/lookbook"
+              className="ml-auto underline decoration-1 underline-offset-4 hover:decoration-2"
+            >
+              The lookbook
+            </Link>
           </div>
+        </div>
 
-          {/* ── Body ───────────────────────────────────────────────────── */}
-          <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-10">
-            {body.length > 0 ? (
-              <LbReveal className="mt-12" delay={0.05}>
-                <LookbookPortableText value={body} />
-              </LbReveal>
-            ) : (
-              <p className="mt-10 text-[10px] font-bold uppercase tracking-[0.2em] text-content/40">
-                {isSanityConfigured()
-                  ? "This story is being written."
-                  : "Connect Sanity to publish the full editorial."}
+        <article className="mx-auto w-full max-w-[1400px] px-5 sm:px-10 lg:px-16">
+          {/* Text block with the folio rail at lg+ (R2). */}
+          <div className="relative lg:ml-[72px] lg:border-l lg:border-line/25 lg:pl-6">
+            {/* Story head — entry anatomy. */}
+            <header className="entry-rule relative mt-12">
+              <p className="pt-5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-content/55">
+                {entry.category ?? "journal"}
+                <span className="mx-2 text-content/35">·</span>
+                {published ?? "archive"}
+                {body.length > 0 && (
+                  <>
+                    <span className="mx-2 text-content/35">·</span>
+                    <span className="tabular-nums">
+                      {readingMinutes(body)} min
+                    </span>
+                  </>
+                )}
               </p>
+              <h1 className="mt-3 max-w-[18ch] text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+                {entry.title}
+              </h1>
+              {entry.excerpt && (
+                <p className="mt-4 max-w-[52ch] text-sm leading-[21px] text-content/70">
+                  {entry.excerpt}
+                </p>
+              )}
+            </header>
+
+            {/* Cover plate — framed, only when a real cover exists. */}
+            {cover && (
+              <div className="mt-8 grid gap-6 lg:grid-cols-12">
+                <div className="plate-frame relative aspect-[3/4] overflow-hidden bg-surface-hover lg:col-span-7">
+                  <Image
+                    src={cover}
+                    alt={entry.title}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 760px"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
             )}
 
-            {/* ── End matter — back to the journal, on to the rail ─────── */}
-            <LbReveal className="mt-16">
-              <div className="flex flex-col gap-4 border-t-2 border-line pt-6 sm:flex-row sm:items-center sm:justify-between">
+            {/* Body. */}
+            <div className="mt-10 max-w-3xl">
+              {body.length > 0 ? (
+                <LookbookPortableText value={body} />
+              ) : (
+                <p className="text-sm leading-6 text-content/60">
+                  This story is being written.
+                </p>
+              )}
+            </div>
+
+            {/* Gallery — grid-hung framed plates, never full-bleed. */}
+            {gallery.length > 0 && (
+              <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {gallery.map((src, index) => (
+                  <div
+                    key={src}
+                    className="plate-frame relative aspect-[4/5] overflow-hidden bg-surface-hover"
+                  >
+                    <Image
+                      src={src}
+                      alt={`${entry.title} — plate ${index + 1}`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 620px"
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Terminal desk — the story ends at the rail. */}
+            <section className="entry-rule mt-16">
+              <h2 className="pt-5 text-[10px] font-extrabold uppercase tracking-[0.22em]">
+                Stock the styles behind this story
+              </h2>
+
+              {styles.length > 0 ? (
+                <div className="ledger mt-4">
+                  {styles.map((product) => {
+                    const setPrice = getBaseSetPrice(product);
+                    const perPiece = getPerPiecePrice(setPrice);
+                    return (
+                      <div
+                        key={product.id}
+                        className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-4 border-b border-line/20 py-3 md:grid-cols-[8rem_minmax(0,1fr)_10rem_7rem]"
+                      >
+                        <span className="hidden font-mono text-[11px] tracking-[0.08em] text-content/70 md:block">
+                          {getStyleCode(product)}
+                        </span>
+                        <Link
+                          href={`/shop/${product.handle}`}
+                          className="min-w-0 truncate text-sm font-bold leading-tight tracking-[-0.02em] hover:underline"
+                        >
+                          {product.title}
+                        </Link>
+                        <span className="text-sm font-black tabular-nums tracking-[-0.02em]">
+                          {formatPrice(setPrice)}
+                          <span className="ml-1 text-[8px] font-bold uppercase tracking-[0.14em] text-content/45">
+                            set
+                          </span>
+                          <span className="mx-1 text-content/40">·</span>
+                          {formatPrice(perPiece)}
+                          <span className="ml-0.5 text-[8px] font-bold uppercase tracking-[0.14em] text-content/45">
+                            /pc
+                          </span>
+                        </span>
+                        <a
+                          href={buildProductInquiryUrl(product)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-right text-[9px] font-extrabold uppercase tracking-[0.18em] underline decoration-1 underline-offset-4 hover:decoration-2"
+                        >
+                          WhatsApp →
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-4 max-w-xl">
+                  <p className="border-b border-line/20 py-3 text-sm leading-6 text-content/70">
+                    Styles updating — WhatsApp for today&apos;s price list.
+                  </p>
+                  <a
+                    href={buildCatalogRequestUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-6 inline-flex h-11 items-center border border-content px-6 text-[10px] font-extrabold uppercase tracking-[0.2em] transition-colors hover:bg-surface-inverse hover:text-content-inverse"
+                  >
+                    WhatsApp catalog
+                  </a>
+                </div>
+              )}
+
+              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-[10px] font-extrabold uppercase tracking-[0.2em]">
                 <Link
                   href="/lookbook"
-                  className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-content/55 transition-colors hover:text-accent-red"
+                  className="underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-                  All stories
+                  ← All stories
                 </Link>
                 <Link
                   href="/shop"
-                  className="group inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-content underline decoration-accent-lime decoration-2 underline-offset-4 transition-colors hover:decoration-accent-red"
+                  className="underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  Stock the line behind this story
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                  Browse styles →
                 </Link>
               </div>
-            </LbReveal>
+            </section>
+
+            <EntryClose className="mt-12" />
           </div>
         </article>
       </main>

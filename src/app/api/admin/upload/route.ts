@@ -89,7 +89,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const mutationGate = await guardAdminMutation(req);
+  const mutationGate = await guardAdminMutation(req, "media:write");
   if (!mutationGate.ok) return mutationGate.response;
 
   const supabase = createServiceRoleClient();

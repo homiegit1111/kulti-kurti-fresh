@@ -4,13 +4,26 @@ export const B2B_CONFIG = {
   minimumOrderSets: 4,
   minimumStyleSets: 1,
   defaultLineSets: 1,
-  // Flat wholesale pricing — no volume-discount ladder for now. A single 0%
-  // tier keeps the tier machinery (MOQ, totals, promo-code sync) working while
-  // charging everyone the same per set. A 0% tier maps to NO promo code, so
-  // nothing discount-related is sent to Medusa. A flat 2–3% cart-value discount
-  // is planned later; add it here (or as a post-subtotal adjustment) when ready.
+  // ⚠️ DECISION NEEDED — see docs/ADMIN_STUDIO.md § "The volume ladder".
+  //
+  // This list used to declare a single flat 0% tier, while
+  // public.create_commerce_checkout independently hardcoded 5% at 8+ sets and
+  // 10% at 20+ sets. The database wins, because it computes the charged total —
+  // so buyers were QUOTED full price and CHARGED up to 10% less.
+  //
+  // These values now mirror the ladder seeded into public.commerce_pricing_tiers
+  // by supabase/20260726_configurable_pricing_and_sales.sql: that is, what the
+  // database was already charging. The quote now agrees with the charge, which is
+  // an improvement either way — but it does NOT settle which ladder was
+  // intended. Decide, set it in Admin Studio → Pricing (a flat 0% ladder is one
+  // edit), and mirror your choice here.
+  //
+  // The database ladder is authoritative for money. This copy exists only so
+  // client components can render tiers synchronously.
   tiers: [
-    { minSets: 4, maxSets: null, discountPercent: 0, label: "Wholesale" },
+    { minSets: 4, maxSets: 7, discountPercent: 0, label: "Wholesale" },
+    { minSets: 8, maxSets: 19, discountPercent: 5, label: "Volume 8+ sets" },
+    { minSets: 20, maxSets: null, discountPercent: 10, label: "Volume 20+ sets" },
   ],
   businessTypes: [
     "Boutique",
@@ -28,6 +41,17 @@ export const B2B_CONFIG = {
 };
 
 export type BusinessType = (typeof B2B_CONFIG.businessTypes)[number];
+
+/**
+ * Typical boutique markup on wholesale, used to ILLUSTRATE a reseller's margin.
+ * It is an assumption about the buyer's own shop, never a claim about ours, so
+ * anything rendered from it must be labelled as typical/illustrative and stay
+ * editable where the buyer can change it (see reseller-margin-estimator).
+ *
+ * Single source: the estimator and the homepage rack both read this, so one edit
+ * moves every margin figure on the site.
+ */
+export const TYPICAL_RESALE_MULTIPLIER = 1.45;
 
 export const SIZE_RATIO_LABEL = B2B_CONFIG.sizeRatio.join("/");
 

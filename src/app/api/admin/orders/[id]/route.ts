@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { allowedOrderTransitions } from "@/lib/commerce/order-transitions";
 import { checkRateLimit, tooManyRequests } from "@/lib/server/rate-limit";
 import {
   guardAdminMutation,
@@ -21,13 +22,11 @@ export const dynamic = "force-dynamic";
 
 // Allowed manual transitions (admin ops). Payment-driven transitions to 'paid'
 // happen only in the checkout/payment flow, never here.
-const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending_payment: ["cancelled"],
-  paid: ["fulfilled"],
-  fulfilled: [],
-  cancelled: [],
-  draft: ["cancelled"],
-};
+/**
+ * The state machine now lives in src/lib/commerce/order-transitions.ts so the
+ * admin UI reads the same list. It was duplicated, the copies had drifted, and
+ * the UI was offering four transitions this route rejects with a 409.
+ */
 
 export async function PATCH(
   req: NextRequest,
@@ -39,7 +38,7 @@ export async function PATCH(
   });
   if (!limited.ok) return tooManyRequests(limited);
 
-  const mutationGate = await guardAdminMutation(req);
+  const mutationGate = await guardAdminMutation(req, "orders:write");
   if (!mutationGate.ok) return mutationGate.response;
 
   const supabase = createServiceRoleClient();
@@ -73,8 +72,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Order not found." }, { status: 404 });
   }
 
-  const allowed = ALLOWED_TRANSITIONS[current.status as string] ?? [];
-  if (!allowed.includes(next)) {
+  const allowed = allowedOrderTransitions(current.status as string);
+  if (!allowed.some((candidate) => candidate === next)) {
     return NextResponse.json(
       {
         error: `Cannot move an order from "${current.status}" to "${next}".`,

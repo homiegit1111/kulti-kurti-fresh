@@ -37,56 +37,148 @@
          ink #0A0A0F (L 0.0027) on paper #FFFFFF (L 1.0) → 21.0:1
          ink #0A0A0F             on saffron #E9A319 (L 0.4667) →  8.6:1
        Both clear AA at any size; the saffron pairing clears AAA for large text. */
-    --surface: #FFFFFF;        /* page background — pure paper */
-    --surface-2: #FAFAFA;      /* alt panel / card — off-white */
-    --surface-inverse: #0A0A0F;/* intentional dark blocks — ink */
-    --surface-hover: #F0F0F0;  /* image placeholder / hover well */
-    --warm-gray: #E5E5E5;      /* legacy warm-gray token value */
-    --content: #0A0A0F;        /* primary text/ink */
-    --content-inverse: #FFFFFF;/* text on dark blocks */
-    --line: #0A0A0F;           /* hairline borders (used with alpha) */
+    /* WARM PAPER REVISION: the pure-white/blue-black pairing read as a
+       spreadsheet, not a textile house. Paper is now the warm ivory of the
+       studio backdrops (cream wall, linen flat-lays) and ink is warm rather
+       than blue-black, so the page and the photography share one light.
+       Luminance roles are unchanged, so every existing pairing survives:
+         ink #1A1512 (L 0.0119) on paper #FBF8F3 (L 0.9268) → 17.2:1
+         ink #1A1512            on saffron #E9A319 (L 0.4667) →  8.4:1
+       Both clear AA at any size. */
+    --surface: #FBF8F3;        /* page background — warm ivory paper */
+    --surface-2: #F4EEE4;      /* alt panel / card — deeper cream */
+    --surface-inverse: #1A1512;/* intentional dark blocks — warm ink */
+    --surface-hover: #EBE3D6;  /* image placeholder / hover well — sand */
+    --warm-gray: #E3D9C9;      /* legacy warm-gray token value */
+    --content: #1A1512;        /* primary text — warm ink */
+    --content-inverse: #FBF8F3;/* text on dark blocks */
+    --line: #1A1512;           /* hairline borders (used with alpha) */
     --accent-lime: #E9A319;    /* signal accent — saffron */
     --accent-red: #C03A2B;     /* negative state — vermilion */
+    /* Decorative warmth ONLY — soft washes, rules, and section marks that must
+       read as textile rather than signal. Never used for state (that is what
+       saffron and vermilion are for), so it can never be confused with either. */
+    --accent-clay: #B4674A;    /* terracotta — dye-pot warmth */
+
+    /* ═══ COLOUR FIELDS — the lookbook's dyed sections ═══
+       Whole sections are filled with these so scrolling moves through colour
+       instead of down a stack of white bands. Jewel tones from the dye pot,
+       chosen to sit under the same warm light as the ivory paper and saffron.
+       Text on a field is always --content-inverse (cream); contrast computed,
+       not estimated:
+         cream #FBF8F3 (L 0.9268) on oxblood #4A1D24 (L 0.0246) → 13.3:1
+         cream                    on forest  #1E3A32 (L 0.0354) → 11.6:1
+         cream                    on indigo  #21304A (L 0.0347) → 11.7:1
+         saffron #E9A319          on oxblood                    →  6.9:1
+       All clear AA; the cream pairings clear AAA. Fields are theme-independent
+       by design — a dyed page is dyed in both themes. */
+    --field-oxblood: #4A1D24;
+    --field-forest: #1E3A32;
+    --field-indigo: #21304A;
+
+    /* ═══ HOME: ONE COLOUR ═══
+       The homepage is a single colour — undyed cloth. One off-white, stepped
+       only in TONE (ground → panel → raised), never into a second hue, so the
+       page reads as one continuous sheet and the ONLY colour on screen is the
+       cloth in the photographs. This is why the studio shots work: their cream
+       backdrop is this paper, so a garment appears to lie on the page.
+       Saffron appears solely as interaction state (a committed row), so at rest
+       the homepage is monochrome.
+       Contrast, computed: ink #1A1512 (L 0.0080) on ground #FBF8F3 (L 0.9416)
+       → 17.1:1; on raised #EDE6DA (L 0.8069) → 14.7:1. Both clear AAA. */
+    /* ═══ रंगत — the homepage identity (DAY) ═══
+       Warm cream paper, ink that is brown-black rather than blue-black, and a
+       single vermilion for accents. The cover is a printed sheet; `.dark` gives
+       it its own designed night palette (see below) rather than inverting it.
+
+       Three grounds, stepped only in tone — panel lifts, raised deepens — and
+       three ink weights. Contrast computed from WCAG 2.1 relative luminance
+       (L values in parentheses), never estimated:
+
+         ground #EFE9DA (L 0.8169)   panel #F7F2E6 (L 0.8899)   raised #E5DDCB (L 0.7268)
+
+                        on ground   on panel   on raised
+         ink   #191410    15.09       16.36      13.52   (L 0.0074)
+         soft  #55503F     6.65        7.21       5.96   (L 0.0803)
+         mute  #635D4C     5.42        5.87       4.85   (L 0.1100)
+         verm  #B03A26     4.98        5.40       4.47*  (L 0.1240)
+
+       Every one clears AA (4.5:1) for body text at any size, except the starred
+       cell: vermilion is NEVER set on `raised`. `raised` carries the Contact
+       panel and the collection plate wells only — ink and soft, no accent. If a
+       vermilion label is ever needed there, deepen the token first.
+
+       --home-rule is a decorative hairline, not text and not a control edge, so
+       it is tuned by eye against the grounds (1.28 / 1.39 / 1.15) — WCAG sets no
+       floor for it, and a rule that meets 3:1 stops being a hairline. */
+    --home-ground: #EFE9DA;
+    --home-panel: #F7F2E6;
+    --home-raised: #E5DDCB;
+    --home-ink: #191410;
+    --home-ink-soft: #55503f;
+    /* Micro-label ink — style codes, /pc, unit captions. Replaces the ad-hoc
+       text-home-ink/45…/55 ladder, which composited to 2.8–3.8:1 on cream and
+       failed AA in BOTH themes. One token, one number, tuned to pass on the
+       darkest ground it can land on. */
+    --home-ink-mute: #635D4C;
+    --home-rule: #D8CFB8;
+    --home-vermilion: #B03A26;
+
+    /* ═══ THE FILM PLATE — pinned in BOTH themes ═══
+       The cinematic band is a photographed plate with a dark scrim burned into
+       it (the scrim is what makes cream type legible over moving cloth). A
+       plate does not invert, exactly as the --field-* dyes do not: if these
+       followed the theme, the cream headline would turn brown-black at night
+       and disappear into its own scrim. Pinned, computed:
+         plate-ink #F3EEE2 (L 0.8570) on plate #191410 (L 0.0074) → 15.79:1
+         plate-ink at 70% (caption)                               →  8.18:1
+         plate-accent #E2604F (L 0.2510) on plate                 →  5.24:1
+       The accent clause is display-scale (≥28.8px) so it needs 3:1; it clears
+       AA for body text as well. */
+    --home-plate: #191410;
+    --home-plate-ink: #F3EEE2;
+    --home-plate-accent: #E2604F;
     /* Ink that sits ON a solid bright fill (saffron chips, white CTAs).
        Pinned dark in BOTH themes: those fills are bright in dark mode too, so
        text on them must stay dark ink or it becomes unreadable. This pin is the
        invariant that let the whole palette rotate by hue alone.
        Never role-split — see docs/THEME_TOKENS.md. */
-    --on-accent: #0A0A0F;
+    --on-accent: #1A1512;
 
-    /* shadcn/ui semantic aliases — monochrome mapping */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 4%;
+    /* shadcn/ui semantic aliases — warm-paper mapping, kept in lockstep with
+       the role tokens above (same colours expressed in HSL). */
+    --background: 38 50% 97%;
+    --foreground: 23 18% 9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card: 38 50% 97%;
+    --card-foreground: 23 18% 9%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover: 38 50% 97%;
+    --popover-foreground: 23 18% 9%;
 
-    --primary: 240 10% 4%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 23 18% 9%;
+    --primary-foreground: 38 50% 97%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 240 10% 4%;
+    --secondary: 38 42% 93%;
+    --secondary-foreground: 23 18% 9%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 38 42% 93%;
+    --muted-foreground: 25 9% 42%;
 
     /* Saffron, matching --accent-lime. */
     --accent: 41 82% 50%;
     /* Dark ink, NOT near-white: paper on saffron is 2.1:1 and fails AA. This
        also keeps shadcn's accent pairing consistent with --on-accent, which the
        other ~430 accent call sites use. */
-    --accent-foreground: 240 10% 4%;
+    --accent-foreground: 23 18% 9%;
 
     /* Vermilion, matching --accent-red. Paper on vermilion computes to 5.9:1 —
        clears AA for normal text. */
     --destructive: 8 63% 46%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
+    --border: 33 22% 86%;
+    --input: 33 22% 86%;
     --ring: 41 82% 50%;
 
     /* Charts walk saffron → ink (used by /admin). Ordered by hue distance so
@@ -109,66 +201,144 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DARK THEME — "studio at night" monochrome
-   Deliberately NOT pure black: near-black ink surfaces that climb in
-   lightness with elevation, keyed to paper so the saffron accent glows.
-   Toggled by `.dark` on <html> (see theme-provider + boot script).
-   Everything here is an OVERRIDE — remove .dark and the site is exactly
-   as before.
+   NIGHT — रंगत under a warm lamp
+   ═══════════════════════════════════════════════════════════════
+   This is a DESIGNED palette, not an inversion. The day palette is a
+   printed cover: cream paper, brown-black ink, one vermilion. At night
+   the same cover is seen under a lamp — so the ground is a deep, warm
+   bistre (hue ~30°, NOT blue-black, NOT #000), the type is the same
+   warm paper it was printed on rather than white, and the vermilion is
+   lifted just enough to carry small text on that ground.
+
+   The whole theme sits on ONE hue axis (28–40°), so the app surfaces
+   and the cover's own --home-* family are lit by the same lamp. Both
+   families are declared here; the homepage themes with everything else.
+
+   Toggled by `.dark` on <html> (theme-provider + the boot script in
+   layout.tsx). Everything here is an OVERRIDE — strip `.dark` and the
+   site is exactly the day palette again.
    ═══════════════════════════════════════════════════════════════ */
 .dark {
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
+    /* shadcn/ui semantic aliases — the same colours below, expressed in HSL,
+       kept in lockstep with the role tokens so a shadcn primitive and a role
+       utility never disagree about what "the page" is. */
+    /* Decimals are not fussiness: `30 31% 6%` rounds to rgb(20,15,11) while the
+       role token --surface is rgb(21,16,11), and a shadcn popover would then sit
+       one step off the page it floats over. These round-trip exactly. */
+    --background: 30 31.25% 6.27%;   /* #15100B */
+    --foreground: 40 51.22% 91.96%;  /* #F5EEE0 */
 
-    --card: 240 6% 7%;
-    --card-foreground: 0 0% 98%;
+    --card: 27.27 22.45% 9.61%;      /* #1E1813 */
+    --card-foreground: 40 51.22% 91.96%;
 
-    --popover: 240 10% 4%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 30 31.25% 6.27%;
+    --popover-foreground: 40 51.22% 91.96%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 10% 4%;
+    --primary: 40 51.22% 91.96%;
+    --primary-foreground: 30 31.25% 6.27%;
 
-    --secondary: 240 4% 12%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 28 23.08% 12.75%;   /* #282019 */
+    --secondary-foreground: 40 51.22% 91.96%;
 
-    --muted: 240 4% 12%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 28 23.08% 12.75%;
+    --muted-foreground: 39.38 19.28% 67.45%; /* #BCB19C — 8.38:1 on the ground */
 
     --accent: 41 82% 55%;
-    --accent-foreground: 240 10% 4%;
+    --accent-foreground: 23 18% 9%;
 
-    --destructive: 8 68% 55%;
+    --destructive: 6.94 71.71% 59.8%; /* #E2604F — one vermilion, site-wide */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 4% 18%;
-    --input: 240 4% 18%;
+    --border: 35 23.08% 20.39%;      /* #403628 */
+    --input: 35 23.08% 20.39%;
     --ring: 41 82% 55%;
 
-    --sidebar-background: 240 10% 4%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 0 0% 98%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 240 4% 12%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 4% 18%;
+    /* /admin chrome joins the same lamp — it used to be blue-black, which read
+       as a different product bolted onto the storefront. */
+    --sidebar-background: 30 31.25% 6.27%;
+    --sidebar-foreground: 40 51.22% 91.96%;
+    --sidebar-primary: 40 51.22% 91.96%;
+    --sidebar-primary-foreground: 30 31.25% 6.27%;
+    --sidebar-accent: 28 23.08% 12.75%;
+    --sidebar-accent-foreground: 40 51.22% 91.96%;
+    --sidebar-border: 35 23.08% 20.39%;
     --sidebar-ring: 41 82% 55%;
 
-    /* Semantic roles — INK / PAPER inverted. Same luminance ladder as before
-       (surfaces climb with elevation so depth reads without borders); only the
-       hue moves, so every existing pairing survives. */
-    --surface: #0A0A0F;         /* page background — ink */
-    --surface-2: #111118;       /* panels / cards — raised ink */
-    --surface-inverse: #1A1A24; /* former dark blocks → elevated ink */
-    --surface-hover: #22222E;   /* image placeholder / hover wells */
-    --warm-gray: #22222E;       /* legacy warm-gray → dark hover well */
-    --content: #FAFAFA;         /* primary text — paper, cooled */
-    --content-inverse: #FFFFFF; /* text on raised surfaces stays paper */
-    --line: #FAFAFA;            /* hairlines invert (used at low alpha) */
-    --accent-lime: #F0B030;     /* saffron lifted — glows on ink */
+    /* ── Semantic roles — the app surfaces ──
+       Surfaces climb in lightness with elevation so depth reads without
+       borders. Contrast computed, not estimated:
+         content #F5EEE0 (L 0.8594) on surface #15100B (L 0.0055) → 16.37:1
+         content                    on surface-2 #1E1813 (L 0.0098) → 15.22:1
+         content                    on surface-hover #282019 (L 0.0155) → 13.88:1
+         content-inverse #FBF8F3    on surface-inverse #2F2720 (L 0.0216) → 13.84:1
+         content at 70%             on surface                 →  8.31:1
+         accent-red #E2604F (L 0.2510) on surface               →  5.42:1
+         accent-clay #C97F5D (L 0.2839) on surface              →  6.01:1
+         on-accent #1A1512 on accent-lime #F0B030 (L 0.4979)    →  9.45:1
+         accent-lime on surface-inverse                         →  7.65:1
+       All clear AA for body text at any size.
+
+       WHY --content IS PAPER AND NOT WHITE. The previous dark theme paired
+       #F7F3EC on #141110 for 16.99:1. Warming the type to the cream it is
+       printed on costs 3.6% of that (16.37:1) and buys the whole point of the
+       theme — a lamp, not a torch. Nothing crosses a threshold: across every
+       alpha the site actually uses (/20 … /100) the largest loss is 3.9%, and
+       no pairing that cleared 4.5:1 before drops under it now (the closest is
+       content/50, 4.93 → 4.77). Checked step by step, not assumed. */
+    --surface: #15100B;         /* page background — deep bistre, lamp-lit */
+    --surface-2: #1E1813;       /* panels / cards — first lift */
+    --surface-inverse: #2F2720; /* former dark blocks → the elevated block */
+    --surface-hover: #282019;   /* image placeholder / hover wells */
+    --warm-gray: #282019;       /* legacy warm-gray → dark hover well */
+    --content: #F5EEE0;         /* primary text — the paper it was printed on */
+    --content-inverse: #FBF8F3; /* text on elevated blocks stays paper */
+    --line: #F5EEE0;            /* hairlines invert (always used at low alpha) */
+    --accent-lime: #F0B030;     /* saffron lifted — glows on warm dark */
     --accent-red: #E2604F;      /* vermilion lifted for contrast on dark */
+    --accent-clay: #C97F5D;     /* terracotta lifted — decorative warmth */
     /* --on-accent intentionally NOT overridden: saffron/white fills are bright
        in dark mode too, so ink on them stays dark. */
+
+    /* ── रंगत — the cover at night ──
+       The cover keeps its own three-ground ladder, but at night all three LIFT
+       (elevation = light), where by day panel lifts and raised deepens. The
+       cover sheet sits one perceptible step above the app ground (1.06:1) so it
+       still reads as a sheet laid on the page rather than a hole in it.
+
+         ground #1D1710 (L 0.0091)  panel #241D16 (L 0.0131)  raised #302719 (L 0.0215)
+
+                        on ground   on panel   on raised
+         ink   #F5EEE0    15.38       14.41      12.72   (L 0.8594)
+         soft  #BCB19C     8.38        7.85       6.93   (L 0.4454)
+         mute  #9E9482     5.93        5.55       4.90   (L 0.3006)
+         verm  #E2604F     5.09        4.77       4.21*  (L 0.2510)
+
+       Same contract as the day palette: every cell clears AA (4.5:1) for body
+       text at any size, and the starred cell is not shipped — `raised` carries
+       no vermilion in either theme.
+
+       The primary button that the owner reported as invisible is
+       `bg-home-ink text-home-ground`. It is correct here BECAUSE both tokens
+       move: paper fill, deep ink type → 15.38:1 (it is 15.09:1 by day). The bug
+       was never the pairing; it was that --home-ink moved and --home-ground did
+       not, because this block did not exist.
+
+       --home-vermilion is the SAME value as --accent-red at night: one
+       vermilion in the whole dark theme, so the cover and the app cannot drift.
+       --home-rule stays a decorative hairline (1.50 / 1.41 / 1.24 on the three
+       grounds — the day palette's 1.28 / 1.39 / 1.15 seen from the other side). */
+    --home-ground: #1D1710;
+    --home-panel: #241D16;
+    --home-raised: #302719;
+    --home-ink: #F5EEE0;   /* === --content: one paper for the whole night */
+    --home-ink-soft: #BCB19C;
+    --home-ink-mute: #9E9482;
+    --home-rule: #403628;
+    --home-vermilion: #E2604F;
+    /* --home-plate / --home-plate-ink / --home-plate-accent intentionally NOT
+       overridden — see the :root block. The film band is a plate, and a plate
+       does not invert. */
+
     color-scheme: dark;
 }
 
@@ -229,6 +399,27 @@
     --color-line: var(--line);
     --color-accent-lime: var(--accent-lime);
     --color-accent-red: var(--accent-red);
+    --color-accent-clay: var(--accent-clay);
+    --color-field-oxblood: var(--field-oxblood);
+    --color-field-forest: var(--field-forest);
+    --color-field-indigo: var(--field-indigo);
+    --color-home-ground: var(--home-ground);
+    --color-home-panel: var(--home-panel);
+    --color-home-raised: var(--home-raised);
+    --color-home-ink: var(--home-ink);
+    --color-home-ink-soft: var(--home-ink-soft);
+    --color-home-ink-mute: var(--home-ink-mute);
+    --color-home-rule: var(--home-rule);
+    --color-home-vermilion: var(--home-vermilion);
+    --color-home-plate: var(--home-plate);
+    --color-home-plate-ink: var(--home-plate-ink);
+    --color-home-plate-accent: var(--home-plate-accent);
+    /* These MUST NOT reuse the next/font variable names: a theme token that
+       references itself (--font-x: var(--font-x)) resolves to nothing and the
+       utility silently falls back to the default sans. Distinct names only. */
+    --font-deva: var(--font-devanagari), serif;
+    --font-editorial: var(--font-fraunces), Georgia, serif;
+    --font-trade: var(--font-mono-trade), ui-monospace, monospace;
     --color-on-accent: var(--on-accent);
     --color-rangat-pink: hsl(348 35% 36%);
     --color-rangat-teal: hsl(28 30% 36%);
@@ -883,12 +1074,11 @@ a,
 .inventory-row:hover::before,
 .inventory-row:focus-visible::before {
   transform: scaleY(1);
-  opacity: 1;
-}
-
-.inventory-row:hover,
-.inventory-row:focus-visible {
-  --content: var(--on-accent);
+  /* A TINT, not a flood. At full opacity this painted an entire row marigold —
+     louder than the prices it was meant to support. At 18% the row still
+     answers the pointer, and the ink stays the ink, so --content no longer
+     needs rebinding (that rebind existed only to survive the opaque fill). */
+  opacity: 0.18;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1045,43 +1235,222 @@ a,
     border-color: color-mix(in srgb, var(--line) 16%, transparent);
 }
 
-/* ── Theme switch reveal / progress bar chrome ── */
-.theme-circle-overlay {
-    contain: strict;
+/* ═══════════════════════════════════════════════════════════════
+   THE LAMP — day ⇄ night switching
+   ═══════════════════════════════════════════════════════════════
+   One gesture: an iris opens from the toggle button and the other
+   half of the day arrives through it. Two implementations of the same
+   gesture, chosen at runtime by theme-provider.tsx:
+
+   1. VIEW TRANSITIONS (Chromium, Safari 18+, any browser with
+      document.startViewTransition). The browser snapshots the page,
+      the theme is applied, and the NEW page is revealed through an
+      expanding clip-path circle centred on the toggle while the old
+      snapshot holds still and settles back a fraction of a percent.
+      This is the premium version: what opens is the real new palette,
+      not a flat disc standing in for it.
+
+   2. OVERLAY FALLBACK. A single fixed layer painted with the incoming
+      ground, clipped by the same circle, with a soft accent bloom
+      running a step ahead of the edge. Compositor-only, ~0 layout cost.
+
+   Both are clip-path + transform + opacity only. Nothing here animates a
+   layout property, and every rule is inert unless theme-provider has put
+   `.theme-vt` (path 1) or the overlay element (path 2) on the page.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+    /* Written by theme-provider before each switch; harmless at rest. */
+    --theme-iris-x: 50vw;
+    --theme-iris-y: 0px;
+    --theme-iris-r: 0px;
+    --theme-iris-ms: 520ms;
+    --theme-iris-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.theme-progress-fill {
-    background: linear-gradient(90deg, var(--accent-red), var(--accent-lime));
+/* ── Path 1: view-transition iris ──────────────────────────────── */
+
+/* These win over the route-navigation rules further down because they are
+   qualified by :root.theme-vt — a class the provider only sets for the
+   duration of a theme switch. Route turns keep their own quick crossfade. */
+:root.theme-vt::view-transition-group(root) {
+    animation-duration: var(--theme-iris-ms);
+    animation-timing-function: var(--theme-iris-ease);
 }
-.dark .theme-progress-fill {
-    background: linear-gradient(90deg, var(--accent-lime), #fff);
+/* The pair must not blend: the outgoing theme sitting under a half-opaque
+   incoming one is exactly the muddy cross-dissolve this replaces. */
+:root.theme-vt::view-transition-image-pair(root) {
+    isolation: auto;
 }
-.theme-progress-glow {
+:root.theme-vt::view-transition-old(root) {
+    z-index: 0;
+    mix-blend-mode: normal;
+    /* The outgoing day does not fade; it settles back a hair, so the iris
+       reads as opening in front of it rather than dissolving it. */
+    animation: theme-iris-settle var(--theme-iris-ms) var(--theme-iris-ease)
+        both;
+}
+:root.theme-vt::view-transition-new(root) {
+    z-index: 1;
+    mix-blend-mode: normal;
+    animation: theme-iris var(--theme-iris-ms) var(--theme-iris-ease) both;
+}
+
+@keyframes theme-iris {
+    from {
+        clip-path: circle(0px at var(--theme-iris-x) var(--theme-iris-y));
+    }
+    to {
+        clip-path: circle(
+            var(--theme-iris-r) at var(--theme-iris-x) var(--theme-iris-y)
+        );
+    }
+}
+
+@keyframes theme-iris-settle {
+    from { transform: scale(1); }
+    to { transform: scale(0.994); }
+}
+
+/*
+ * Shared-element names must stand down for the duration of a theme switch.
+ * The wordmark, the tray button, the top rail and every product plate carry
+ * an inline `view-transition-name` for route morphs. Left alone, each becomes
+ * its own snapshot group ABOVE the root pair — so it would repaint in the new
+ * palette instantly, outside the iris, and the reveal would look broken.
+ * `!important` in a stylesheet outranks a non-important inline style, and the
+ * class is set before the snapshot is captured, so the names are already gone
+ * by the time the browser looks.
+ */
+:root.theme-vt [style*="view-transition-name"] {
+    view-transition-name: none !important;
+}
+
+/* ── Path 2: overlay iris (no View Transitions API) ─────────────── */
+
+.theme-iris-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483645;
+    pointer-events: none;
+    contain: strict;
+    transform: translateZ(0);
+    will-change: clip-path;
+}
+
+/* The bloom that runs a step ahead of the edge — transform + opacity only. */
+.theme-iris-bloom {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2147483646;
+    pointer-events: none;
+    border-radius: 50%;
     background: radial-gradient(
         closest-side,
-        var(--accent-lime) 0%,
-        transparent 100%
+        color-mix(in srgb, var(--accent-lime) 55%, transparent) 0%,
+        transparent 72%
     );
-    filter: blur(4px);
+    transform: translateZ(0);
+    will-change: transform, opacity;
 }
-.theme-progress-run {
-    animation: theme-progress-run 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-.theme-progress-complete {
-    animation: theme-progress-complete 0.2s ease-out forwards;
-}
-@keyframes theme-progress-run {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(0.7); }
-}
-@keyframes theme-progress-complete {
-    from { transform: scaleX(0.7); }
-    to { transform: scaleX(1); }
-}
+
 @media (prefers-reduced-motion: reduce) {
-    .theme-progress-run,
-    .theme-progress-complete {
-        animation: none;
+    /* Belt and braces — the provider already applies the theme instantly and
+       never appends these, but if one ever escaped it must not animate. */
+    .theme-iris-overlay,
+    .theme-iris-bloom {
+        display: none !important;
+    }
+    :root.theme-vt::view-transition-old(root),
+    :root.theme-vt::view-transition-new(root),
+    :root.theme-vt::view-transition-group(root) {
+        animation: none !important;
+    }
+}
+
+/* ── The toggle itself ─────────────────────────────────────────── */
+
+/*
+ * A lamp switch, not a chip. The two glyphs live in one 18px well and trade
+ * places on a spring; the well's ring warms toward vermilion on hover. All of
+ * it is transform/opacity/colour — no layout, and no `disabled` binding
+ * anywhere (a stuck transition once killed the control for a whole session).
+ */
+.theme-toggle {
+    color: var(--content);
+    transition:
+        color 0.25s ease,
+        border-color 0.25s ease,
+        background-color 0.25s ease;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    color: var(--accent-red);
+}
+
+.theme-toggle-well {
+    position: relative;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+}
+
+/* The lamp's own glow — sits under the glyphs, blooms on hover. */
+.theme-toggle-well::before {
+    content: "";
+    position: absolute;
+    inset: -7px;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(
+        closest-side,
+        color-mix(in srgb, var(--accent-red) 26%, transparent),
+        transparent 78%
+    );
+    opacity: 0;
+    transform: scale(0.6);
+    transition:
+        opacity 0.3s ease,
+        transform 0.4s var(--theme-iris-ease);
+}
+
+.theme-toggle:hover .theme-toggle-well::before,
+.theme-toggle:focus-visible .theme-toggle-well::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.theme-toggle-glyph {
+    grid-area: 1 / 1;
+    transition:
+        transform 0.42s var(--theme-iris-ease),
+        opacity 0.28s ease;
+}
+
+/* Day shows the moon (what you get if you press); night shows the sun. */
+.theme-toggle-glyph--sun {
+    transform: rotate(-75deg) scale(0.4);
+    opacity: 0;
+}
+.theme-toggle-glyph--moon {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+}
+.dark .theme-toggle-glyph--sun {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+}
+.dark .theme-toggle-glyph--moon {
+    transform: rotate(75deg) scale(0.4);
+    opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-toggle-glyph,
+    .theme-toggle-well::before {
+        transition: none;
     }
 }
 
@@ -1106,6 +1475,57 @@ a,
     ::view-transition-group(*) {
         animation-duration: 0.3s;
         animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /*
+     * THE PLATE ITSELF — the garment travels, and it is the one thing on screen
+     * allowed to take its time.
+     *
+     * `view-transition-class: plate` is set by src/lib/line/plate-morph.ts (and
+     * by the product page hero). A class is the only way to reach these: the
+     * pseudo-element argument accepts one ident or `*`, never a prefix, so a
+     * per-product name like `product-plate-prod_01` cannot be selected without
+     * also restyling the root snapshot.
+     */
+    ::view-transition-group(.plate) {
+        /* Slower than the page turn, so the cloth leads and the chrome follows.
+           It stays inside the 400ms where a transition still reads as one
+           gesture rather than a wait. */
+        animation-duration: 0.42s;
+        animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /*
+     * Load-bearing, not polish. A list plate is 4:5 and the hero is 1:1, and the
+     * snapshot pseudo-elements default to `object-fit: fill` — so without this
+     * the garment visibly stretches as the box changes ratio, which on a
+     * wholesale catalogue misrepresents the cut of the kurti. `cover` crops
+     * instead, matching the `object-cover` both real images already use, so the
+     * morph reads as the frame opening around a fixed photograph.
+     */
+    ::view-transition-old(.plate),
+    ::view-transition-new(.plate) {
+        object-fit: cover;
+    }
+
+    /*
+     * Hold the outgoing plate at full opacity for the whole morph. The default
+     * image-pair crossfade would dissolve the garment mid-flight; here the two
+     * snapshots are the same photograph, so there is nothing to cross-fade and
+     * fading only introduces a ghost.
+     */
+    ::view-transition-image-pair(.plate) {
+        isolation: auto;
+    }
+    ::view-transition-old(.plate) {
+        animation: none;
+        mix-blend-mode: normal;
+        display: block;
+    }
+    ::view-transition-new(.plate) {
+        animation: none;
+        mix-blend-mode: normal;
+        display: block;
     }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1337,4 +1757,139 @@ a,
 :where(a, button, input, select, textarea):focus-visible {
     outline: 2px solid color-mix(in srgb, var(--accent-lime) 75%, transparent);
     outline-offset: 3px;
+}
+
+/* ── Fifth architecture: document utilities (additive only) ── */
+:root {
+  /* The six ledger tracks. Mirrors LEDGER_COLS in
+     src/components/line/style-row.tsx (do not drift). */
+  --ledger-cols: 4.5rem minmax(0, 1fr) 7rem 7.5rem 3rem 10rem;
+}
+
+/* Tabular numerals everywhere a number appears. Apply to any container of prices/counts. */
+.ledger { font-variant-numeric: tabular-nums; }
+
+/* Entry head double rule — print convention: 2px over 1px, 4px apart. */
+.entry-rule {
+  border-top: 2px solid var(--content);
+  position: relative;
+}
+.entry-rule::after {
+  content: "";
+  position: absolute;
+  top: 4px; left: 0; right: 0;
+  border-top: 1px solid var(--content);
+}
+
+/* Provisional (shortlisted) register. */
+.rule-provisional { border-top: 1px dotted color-mix(in srgb, var(--line) 45%, transparent); }
+
+/* The chop — saffron stamp, fires once on moqMet (JS adds .chop-fired). */
+.chop {
+  width: 1.25rem; height: 1.25rem;
+  background: var(--accent-lime);
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .chop-fired { animation: chop-stamp 240ms cubic-bezier(0.16, 1, 0.3, 1) 1 both; }
+  @keyframes chop-stamp {
+    from { transform: scale(1.06); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+}
+
+/* Loading register: a scan line over a ghost ledger (replaces animate-pulse). */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes ledger-scan {
+    from { transform: translateY(-100%); }
+    to   { transform: translateY(100%); }
+  }
+  .ledger-scan { animation: ledger-scan 1.6s linear infinite; }
+}
+
+/* Dark-mode plate law: every photographic plate is a mounted plate, not a glowing rectangle. */
+.plate-frame { border: 1px solid color-mix(in srgb, var(--line) 25%, transparent); }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   HOMEPAGE CHROME — match the cover.
+   The navbar and running head are `fixed`, so they sit outside <main> and
+   cannot inherit the cover's palette by nesting. `:has()` lets the page itself
+   opt its chrome in: when the cover is on the page, the fixed bars take cream
+   paper and brown-black ink instead of the app's theme surface. Without this a
+   dark navbar cuts a black band across the top of a cream cover.
+   Scoped to the homepage only — every other route keeps the themed chrome.
+   ─────────────────────────────────────────────────────────────────────────── */
+body:has(#home-cover) nav,
+body:has(#home-cover) header[class*="fixed"] {
+  --surface: var(--home-ground);
+  --surface-2: var(--home-panel);
+  --surface-hover: var(--home-raised);
+  /*
+   * --surface-inverse MUST move with the pair. The chrome's inverted controls
+   * (`bg-surface-inverse text-content-inverse` — Bulk Order, the mobile search
+   * and menu hovers) read their fill from here and their type from
+   * --content-inverse below. Without this line the fill stayed the app's
+   * elevated block while the type became the cover's ground: 1.5:1 at night,
+   * i.e. the invisible-button failure, in the chrome instead of the page.
+   * Bound to the ink so the pair is always ink-on-paper or paper-on-ink:
+   *   day   #191410 fill / #EFE9DA type → 15.09:1
+   *   night #F5EEE0 fill / #1D1710 type → 15.38:1
+   */
+  --surface-inverse: var(--home-ink);
+  --content: var(--home-ink);
+  --content-inverse: var(--home-ground);
+  --line: var(--home-ink);
+  /* One vermilion on the cover, in both themes: the app's --accent-red is a
+     hair hotter than the cover's, and on cream it computes to 4.47:1 — under
+     AA for the 10px chrome labels that use it. The cover's own vermilion is
+     4.98:1 by day and 5.09:1 at night. */
+  --accent-red: var(--home-vermilion);
+  background-color: var(--home-ground);
+  color: var(--home-ink);
+  border-color: color-mix(in srgb, var(--home-ink) 16%, transparent);
+}
+
+/* ── Cover surfaces that cannot be expressed as a single token ──────────────
+   Two effects on the cover carry baked-in light-mode assumptions (a white
+   bloom, a darkening filter) that had to become theme-aware. Colour only —
+   no geometry, no timing changes. */
+
+/*
+ * The jharokha wash behind each figure in the season plate. By day it is a
+ * bloom of paper light (--content-inverse is the one near-white pinned in both
+ * themes, so this is the same #FBF8F3 the hardcoded rgba(255,255,255) used to
+ * be). At night a white bloom reads as a blown-out box behind a cutout, so it
+ * becomes a low warm lamp-glow instead — the same idea, lit correctly.
+ */
+.home-arch {
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    color-mix(in srgb, var(--content-inverse) 95%, transparent) 0%,
+    color-mix(in srgb, var(--content-inverse) 35%, transparent) 55%,
+    transparent 78%
+  );
+}
+
+.dark .home-arch {
+  background: radial-gradient(
+    ellipse at 50% 70%,
+    color-mix(in srgb, var(--home-ink) 11%, transparent) 0%,
+    color-mix(in srgb, var(--home-ink) 4%, transparent) 55%,
+    transparent 78%
+  );
+}
+
+/*
+ * रंगत is filled with the season's photograph. The day grade darkens the cloth
+ * so it holds against cream paper; at night that same grade sinks the masthead
+ * into the ground, so the cloth is lifted instead of pushed down. The blurred
+ * ink copy behind the word is the contrast floor either way — it is
+ * --home-ink, so by day it is a cast shadow and at night a halo.
+ */
+.cover-cloth {
+  filter: brightness(0.8) contrast(1.3) saturate(1.25);
+}
+
+.dark .cover-cloth {
+  filter: brightness(1.06) contrast(1.18) saturate(1.2);
 }

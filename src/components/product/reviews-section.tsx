@@ -1,12 +1,15 @@
 "use client";
 
 /**
- * PDP buyer notes and trade feedback with photos.
+ * BUYER NOTES — trade feedback with photos, on the PDP.
  *
- * Reads/writes /api/reviews. Strictly on the line-book design system: eyebrow
- * label, black uppercase headings, accent stars, hairline dividers, field-luxe
- * inputs and btn-luxe CTAs. Signed-out visitors get a quiet invitation to
- * sign in rather than a dead form.
+ * Reads/writes /api/reviews. Ratings render as ink tally marks (vermilion is
+ * the negative-only register — never a rating). Photo strips lead each note.
+ * Signed-out visitors get a quiet invitation to sign in rather than a dead form.
+ *
+ * Set in the cover's vocabulary: vermilion dot eyebrow → light Fraunces line
+ * closing in vermilion italic → hairline rule, then ruled entries on cream.
+ * Nothing is a card.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -29,9 +32,10 @@ interface Summary {
   average: number;
 }
 
-function Stars({
+/** Ink tally marks — five strokes, filled in ink, the rest faint. */
+function Tally({
   value,
-  size = "text-sm",
+  size = "h-3",
   interactive = false,
   onSelect,
 }: {
@@ -42,38 +46,48 @@ function Stars({
 }) {
   return (
     <div
-      className={`flex items-center gap-1 ${size}`}
+      className="flex items-center gap-1"
       role={interactive ? "radiogroup" : undefined}
       aria-label={interactive ? "Select a rating" : `Rated ${value} out of 5`}
     >
-      {[1, 2, 3, 4, 5].map((star) =>
+      {[1, 2, 3, 4, 5].map((mark) =>
         interactive ? (
           <button
-            key={star}
+            key={mark}
             type="button"
             role="radio"
-            aria-checked={value === star}
-            aria-label={`${star} star${star > 1 ? "s" : ""}`}
-            onClick={() => onSelect?.(star)}
-            className={`tap-luxe transition-colors duration-300 ${
-              star <= value ? "text-accent-red" : "text-content/20 hover:text-accent-red/60"
-            }`}
+            aria-checked={value === mark}
+            aria-label={`${mark} of 5`}
+            onClick={() => onSelect?.(mark)}
+            className="flex h-11 w-6 items-center justify-center"
           >
-            ★
+            <span
+              aria-hidden
+              className={`block w-[2px] ${size} transition-colors duration-150 ${
+                mark <= value
+                  ? "bg-home-ink"
+                  : "bg-home-rule hover:bg-home-ink-mute"
+              } ${mark === 5 ? "-rotate-[24deg]" : ""}`}
+            />
           </button>
         ) : (
           <span
-            key={star}
+            key={mark}
             aria-hidden
-            className={star <= value ? "text-accent-red" : "text-content/15"}
-          >
-            ★
-          </span>
+            className={`block w-[2px] ${size} ${
+              mark <= value ? "bg-home-ink" : "bg-home-rule"
+            } ${mark === 5 ? "-rotate-[24deg]" : ""}`}
+          />
         ),
       )}
     </div>
   );
 }
+
+const FIELD =
+  "w-full border-0 border-b border-home-rule bg-transparent px-0 py-3 text-[14px] text-home-ink outline-none transition-colors duration-200 placeholder:text-home-ink-mute focus:border-home-ink";
+
+const LABEL = "font-trade text-[10px] tracking-[0.16em] text-home-ink-mute";
 
 export default function ReviewsSection({ handle }: { handle: string }) {
   const { isSignedIn, user } = useUser();
@@ -167,70 +181,90 @@ export default function ReviewsSection({ handle }: { handle: string }) {
   if (!loaded) return null;
 
   return (
-    <section className="mt-20 lg:mt-28" aria-label="Buyer notes">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 pb-8 border-b border-charcoal/10">
-        <div>
-          <p className="eyebrow mb-3">Buyer Notes</p>
-          <h2 className="font-black uppercase text-3xl lg:text-4xl tracking-[-0.04em] leading-[0.95]">
-            Sourced &amp; reordered
-          </h2>
-          {summary.count > 0 && (
-            <div className="flex items-center gap-3 mt-4">
-              <Stars value={Math.round(summary.average)} />
-              <span className="text-lg font-bold tracking-tight">{summary.average.toFixed(1)}</span>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
-                {summary.count} note{summary.count > 1 ? "s" : ""}
+    <section aria-label="Buyer notes">
+      <header className="border-b border-home-rule pb-6">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+          <div>
+            <p className="inline-flex items-center gap-2.5 text-[10px] font-extrabold uppercase tracking-[0.32em] text-home-vermilion">
+              <span
+                aria-hidden="true"
+                className="h-[5px] w-[5px] rounded-full bg-home-vermilion"
+              />
+              Buyer notes
+            </p>
+            <h2 className="mt-3 font-editorial text-[clamp(1.6rem,2.6vw,2.3rem)] font-light leading-[1.14] tracking-[-0.01em]">
+              What the trade said{" "}
+              <span className="font-semibold italic text-home-vermilion">
+                after it sold.
               </span>
-            </div>
+            </h2>
+            {summary.count > 0 && (
+              <div className="mt-4 flex items-center gap-3">
+                <Tally value={Math.round(summary.average)} />
+                <span className="text-[17px] font-semibold tabular-nums">
+                  {summary.average.toFixed(1)}
+                </span>
+                <span className="font-trade text-[10px] tracking-[0.14em] text-home-ink-mute">
+                  {summary.count} note{summary.count > 1 ? "s" : ""}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {isSignedIn ? (
+            !formOpen && (
+              <button
+                type="button"
+                onClick={() => {
+                  setThanks(false);
+                  setFormOpen(true);
+                }}
+                className="inline-flex h-11 items-center rounded-full border border-home-ink/25 px-5 font-trade text-[11px] tracking-[0.06em] transition-colors duration-200 hover:border-home-ink hover:bg-home-ink hover:text-home-ground"
+              >
+                Add your note
+              </button>
+            )
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex h-11 items-center rounded-full border border-home-ink/25 px-5 font-trade text-[11px] tracking-[0.06em] transition-colors duration-200 hover:border-home-ink hover:bg-home-ink hover:text-home-ground"
+            >
+              Sign in to add a note
+            </Link>
           )}
         </div>
-
-        {isSignedIn ? (
-          !formOpen && (
-            <button
-              type="button"
-              onClick={() => {
-                setThanks(false);
-                setFormOpen(true);
-              }}
-              className="btn-luxe-outline self-start sm:self-auto"
-            >
-              Add buyer note
-            </button>
-          )
-        ) : (
-          <p className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
-            <Link href="/login" className="link-luxe text-charcoal">
-              Sign in
-            </Link>{" "}
-            to share trade feedback
-          </p>
-        )}
-      </div>
+      </header>
 
       {thanks && (
-        <div className="panel-luxe p-6 mt-8">
-          <p className="text-lg text-charcoal/80">
-            Thank you. Your feedback helps other wholesale buyers plan better.
-          </p>
-        </div>
+        <p className="mt-8 max-w-[54ch] text-[15px] leading-[1.7] text-home-ink-soft">
+          Thank you — your note helps the next buyer plan their rack.
+        </p>
       )}
 
       {/* ── Write form ── */}
       {formOpen && (
-        <form onSubmit={submit} className="frame-luxe p-8 lg:p-10 mt-10 space-y-7">
-          <p className="eyebrow eyebrow--bare">Your Buyer Note</p>
+        <form
+          onSubmit={submit}
+          className="mt-10 border border-home-rule bg-home-ground px-5 py-6 lg:px-8 lg:py-8"
+        >
+          <p className="inline-flex items-center gap-2.5 text-[10px] font-extrabold uppercase tracking-[0.32em] text-home-vermilion">
+            <span
+              aria-hidden="true"
+              className="h-[5px] w-[5px] rounded-full bg-home-vermilion"
+            />
+            Your note
+          </p>
 
-          <div>
-            <span className="field-label">Rating</span>
-            <div className="mt-2">
-              <Stars value={rating} size="text-2xl" interactive onSelect={setRating} />
+          <div className="mt-7">
+            <span className={LABEL}>Rating</span>
+            <div className="mt-1">
+              <Tally value={rating} size="h-5" interactive onSelect={setRating} />
             </div>
           </div>
 
-          <div>
-            <label className="field-label" htmlFor="review-title">
-              Title <span className="normal-case tracking-normal">(optional)</span>
+          <div className="mt-6">
+            <label className={LABEL} htmlFor="review-title">
+              Title (optional)
             </label>
             <input
               id="review-title"
@@ -238,14 +272,14 @@ export default function ReviewsSection({ handle }: { handle: string }) {
               maxLength={120}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="A single line that says it all"
-              className="field-luxe"
+              placeholder="One line that says it all"
+              className={FIELD}
             />
           </div>
 
-          <div>
-            <label className="field-label" htmlFor="review-body">
-              Trade feedback
+          <div className="mt-6">
+            <label className={LABEL} htmlFor="review-body">
+              What happened on your rack
             </label>
             <textarea
               id="review-body"
@@ -255,23 +289,23 @@ export default function ReviewsSection({ handle }: { handle: string }) {
               rows={4}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Share fabric quality, customer response, reorder potential, or merchandising notes."
-              className="field-luxe resize-none"
+              placeholder="Fabric, customer response, reorder potential, merchandising notes."
+              className={`${FIELD} resize-none`}
             />
           </div>
 
-          <div>
-            <span className="field-label">Photos (up to 3)</span>
-            <div className="flex items-center gap-4 mt-2">
+          <div className="mt-6">
+            <span className={LABEL}>Photos (up to 3)</span>
+            <div className="mt-2 flex flex-wrap items-center gap-4">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="btn-luxe-outline !px-6 !py-3"
+                className="inline-flex h-11 items-center rounded-full border border-home-ink/25 px-5 font-trade text-[11px] tracking-[0.06em] transition-colors duration-200 hover:border-home-ink hover:bg-home-ink hover:text-home-ground"
               >
                 Add photos
               </button>
               {photos.length > 0 && (
-                <span className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
+                <span className="font-trade text-[10px] tracking-[0.14em] text-home-ink-mute">
                   {photos.length} selected
                 </span>
               )}
@@ -289,93 +323,94 @@ export default function ReviewsSection({ handle }: { handle: string }) {
           </div>
 
           {error && (
-            <p className="text-xs tracking-wide text-red-700" role="alert">
+            <p className="mt-5 text-[12px] text-home-vermilion" role="alert">
               {error}
             </p>
           )}
 
-          <div className="flex items-center gap-6">
-            <button type="submit" disabled={submitting} className="btn-luxe">
-              {submitting ? "Sending..." : "Submit note"}
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex h-12 items-center justify-center bg-home-ink px-7 text-[11px] font-extrabold uppercase tracking-[0.16em] text-home-ground transition-opacity duration-200 hover:opacity-85 disabled:opacity-55"
+            >
+              {submitting ? "Sending…" : "Post note"}
             </button>
             <button
               type="button"
               onClick={() => setFormOpen(false)}
-              className="link-luxe text-[11px] uppercase tracking-[0.2em] text-charcoal/60"
+              className="inline-flex min-h-11 items-center font-trade text-[10px] tracking-[0.14em] text-home-ink-mute underline-offset-4 transition-colors duration-200 hover:text-home-ink hover:underline"
             >
               Cancel
             </button>
           </div>
           {user?.firstName && (
-            <p className="text-[10px] uppercase tracking-[0.2em] text-charcoal/40">
+            <p className="mt-4 font-trade text-[10px] tracking-[0.14em] text-home-ink-mute">
               Posting as {user.firstName}
             </p>
           )}
         </form>
       )}
 
-      {/* ── Review list ── */}
-      {reviews.length === 0 ? (
-        !formOpen && (
-          /* merchant ledger empty row — framed and factual, not a void */
-          <div className="mt-8 flex flex-col gap-4 border border-line/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <span className="bg-accent-lime px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-on-accent">
-                00
-              </span>
-              <p className="text-sm text-charcoal/60">
-                This style is waiting for its first trade note.
+      {/* ── The notes ── */}
+      {reviews.length === 0
+        ? !formOpen && (
+            /* An honest ruled empty row, not a void and not a fake card. */
+            <div className="mt-8 flex flex-col gap-2 border-b border-home-rule py-6 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+              <p className="text-[15px] leading-[1.6] text-home-ink-soft">
+                No notes on this style yet — it is waiting for its first rack.
+              </p>
+              <p className="shrink-0 font-trade text-[10px] tracking-[0.14em] text-home-ink-mute">
+                fabric · customer response · reorder
               </p>
             </div>
-            <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-charcoal/40">
-              Fabric · customer response · reorder potential
-            </p>
-          </div>
-        )
-      ) : (
-        <ul className="divide-y divide-charcoal/10">
-          {reviews.map((review) => (
-            <li key={review.id} className="py-10">
-              <div className="flex items-center gap-4">
-                <Stars value={review.rating} />
-                <span className="text-[11px] uppercase tracking-[0.2em] text-charcoal/50">
-                  {review.author_name}
-                </span>
-                <span className="text-[11px] tracking-wide text-charcoal/30">
-                  {new Date(review.created_at).toLocaleDateString("en-IN", {
-                    year: "numeric",
-                    month: "long",
-                  })}
-                </span>
-              </div>
-              {review.title && (
-                <h3 className="font-black uppercase text-lg tracking-[-0.02em] mt-4">{review.title}</h3>
-              )}
-              <p className="text-sm leading-relaxed text-charcoal/70 mt-3 max-w-2xl">
-                {review.body}
-              </p>
-              {review.photo_urls.length > 0 && (
-                <div className="flex gap-3 mt-6">
-                  {review.photo_urls.map((url) => (
-                    <div
-                      key={url}
-                      className="relative w-24 h-32 border border-charcoal/10 overflow-hidden"
-                    >
-                      <Image
-                        src={url}
-                        alt={`Photo from ${review.author_name}'s review`}
-                        fill
-                        sizes="96px"
-                        className="object-cover"
-                      />
+          )
+        : (
+            <ul className="mt-2">
+              {reviews.map((review) => (
+                <li key={review.id} className="border-b border-home-rule py-9">
+                  {review.photo_urls.length > 0 && (
+                    <div className="mb-6 flex gap-3 overflow-x-auto hide-scrollbar">
+                      {review.photo_urls.map((url) => (
+                        <div
+                          key={url}
+                          className="relative h-32 w-24 shrink-0 overflow-hidden border border-home-rule bg-home-ground"
+                        >
+                          <Image
+                            src={url}
+                            alt={`Photo from ${review.author_name}'s note`}
+                            fill
+                            sizes="96px"
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+                  )}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <Tally value={review.rating} />
+                    <span className="font-trade text-[10px] tracking-[0.14em] text-home-ink">
+                      {review.author_name}
+                    </span>
+                    <span className="font-trade text-[10px] tracking-[0.14em] text-home-ink-mute">
+                      {new Date(review.created_at).toLocaleDateString("en-IN", {
+                        year: "numeric",
+                        month: "long",
+                      })}
+                    </span>
+                  </div>
+                  {review.title && (
+                    <h3 className="mt-4 font-editorial text-[20px] italic leading-tight">
+                      {review.title}
+                    </h3>
+                  )}
+                  <p className="mt-3 max-w-[62ch] text-[15px] leading-[1.7] text-home-ink-soft">
+                    {review.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
     </section>
   );
 }

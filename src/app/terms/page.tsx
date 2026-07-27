@@ -31,8 +31,8 @@ export default function TermsPage() {
             A submitted cart or WhatsApp inquiry is an order request. We confirm
             acceptance after stock, set quantities, buyer details, payment, GST
             information, and dispatch requirements are verified. We may decline
-            or revise an order if stock changes, a pricing error occurred, MOQ
-            is not met, or payment cannot be verified.
+            or revise an order if stock changes, a pricing error occurred, the
+            minimum order is not met, or payment cannot be verified.
           </p>
         </LegalSection>
 

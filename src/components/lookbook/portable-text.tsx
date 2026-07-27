@@ -36,8 +36,10 @@ const components: PortableTextComponents = {
       </h3>
     ),
     blockquote: ({ children }) => (
-      <blockquote className="my-10 border-l-2 border-accent-red pl-6">
-        <p className="max-w-[26ch] text-xl font-black uppercase leading-[1.08] tracking-[-0.02em] text-content md:text-2xl">
+      // Lookbook pull quote — one of the three licensed Playfair placements
+      // (§1.3: serif accent, italic 500, lowercase).
+      <blockquote className="my-10 border-l border-line/25 pl-6">
+        <p className="max-w-[40ch] font-serif text-[17px] lowercase italic leading-7 text-content/80">
           {children}
         </p>
       </blockquote>

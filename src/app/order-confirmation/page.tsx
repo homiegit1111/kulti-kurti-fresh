@@ -3,11 +3,11 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, Package, ArrowRight, Mail } from "lucide-react";
-import { motion } from "framer-motion";
+import { CheckCircle2, Package, ArrowRight, Mail, MessageCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { useCart } from "@/lib/cart-context";
+import { buildPaymentHelpUrl } from "@/lib/b2b/whatsapp";
 
 /**
  * Post-payment confirmation page.
@@ -55,12 +55,7 @@ function OrderConfirmationContent() {
       <Navbar />
       <main className="flex-1 pt-28 pb-24 lg:pt-36">
         <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="border border-line/20 bg-surface-2"
-          >
+          <div className="border border-line/20 bg-surface-2">
             <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
               {/* Left: editorial headline */}
               <div className="border-b border-line/20 px-6 py-14 sm:px-10 lg:border-b-0 lg:border-r lg:py-20">
@@ -84,16 +79,16 @@ function OrderConfirmationContent() {
                   </p>
                 </div>
 
-                <h1 className="mt-8 text-[clamp(3rem,9vw,6.5rem)] font-black uppercase leading-[0.82] tracking-[-0.06em]">
+                <h1 className="mt-8 text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
                   {confirmed ? (
                     <>
-                      Order
+                      Wholesale order
                       <br />
                       placed
                     </>
                   ) : (
                     <>
-                      Confirm
+                      Wholesale order
                       <br />
                       pending
                     </>
@@ -108,11 +103,16 @@ function OrderConfirmationContent() {
                       : "Open checkout or WhatsApp to confirm this wholesale order before we reserve stock or clear your cart."}
                 </p>
 
-                <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                   <Link href={confirmed ? "/account" : "/checkout"} className="btn-luxe">
                     <Package className="h-3.5 w-3.5" />
                     {confirmed ? "View buyer account" : "Return to checkout"}
                   </Link>
+                  {!confirmed && (
+                    <a href={buildPaymentHelpUrl()} className="btn-luxe-outline">
+                      Payment help on WhatsApp <MessageCircle className="h-3.5 w-3.5" />
+                    </a>
+                  )}
                   <Link href="/shop" className="btn-luxe-outline">
                     Back to catalog <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
@@ -122,7 +122,7 @@ function OrderConfirmationContent() {
               {/* Right: detail ledger */}
               <div className="bg-surface-inverse px-6 py-14 text-content-inverse sm:px-10 lg:py-20">
                 <p className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent-lime">
-                  Order ledger
+                  Order details
                 </p>
 
                 <div className="mt-8 divide-y divide-content-inverse/15 border-t border-content-inverse/20">
@@ -138,7 +138,7 @@ function OrderConfirmationContent() {
                     <DetailRow label="Payment ID" value={paymentId} />
                   )}
                   {medusaOrderId && (
-                    <DetailRow label="Medusa order" value={medusaOrderId} />
+                    <DetailRow label="Order ref" value={medusaOrderId} />
                   )}
                   {email && <DetailRow label="Buyer email" value={email} />}
                 </div>
@@ -171,7 +171,7 @@ function OrderConfirmationContent() {
                 )}
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </main>
       <Footer />

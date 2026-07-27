@@ -1,546 +1,808 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+/**
+ * /shop — the line book (fifth architecture, §5).
+ *
+ * The /line system mounted inside /shop's URL and SEO shell. One canonical
+ * mount of the merged catalog: this file is the only importer of LineResults.
+ *
+ * Letterhead (R4) → sticky CommandBar → FacetRail + results (three densities,
+ * tray-wired) → trade questions as ruled numbered ledger entries → colophon
+ * (the route's one ink entry, R9).
+ *
+ * PRINT IS THE SIGNATURE (§5.3): PrintSheetStyles is attached, the screen body
+ * is print-hidden, and a print-only ledger renders the letterhead plus ONLY the
+ * filtered rows — so any shared filtered /shop URL prints as a per-buyer A4
+ * line sheet, "Prepared for {business_name} · {city}" when the wholesale
+ * profile exists.
+ *
+ * PRESENTATIONAL: reads the catalog, writes only tray state (localStorage).
+ * Touches no cart handler, no checkout, no schema.
+ */
+
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
+import { MessageCircle, SlidersHorizontal, X } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { getProducts, type MockProduct, COLOR_MAP } from "@/lib/commerce/catalog";
-import ShopLoading from "@/app/shop/loading";
-import { useWishlist } from "@/lib/wishlist-context";
-import { LivingProductCard } from "@/components/ui/living-product-card";
-import Link from "next/link";
-import { ChevronDown, MessageCircle, Printer, Table2, X } from "lucide-react";
-import { SHOP_FAQS } from "./faqs";
 import { StickyMobileB2BCta } from "@/components/b2b/sticky-mobile-b2b-cta";
-import { B2B_CONFIG } from "@/lib/b2b/config";
+import { EntryHead } from "@/components/document/entry";
+import { TermsRule } from "@/components/document/terms-rule";
+import { PrintSheetStyles } from "@/components/document/print-sheet-styles";
+import { formatPrice, type MockProduct } from "@/lib/commerce/catalog";
+import { toStyleLine, type StyleLine } from "@/lib/line/contract";
+import {
+  applyLineQuery,
+  activeFacetCount,
+  categoryOptions,
+  colorOptions,
+  parseLineQuery,
+  perPieceOptions,
+  sizeRunOptions,
+  type SortValue,
+} from "@/lib/line/facets";
+import { useDensity, markTradeBuyer, type Density } from "@/lib/line/density";
+import { useTray } from "@/lib/line/tray-context";
+import { CommandBar } from "@/components/line/command-bar";
+import { FacetRail } from "@/components/line/facet-rail";
+import { LineResults } from "@/components/line/line-results";
+import { B2B_CONFIG, GST_CONFIG } from "@/lib/b2b/config";
 import { buildCatalogRequestUrl } from "@/lib/b2b/whatsapp";
+import { SHOP_FAQS } from "./faqs";
+import ShopLoading from "./loading";
+import { cn } from "@/lib/utils";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
+/* Public contact facts — mirrored from the printed line sheet's letterhead. */
+const CONTACT = {
+  whatsapp: "8660452247",
+  email: "rangatpehnawa@gmail.com",
+  address:
+    "3rd Floor, NR Complex, 36, Siddanna Ln, Cubbonpete, Bengaluru 560002",
+};
 
-const sortOptions = [
-  { label: "Newest", value: "newest" },
-  { label: "Price: Low to High", value: "price-asc" },
-  { label: "Price: High to Low", value: "price-desc" },
-];
+/** Rows per printed A4 sheet after the letterhead. Explicit breaks: Chromium
+ *  cannot auto-number pages, so sheets are chunked and counters placed (§1.7). */
+const PRINT_ROWS_PER_SHEET = 24;
 
-const priceBands = [
-  { label: "Under Rs2,000", value: "under-2000", test: (p: number) => p < 2000 },
-  {
-    label: "Rs2,000 - Rs5,000",
-    value: "2000-5000",
-    test: (p: number) => p >= 2000 && p <= 5000,
-  },
-  { label: "Rs5,000+", value: "5000-plus", test: (p: number) => p > 5000 },
-];
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+/* ── Print-only ledger — letterhead + ONLY the filtered rows (§5.3) ────────── */
+
+function PrintSheet({ results, season }: { results: StyleLine[]; season: string }) {
+  const sheets = chunk(results, PRINT_ROWS_PER_SHEET);
+
+  const headRow = (
+    <div className="grid grid-cols-[7rem_minmax(0,1fr)_7rem_5.5rem_5.5rem] gap-3 border-b border-line py-1.5 text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+      <span>Style №</span>
+      <span>Style</span>
+      <span>Size run</span>
+      <span className="text-right">₹ Set</span>
+      <span className="text-right">₹ / PC</span>
+    </div>
+  );
+
+  return (
+    <section aria-hidden className="ls-doc hidden bg-surface text-content print:block">
+      {/* Letterhead — masthead, season line, terms squares. PrintSheetStyles
+          appends "Prepared for …" via .ls-letterhead::after when the wholesale
+          profile exists, and .ls-sheet-counter renders "Sheet 1". */}
+      <header className="ls-letterhead border-b-2 border-line pb-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.28em] text-content/50">
+              Rangat Pehnawa · Wholesale line book
+            </p>
+            <p className="mt-2 text-4xl font-black uppercase leading-[0.9] tracking-[-0.04em]">
+              Wholesale kurti line book
+            </p>
+            <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.22em] text-content/50">
+              {season} · {results.length} styles on this sheet
+            </p>
+          </div>
+          <span className="ls-sheet-counter shrink-0 pt-1" />
+        </div>
+        <TermsRule className="mt-4 border-b-0" />
+        <p className="mt-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-content/40">
+          WhatsApp {CONTACT.whatsapp} · {CONTACT.email} · {CONTACT.address}
+        </p>
+      </header>
+
+      {sheets.map((rows, sheetIndex) => (
+        <div
+          key={sheetIndex}
+          className={cn(sheetIndex > 0 && "ls-sheet-break")}
+        >
+          {sheetIndex > 0 && (
+            <div className="flex items-center justify-between border-b border-line pb-2 pt-1">
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.28em] text-content/50">
+                Rangat Pehnawa · Wholesale kurti line book · {season}
+              </p>
+              <span className="ls-sheet-counter" />
+            </div>
+          )}
+          {headRow}
+          {rows.map((line) => (
+            <div
+              key={line.product.id}
+              className="ls-card ledger grid grid-cols-[7rem_minmax(0,1fr)_7rem_5.5rem_5.5rem] items-baseline gap-3 border-b border-line/25 py-2 text-[11px] leading-4"
+            >
+              <span className="font-mono text-[10px]">{line.code}</span>
+              <span className="font-bold tracking-[-0.01em]">
+                {line.product.title}
+                {line.stock === "sold_out" && (
+                  <span className="ml-2 text-[8px] font-extrabold uppercase tracking-[0.18em] text-accent-red">
+                    Sold out
+                  </span>
+                )}
+              </span>
+              <span className="text-content/60">{line.sizeRun.join("/")}</span>
+              <span className="text-right font-black">{formatPrice(line.setPrice)}</span>
+              <span className="text-right font-bold text-content/70">
+                {formatPrice(line.perPiece)}
+              </span>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {/* Document footer — part of the artifact, prints (.ls-keep). */}
+      <footer className="ls-keep mt-8 border-t-2 border-line pt-4">
+        <div className="flex flex-col gap-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-content/40 sm:flex-row sm:justify-between">
+          <span>Rangat Pehnawa · Wholesale kurti line book · {season}</span>
+          <span>All rates per set · GST at invoice · Subject to availability</span>
+        </div>
+      </footer>
+    </section>
+  );
+}
+
+/* ── Compare — the 4-column hairline overlay table (§5.4) ──────────────────── */
+
+function CompareOverlay({
+  lines,
+  onClose,
+  onRemove,
+}: {
+  lines: StyleLine[];
+  onClose: () => void;
+  onRemove: (line: StyleLine) => void;
+}) {
+  const facts: { label: string; render: (line: StyleLine) => React.ReactNode }[] = [
+    {
+      label: "Per pc",
+      render: (l) => (
+        <span className="text-base font-black tracking-[-0.02em]">
+          {formatPrice(l.perPiece)}
+        </span>
+      ),
+    },
+    { label: "Set rate", render: (l) => formatPrice(l.setPrice) },
+    { label: "Size run", render: (l) => l.sizeRun.join("/") },
+    { label: `${GST_CONFIG.label} band`, render: (l) => `${l.gstRate}%` },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Close compare"
+        onClick={onClose}
+        className="absolute inset-0 bg-surface-inverse/60"
+      />
+      <div className="relative max-h-[85vh] w-full max-w-[880px] overflow-y-auto border border-line bg-surface">
+        <div className="flex items-center justify-between border-b-2 border-line px-5 py-3">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.22em]">
+            Compare ·{" "}
+            <span className="ledger text-content/55">{lines.length} of 4</span>
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close compare"
+            className="flex h-8 w-8 items-center justify-center text-content/50 transition-colors hover:text-content"
+          >
+            <X className="h-4 w-4" strokeWidth={2} />
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <div
+            className="ledger grid min-w-[560px]"
+            style={{
+              gridTemplateColumns: `6rem repeat(${lines.length}, minmax(0, 1fr))`,
+            }}
+          >
+            {/* Head row — code + title per column, vermilion mark register */}
+            <span className="border-b border-line/25 px-3 py-3" />
+            {lines.map((line) => (
+              <div
+                key={line.product.id}
+                className="border-b border-l border-line/25 px-3 py-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-mono text-[10px] text-content/70">
+                    {line.code}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(line)}
+                    aria-label={`Remove ${line.code} from compare`}
+                    className="flex h-5 w-5 shrink-0 items-center justify-center border border-accent-red text-accent-red transition-colors hover:bg-accent-red hover:text-white"
+                  >
+                    <X className="h-3 w-3" strokeWidth={2} />
+                  </button>
+                </div>
+                <Link
+                  href={`/shop/${line.product.handle}`}
+                  className="mt-1.5 block text-[12px] font-bold leading-tight tracking-[-0.01em] hover:underline"
+                >
+                  {line.product.title}
+                </Link>
+              </div>
+            ))}
+
+            {facts.map((fact) => (
+              <div key={fact.label} className="contents">
+                <span className="border-b border-line/15 px-3 py-2.5 text-[8px] font-extrabold uppercase tracking-[0.22em] text-content/45">
+                  {fact.label}
+                </span>
+                {lines.map((line) => (
+                  <span
+                    key={line.product.id}
+                    className="border-b border-l border-line/15 px-3 py-2.5 text-[12px] font-semibold"
+                  >
+                    {fact.render(line)}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── The route body ────────────────────────────────────────────────────────── */
 
 function ShopContent({
   initialProducts,
+  season,
 }: {
-  initialProducts?: MockProduct[];
+  initialProducts: MockProduct[];
+  season: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const tray = useTray();
 
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const { isWishlisted, toggleWishlist } = useWishlist();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [preparedFor, setPreparedFor] = useState<string | undefined>(undefined);
 
-  // Derive categories from SSR products at init so the effect below never has
-  // to set state synchronously (react-hooks/set-state-in-effect).
-  const [categories, setCategories] = useState(() => {
-    const fallback = ["All", "Kurtis", "Lehengas", "Co-ords", "Sarees"];
-    if (!initialProducts?.length) return fallback;
-    const derived = [
-      "All",
-      ...new Set(initialProducts.map((p) => p.category).filter(Boolean)),
-    ];
-    return derived.length > 1 ? derived : fallback;
-  });
-  // Server-provided products ship real HTML on first paint (SEO/LCP);
-  // the client effect only runs as a fallback when SSR data is absent.
-  const [products, setProducts] = useState<MockProduct[]>(
-    initialProducts ?? [],
+  const query = useMemo(
+    () => parseLineQuery(new URLSearchParams(searchParams.toString())),
+    [searchParams],
   );
-  const [isLoading, setIsLoading] = useState(!initialProducts?.length);
 
-    // Filter state lives in the URL (shareable, SSR-friendly, back-button OK).
-  const activeCategory = searchParams.get("cat") ?? "All";
-  const sortBy = searchParams.get("sort") ?? "newest";
-  const activeColor = searchParams.get("color");
-  const activePrice = searchParams.get("price");
+  const urlDensity = (searchParams.get("d") as Density | null) ?? null;
+  const { density, choose: setDensity } = useDensity(urlDensity);
 
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isManualExpand, setIsManualExpand] = useState(false);
+  /** Lines carry live tray state — a committed style shows its set count. */
+  const lines = useMemo(
+    () =>
+      initialProducts.map((product) => {
+        const entry = tray.lines.find((l) => l.product.id === product.id);
+        return toStyleLine(
+          product,
+          entry?.sets ?? 0,
+          tray.isComparing(product.id),
+        );
+      }),
+    [initialProducts, tray],
+  );
 
+  const results = useMemo(() => applyLineQuery(lines, query), [lines, query]);
+
+  const facets = useMemo(
+    () => ({
+      sizes: sizeRunOptions(lines),
+      perPiece: perPieceOptions(lines),
+      categories: categoryOptions(lines),
+      colors: colorOptions(lines),
+      soldOutCount: lines.filter((l) => l.stock === "sold_out").length,
+      dropCount: lines.filter((l) => l.product.salePrice != null).length,
+      freshCount: lines.filter((l) => l.product.isNew).length,
+    }),
+    [lines],
+  );
+
+  /* Wholesale profile → "Prepared for {business_name} · {city}" on the printed
+     letterhead (§5.3). Absent profile or signed-out: no line, no error. */
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-        setIsManualExpand(false);
-      }
+    let cancelled = false;
+    fetch("/api/wholesale-profile")
+      .then((res) =>
+        res.ok
+          ? (res.json() as Promise<{
+              profile?: { business_name?: string; city?: string } | null;
+            }>)
+          : null,
+      )
+      .then((data) => {
+        if (cancelled) return;
+        const profile = data?.profile;
+        if (profile?.business_name && profile?.city) {
+          setPreparedFor(`${profile.business_name} · ${profile.city}`);
+        }
+      })
+      .catch(() => {
+        /* profile is optional — the sheet prints unaddressed */
+      });
+    return () => {
+      cancelled = true;
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // initialize
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const shouldShowFiltersMobile = !isScrolled || isManualExpand;
+  // ── URL writers ──
+  const write = useCallback(
+    (mutate: (params: URLSearchParams) => void) => {
+      const params = new URLSearchParams(searchParams.toString());
+      mutate(params);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
 
-  const setParam = (key: string, value: string | null) => {
-    const params = new URLSearchParams(Array.from(searchParams.entries()));
-    if (!value || value === "All" || value === "newest") params.delete(key);
-    else params.set(key, value);
-    const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  };
+  const toggleMulti = useCallback(
+    (key: "run" | "pp" | "cat" | "col", value: string) => {
+      write((params) => {
+        const current = (params.get(key) ?? "").split(",").filter(Boolean);
+        const next = current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value];
+        if (next.length) params.set(key, next.join(","));
+        else params.delete(key);
+      });
+    },
+    [write],
+  );
 
-  const toggleParam = (key: string, value: string) => {
-    setParam(key, searchParams.get(key) === value ? null : value);
-  };
+  const toggleFlag = useCallback(
+    (key: "stock" | "drop" | "fresh") => {
+      write((params) => {
+        const on =
+          key === "stock" ? params.get("stock") === "live" : params.get(key) === "1";
+        if (on) params.delete(key);
+        else params.set(key, key === "stock" ? "live" : "1");
+      });
+    },
+    [write],
+  );
 
-  const clearAll = () => router.replace(pathname, { scroll: false });
+  const setSearch = useCallback(
+    (value: string) => {
+      write((params) => {
+        if (value.trim()) params.set("q", value);
+        else params.delete("q");
+      });
+    },
+    [write],
+  );
+
+  const setSort = useCallback(
+    (value: SortValue) => write((params) => params.set("sort", value)),
+    [write],
+  );
+
+  const clearAll = useCallback(
+    () => router.replace(pathname, { scroll: false }),
+    [pathname, router],
+  );
+
+  const changeDensity = useCallback(
+    (next: Density) => {
+      setDensity(next);
+      write((params) => params.set("d", next));
+    },
+    [setDensity, write],
+  );
+
+  // ── Tray actions, shared by all three densities ──
+  const actions = useMemo(
+    () => ({
+      onCommit: (line: StyleLine) => {
+        tray.commit(line.product);
+        markTradeBuyer();
+      },
+      onSetsChange: (line: StyleLine, sets: number) =>
+        tray.setSets(line.product.id, sets),
+      onDemote: (line: StyleLine) => tray.demote(line.product.id),
+      onToggleShortlist: (line: StyleLine) => tray.toggleShortlist(line.product),
+      onToggleCompare: (line: StyleLine) => tray.toggleCompare(line.product),
+    }),
+    [tray],
+  );
+
+  // ── Ledger hover peek plate — pointer:fine only, reduced-motion gated ──
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const peekRef = useRef<HTMLDivElement>(null);
+  const [peekIndex, setPeekIndex] = useState<number | null>(null);
+  const [peekEnabled, setPeekEnabled] = useState(false);
 
   useEffect(() => {
-    // SSR data already hydrated products + categories at init.
-    if (initialProducts?.length) return;
-    getProducts().then((data) => {
-      setProducts(data);
-      const dynamicCategories = [
-        "All",
-        ...new Set(data.map((p) => p.category).filter(Boolean)),
-      ];
-      if (dynamicCategories.length > 1) setCategories(dynamicCategories);
-      setIsLoading(false);
-    });
-  }, [initialProducts]);
+    const fine = window.matchMedia("(pointer: fine)");
+    const motionOk = window.matchMedia("(prefers-reduced-motion: no-preference)");
+    const update = () => setPeekEnabled(fine.matches && motionOk.matches);
+    update();
+    fine.addEventListener("change", update);
+    motionOk.addEventListener("change", update);
+    return () => {
+      fine.removeEventListener("change", update);
+      motionOk.removeEventListener("change", update);
+    };
+  }, []);
 
-  // Colors available across the catalog (for the swatch facet)
-  // Near-identical shades collapse into one swatch (ivory/cream/pearl/white
-  // read as four random dots otherwise). A family filters ANY member — the
-  // URL carries the members as CSV so links stay shareable.
-  const colorFacets = useMemo(() => {
-    const COLOR_GROUPS: { label: string; members: string[] }[] = [
-      { label: "Ivory & cream", members: ["ivory", "cream", "pearl", "white"] },
-    ];
-    const unique = [...new Set(products.flatMap((p) => p.colors).filter(Boolean))];
-    const seen = new Set<string>();
-    const facets: { label: string; value: string; hexes: string[] }[] = [];
-    for (const color of unique) {
-      if (seen.has(color)) continue;
-      const group = COLOR_GROUPS.find((g) =>
-        g.members.includes(color.toLowerCase()),
-      );
-      if (group) {
-        const members = unique.filter((c) =>
-          group.members.includes(c.toLowerCase()),
-        );
-        members.forEach((m) => seen.add(m));
-        facets.push({
-          label: group.label,
-          value: members.join(","),
-          hexes: members
-            .slice(0, 2)
-            .map((m) => COLOR_MAP[m.toLowerCase()] ?? "#D9D4CC"),
-        });
-      } else {
-        seen.add(color);
-        facets.push({
-          label: color,
-          value: color,
-          hexes: [COLOR_MAP[color.toLowerCase()] ?? "#D9D4CC"],
-        });
+  const peekActive = density === "ledger" && peekEnabled;
+
+  const handlePeekMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!peekActive) return;
+      const container = resultsRef.current;
+      const row = (event.target as HTMLElement).closest?.(".inventory-row");
+      if (!container || !row) {
+        setPeekIndex(null);
+        return;
       }
-    }
-    return facets;
-  }, [products]);
+      const rows = Array.from(container.querySelectorAll(".inventory-row"));
+      const index = rows.indexOf(row as Element);
+      setPeekIndex(index >= 0 ? index : null);
+      const el = peekRef.current;
+      if (el) {
+        // Transform-only follow; clamped to the viewport.
+        const x = Math.min(event.clientX + 28, window.innerWidth - 248);
+        const y = Math.max(
+          16,
+          Math.min(event.clientY - 138, window.innerHeight - 300),
+        );
+        el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      }
+    },
+    [peekActive],
+  );
 
-  const [hoveredColor, setHoveredColor] = useState<string | null>(null);
+  const peekLine =
+    peekActive && peekIndex !== null ? results[peekIndex] ?? null : null;
 
-  const filtered = useMemo(() => {
-    const band = priceBands.find((b) => b.value === activePrice);
-    return products
-      .filter((p) => activeCategory === "All" || p.category === activeCategory)
-      .filter(
-        (p) =>
-          !activeColor ||
-          activeColor.split(",").some((c) => p.colors.includes(c)),
-      )
-      .filter((p) => !band || band.test(p.salePrice ?? p.price))
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "price-asc":
-            return (a.salePrice ?? a.price) - (b.salePrice ?? b.price);
-          case "price-desc":
-            return (b.salePrice ?? b.price) - (a.salePrice ?? a.price);
-          default:
-            return 0; // newest
-        }
-      });
-  }, [activeCategory, activeColor, activePrice, sortBy, products]);
+  const compareLines = useMemo(
+    () => lines.filter((line) => tray.compareIds.includes(line.product.id)),
+    [lines, tray.compareIds],
+  );
 
-  const hasActiveFacets = Boolean(activeColor || activePrice) || activeCategory !== "All";
+  const activeCount = activeFacetCount(query);
 
   return (
-    <div className="bg-surface min-h-screen text-content font-sans flex flex-col">
+    <div className="flex min-h-screen flex-col bg-surface font-sans text-content">
+      <PrintSheetStyles preparedFor={preparedFor} />
       <Navbar />
 
-      <main className="flex-1 relative z-10 pt-28 lg:pt-36 pb-32">
-        {/* Editorial catalogue header */}
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: EASE }}
-            className="border-b-2 border-line pb-6"
-          >
-            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="eyebrow mb-4">Wholesale line book / Catalogue</p>
-                <h1 className="font-sans font-black uppercase leading-[0.82] tracking-[-0.06em] text-[clamp(3rem,10vw,8.5rem)]">
-                  <span className="block">The</span>
-                  {/* stroke uses the content token — a hardcoded ink stroke
-                      made this line invisible in dark mode */}
-                  <span className="block text-transparent [-webkit-text-stroke:1px_var(--content)] sm:ml-[6vw]">
-                    Kurti
-                  </span>
-                  <span className="block">Index</span>
-                </h1>
-              </div>
-
-              {/* compact terms + actions — replaces the old paragraph, CTA
-                  row and 4-cell stat band (less text, same facts) */}
-              <div className="flex flex-col gap-5 md:items-end md:pb-2">
-                <p className="max-w-xs text-sm leading-6 text-content/55 md:text-right">
-                  Set pricing, live availability, direct ordering — built for
-                  boutiques and resellers.
+      <main className="flex-1 pb-28">
+        {/* ── Letterhead entry (R4): h1 · real unfiltered count · season line ·
+               TermsRule. Screen register only — print has its own letterhead. */}
+        <div className="print:hidden">
+          <div className="mx-auto max-w-[1400px] px-5 pt-28 md:px-10 lg:px-16 lg:pt-36">
+            <header className="border-b-0 pb-8 lg:pb-10">
+              <p className="text-[9px] font-extrabold uppercase tracking-[0.28em] text-content/50">
+                Rangat Pehnawa · Wholesale line book
+              </p>
+              <h1 className="mt-4 text-[clamp(2.75rem,6vw,5.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+                Wholesale kurti line book
+              </h1>
+              <div className="mt-5 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+                <p className="ledger text-[10px] font-extrabold uppercase tracking-[0.22em] text-content/55">
+                  {lines.length} styles
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  <a href={buildCatalogRequestUrl()} className="btn-luxe-outline">
-                    WhatsApp catalog <MessageCircle className="h-3.5 w-3.5" />
-                  </a>
-                  <Link href="/line-sheet" className="btn-luxe-outline">
-                    Line sheet <Printer className="h-3.5 w-3.5" />
-                  </Link>
-                  <a href="/bulk-order" className="btn-luxe">
-                    Bulk deals <Table2 className="h-3.5 w-3.5" />
-                  </a>
+                {/* Season line — the letterhead's one serif accent (§1.3c). */}
+                <p className="font-serif text-[16px] lowercase italic text-content/60">
+                  {season}, issued Bengaluru
+                </p>
+              </div>
+              <TermsRule className="mt-6" />
+            </header>
+          </div>
+
+          {/* ── Command bar — sticky operating strip under the fixed navbar ── */}
+          <div className="sticky top-16 z-40 lg:top-[74px]">
+            <CommandBar
+              total={lines.length}
+              shown={results.length}
+              query={query}
+              density={density}
+              onDensity={changeDensity}
+              onSearch={setSearch}
+              onSort={setSort}
+              compareCount={tray.compareIds.length}
+              onOpenCompare={() => setCompareOpen(true)}
+              shortlistCount={tray.shortlisted.length}
+              committedCount={tray.committed.length}
+              onOpenTray={() => router.push("/tray")}
+              onOpenFilters={() => setFiltersOpen(true)}
+              onPrint={() => window.print()}
+              activeFacets={activeCount}
+            />
+          </div>
+
+          {/* ── The text block, behind the folio rail rule (R2) ── */}
+          <div className="mx-auto max-w-[1400px] px-5 md:px-10 lg:px-16">
+            <div className="relative lg:pl-[72px]">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-[72px] hidden w-px bg-line/25 lg:block"
+              />
+
+              {/* Entry A — the line */}
+              <EntryHead
+                letter="A"
+                name="Styles"
+                count={results.length}
+                countLabel="styles"
+                className="mt-8 lg:mt-10"
+                action={
+                  activeCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      className="text-[9px] font-bold uppercase tracking-[0.18em] text-accent-red hover:underline"
+                    >
+                      Clear filters
+                    </button>
+                  ) : undefined
+                }
+              />
+
+              <div className="grid lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-10">
+                {/* Facet rail — sticky under the command bar */}
+                <aside className="hidden py-8 lg:block">
+                  <div className="sticky top-[8.5rem]">
+                    <FacetRail
+                      query={query}
+                      {...facets}
+                      onToggleMulti={toggleMulti}
+                      onToggleFlag={toggleFlag}
+                    />
+                  </div>
+                </aside>
+
+                {/* Results — rows swap instantly on filter change (§1.6) */}
+                <div
+                  ref={resultsRef}
+                  onMouseMove={handlePeekMove}
+                  onMouseLeave={() => setPeekIndex(null)}
+                  className="py-6 lg:py-8"
+                >
+                  {lines.length === 0 ? (
+                    /* Empty catalog — empty means empty, never mock (§1.1.7). */
+                    <div className="flex flex-col items-start gap-4 border border-line/25 px-6 py-10">
+                      <p className="text-[10px] font-extrabold uppercase tracking-[0.24em] text-content/55">
+                        Styles updating — WhatsApp for today&apos;s price list
+                      </p>
+                      <a
+                        href={buildCatalogRequestUrl()}
+                        target="_blank"
+                        rel="noopener"
+                        className="flex h-10 items-center gap-2 bg-surface-inverse px-4 text-[10px] font-bold uppercase tracking-[0.18em] text-content-inverse"
+                      >
+                        WhatsApp catalog <MessageCircle className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  ) : (
+                    <LineResults
+                      lines={results}
+                      density={density}
+                      isShortlisted={tray.isShortlisted}
+                      actions={actions}
+                    />
+                  )}
+
+                  {results.length > 0 && activeCount > 0 && (
+                    <div className="mt-6 flex flex-col gap-3 border-t border-line/25 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="ledger text-[10px] font-semibold uppercase tracking-[0.14em] text-content/45">
+                        {results.length} of {lines.length} styles under the
+                        current filters
+                      </p>
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        className="text-left text-[9px] font-bold uppercase tracking-[0.18em] text-content/55 hover:text-content sm:text-right"
+                      >
+                        Show the full line
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          </motion.div>
 
-          {/* one-line spec strip — the old stat band, compressed */}
-          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-[9px] font-bold uppercase tracking-[0.22em] text-content/45">
-            {[
-              "Low–mid range",
-              "Fresh first",
-              `MOQ ${B2B_CONFIG.minimumOrderSets} sets`,
-              "WhatsApp stock support",
-            ].map((spec) => (
-              <span key={spec} className="flex items-center gap-2">
-                <span className="h-1 w-1 bg-accent-lime" aria-hidden="true" />
-                {spec}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Marquee — ink + lime. overflow-hidden is load-bearing: the w-max
-            rail is wider than the viewport and would otherwise stretch the
-            document sideways (horizontal scroll + dead gutter). */}
-        <div className="mb-10 overflow-hidden border-y border-line bg-surface-inverse py-3 text-content-inverse">
-          <div className="flex w-max animate-marquee gap-8 whitespace-nowrap px-4">
-            {[
-              "Daily cotton kurtis",
-              "Office-ready fits",
-              "Fresh color drops",
-              "Bulk deals",
-              "WhatsApp catalog",
-              "Price-smart styles",
-              "Daily cotton kurtis",
-              "Office-ready fits",
-              "Fresh color drops",
-              "Bulk deals",
-              "WhatsApp catalog",
-              "Price-smart styles",
-            ].map((item, index) => (
-              <span
-                key={`${item}-${index}`}
-                className="flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.18em]"
-              >
-                {item}
-                <span className="h-1.5 w-1.5 shrink-0 bg-accent-lime" />
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Sticky filter bar */}
-        <div className="sticky top-[72px] z-40 mb-12 border-y border-line/20 bg-surface lg:top-[72px]">
-
-          {/* Mobile Toggle Button (Only visible when scrolled down) */}
-          <div
-            className={`md:hidden overflow-hidden transition-all duration-300 ${
-              isScrolled ? "max-h-12 border-b border-line/20" : "max-h-0"
-            }`}
-          >
-            <button
-              onClick={() => setIsManualExpand(!isManualExpand)}
-              className="w-full flex items-center justify-center gap-2 py-3 text-[10px] uppercase tracking-[0.2em] font-bold text-content hover:text-accent-red transition-colors focus-visible:outline-none"
-            >
-              {isManualExpand ? "Hide Filters" : "Filters & Sort"}
-              <ChevronDown
-                className={`w-3 h-3 transition-transform duration-300 ${
-                  isManualExpand ? "rotate-180" : ""
-                }`}
+              {/* Entry B — trade questions, as ruled numbered ledger entries.
+                  Text is SHOP_FAQS verbatim: the visible answer and the
+                  FAQPage JSON-LD share one source. */}
+              <EntryHead
+                letter="B"
+                name="Trade questions"
+                count={SHOP_FAQS.length}
+                countLabel="entries"
               />
-            </button>
-          </div>
-
-          <div
-            className={`overflow-hidden transition-all duration-300 md:max-h-none md:opacity-100 ${
-              shouldShowFiltersMobile ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between py-3 gap-4">
-
-            {/* Category filters */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 hide-scrollbar">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setParam("cat", cat)}
-                  className={`relative mr-5 shrink-0 px-1 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-colors duration-200 after:absolute after:left-0 after:-bottom-px after:h-0.5 after:w-full after:origin-right after:scale-x-0 after:bg-accent-lime after:transition-transform last:mr-0 focus-visible:outline-none ${
-                    activeCategory === cat
-                      ? "text-content after:scale-x-100 after:origin-left"
-                      : "text-content/40 hover:text-content hover:after:scale-x-100 hover:after:origin-left"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            {/* Meta & Sort Dropdown */}
-            <div className="flex items-center justify-between w-full md:w-auto gap-6 shrink-0 relative">
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-content/40 hidden lg:block">
-                {filtered.length} Styles
-              </span>
-
-              <div className="relative">
-                <button
-                  onClick={() => setIsSortOpen(!isSortOpen)}
-                  className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] font-bold text-content hover:text-accent-red transition-colors focus-visible:outline-none"
-                >
-                  Sort By: {sortOptions.find((o) => o.value === sortBy)?.label}
-                  <ChevronDown className={`w-3 h-3 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                <AnimatePresence>
-                  {isSortOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.3, ease: EASE }}
-                      className="absolute right-0 top-full mt-4 w-52 bg-surface border border-line overflow-hidden z-50"
-                    >
-                      {sortOptions.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => {
-                            setParam("sort", opt.value);
-                            setIsSortOpen(false);
-                          }}
-                          className={`w-full text-left px-5 py-3 text-[10px] uppercase tracking-[0.2em] font-bold transition-colors ${
-                            sortBy === opt.value
-                              ? "bg-accent-lime text-on-accent"
-                              : "text-content/55 hover:bg-line/5 hover:text-content"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-
-          {/* Facets: price bands + color swatches */}
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 pb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-            <div className="flex gap-2 flex-wrap">
-              {priceBands.map((band) => (
-                <button
-                  key={band.value}
-                  onClick={() => toggleParam("price", band.value)}
-                  className={`px-4 py-1.5 text-[9px] font-bold uppercase tracking-[0.15em] border transition-colors duration-200 focus-visible:outline-none ${
-                    activePrice === band.value
-                      ? "bg-accent-lime text-on-accent border-line"
-                      : "bg-transparent border-line/20 text-content/55 hover:border-line hover:text-content"
-                  }`}
-                >
-                  {band.label}
-                </button>
-              ))}
-            </div>
-
-            {colorFacets.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {colorFacets.map((facet) => {
-                  const isActive = activeColor === facet.value;
-                  const bg =
-                    facet.hexes.length > 1
-                      ? `linear-gradient(135deg, ${facet.hexes[0]} 50%, ${facet.hexes[1]} 50%)`
-                      : facet.hexes[0];
-                  return (
-                    <button
-                      key={facet.value}
-                      onClick={() => toggleParam("color", facet.value)}
-                      onMouseEnter={() => setHoveredColor(facet.label)}
-                      onMouseLeave={() => setHoveredColor(null)}
-                      onFocus={() => setHoveredColor(facet.label)}
-                      onBlur={() => setHoveredColor(null)}
-                      aria-label={`Filter by ${facet.label}`}
-                      aria-pressed={isActive}
-                      className={`h-5 w-5 transition-all duration-200 focus-visible:outline-none ${
-                        isActive
-                          ? "scale-110 ring-2 ring-accent-red ring-offset-2 ring-offset-surface"
-                          : "ring-1 ring-line/15 hover:scale-110 hover:ring-line/40"
-                      }`}
-                      style={{ background: bg }}
-                    />
-                  );
-                })}
-                {/* fixed label slot — no floating tooltip to clip inside the
-                    collapsible bar; reads like a desk readout */}
-                <span
-                  aria-live="polite"
-                  className="ml-1 min-w-[7rem] text-[9px] font-bold uppercase tracking-[0.18em] text-content/45"
-                >
-                  {hoveredColor ??
-                    (activeColor
-                      ? colorFacets.find((f) => f.value === activeColor)?.label
-                      : "")}
-                </span>
-              </div>
-            )}
-
-            {hasActiveFacets && (
-              <button
-                onClick={clearAll}
-                className="ml-auto flex items-center gap-1 text-[9px] font-bold uppercase tracking-[0.15em] text-content/50 hover:text-accent-red transition-colors"
-              >
-                <X className="w-3 h-3" /> Clear filters
-              </button>
-            )}
-          </div>
-          </div>
-        </div>
-
-        {/* Product grid — sr-only h2 keeps heading order intact (card titles
-            are h3; without this the page jumps h1 → h3). */}
-        <h2 className="sr-only">Catalog styles</h2>
-        {/* Product grid */}
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-10">
-          <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-10 md:gap-x-6 md:gap-y-12">
-            <AnimatePresence mode="popLayout">
-              {filtered.map((product) => (
-                  <motion.div
-                    key={product.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.4, ease: EASE }}
+              <ol className="mb-4">
+                {SHOP_FAQS.map((faq, index) => (
+                  <li
+                    key={faq.q}
+                    className="grid gap-x-6 gap-y-2 border-b border-line/20 py-6 md:grid-cols-[3rem_minmax(0,1fr)]"
                   >
-                    <LivingProductCard
-                      product={product}
-                      isWishlisted={isWishlisted(product.id)}
-                      onToggleWishlist={() => toggleWishlist(product)}
-                    />
-                  </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                    <span className="ledger text-[10px] font-extrabold text-content/40">
+                      {index + 1}
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-bold leading-snug tracking-[-0.01em]">
+                        {faq.q}
+                      </h3>
+                      <p className="mt-2 max-w-[62ch] text-sm leading-6 text-content/60">
+                        {faq.a}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
 
-          {/* Loading state */}
-          {isLoading && (
-            <div className="text-center py-32">
-              <p className="text-sm font-bold uppercase tracking-[0.3em] text-content/40">
-                Loading the collection...
-              </p>
+              {/* ── Colophon — the route's one ink entry (R9) ── */}
+              <section className="mb-4 mt-24 bg-surface-inverse text-content-inverse lg:mt-32">
+                <div className="px-6 py-12 lg:px-10 lg:py-16">
+                  <p className="text-[9px] font-extrabold uppercase tracking-[0.28em] text-content-inverse/50">
+                    Contact
+                  </p>
+                  <p className="mt-4 text-[clamp(2rem,4vw,3.5rem)] font-black uppercase leading-[0.95] tracking-[-0.04em]">
+                    Rangat Pehnawa
+                  </p>
+                  <dl className="ledger mt-8 max-w-xl">
+                    {[
+                      { label: "WhatsApp", value: CONTACT.whatsapp },
+                      { label: "Email", value: CONTACT.email },
+                      { label: "Address", value: CONTACT.address },
+                      {
+                        label: "Terms",
+                        value: `Minimum order ${B2B_CONFIG.minimumOrderSets} sets · GST ${GST_CONFIG.lowRate}–${GST_CONFIG.highRate}%, invoice at dispatch`,
+                      },
+                    ].map((fact) => (
+                      <div
+                        key={fact.label}
+                        className="flex flex-col gap-1 border-b border-content-inverse/15 py-3 sm:flex-row sm:items-baseline sm:gap-6"
+                      >
+                        <dt className="w-24 shrink-0 text-[8px] font-extrabold uppercase tracking-[0.24em] text-content-inverse/45">
+                          {fact.label}
+                        </dt>
+                        <dd className="text-sm font-semibold">{fact.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <a
+                      href={buildCatalogRequestUrl()}
+                      target="_blank"
+                      rel="noopener"
+                      className="flex h-10 items-center gap-2 bg-accent-lime px-4 text-[10px] font-bold uppercase tracking-[0.18em] text-on-accent"
+                    >
+                      WhatsApp catalog <MessageCircle className="h-3.5 w-3.5" />
+                    </a>
+                    <Link
+                      href="/bulk-order"
+                      className="flex h-10 items-center border border-content-inverse/35 px-4 text-[10px] font-bold uppercase tracking-[0.18em] transition-colors hover:border-content-inverse"
+                    >
+                      Open the bulk desk
+                    </Link>
+                  </div>
+                </div>
+              </section>
             </div>
-          )}
-
-          {/* Empty State */}
-          {!isLoading && filtered.length === 0 && (
-            <div className="mx-auto max-w-2xl border border-line/20 bg-surface-2 px-6 py-16 text-center">
-              <p className="eyebrow eyebrow--bare mb-4 justify-center">No Matching Styles</p>
-              <h2 className="font-sans text-2xl sm:text-3xl font-black uppercase leading-[0.9] tracking-[-0.04em] text-content">
-                Adjust filters or ask for the latest wholesale catalog.
-              </h2>
-              <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-content/55">
-                Some trade drops sell through quickly. WhatsApp us for current
-                stock, new arrivals, and style-code availability.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                {hasActiveFacets && (
-                  <button onClick={clearAll} className="btn-luxe-outline">
-                    Clear all filters
-                  </button>
-                )}
-                <a href={buildCatalogRequestUrl()} className="btn-luxe">
-                  WhatsApp Catalog <MessageCircle className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
-        {/* SEO content and FAQ */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-10 mt-32 border-t-2 border-line pt-16">
-          <p className="eyebrow mb-4">The Shop</p>
-          <h2 className="font-sans text-3xl sm:text-4xl font-black uppercase leading-[0.9] tracking-[-0.045em] text-content mb-6">
-            Modern kurti catalog online in India
-          </h2>
-          <div className="space-y-4 text-sm leading-6 text-content/60">
-            <p>
-              Rangat Pehnawa is a modern kurti catalog for shoppers, boutique
-              owners, online sellers and distributors. The edit spans
-              breathable daily cottons, clean workday kurtis, festive color
-              wear, hand-finished co-ord sets, anarkalis, lehengas, and sarees
-              at practical low-mid to high-mid price points.
-            </p>
-            <p>
-              Bulk buyers can order S/M/L/XL sets with MOQ starting at 4 sets.
-              Current stock, invoice details, dispatch, and payment are
-              confirmed on WhatsApp.
-            </p>
-          </div>
-
-          <h2 className="font-sans text-3xl sm:text-4xl font-black uppercase leading-[0.9] tracking-[-0.045em] text-content mt-16 mb-8">
-            Frequently Asked
-          </h2>
-          <div className="border-t border-line/20">
-            {SHOP_FAQS.map((faq) => (
-              <details key={faq.q} className="group border-b border-line/20 py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-sm font-bold uppercase tracking-[0.02em] text-content transition-colors hover:text-accent-red">
-                  {faq.q}
-                  <ChevronDown className="w-4 h-4 shrink-0 text-content/45 transition-transform duration-300 group-open:rotate-180 group-open:text-accent-red" />
-                </summary>
-                <p className="mt-4 max-w-xl text-sm leading-6 text-content/60">
-                  {faq.a}
-                </p>
-              </details>
-            ))}
-          </div>
-        </section>
+        {/* ── The printed sheet (§5.3) — the only body that prints ── */}
+        <PrintSheet results={results} season={season} />
       </main>
+
+      {/* Ledger peek plate — fixed, transform-only, never printed. */}
+      {peekLine && (
+        <div
+          ref={peekRef}
+          aria-hidden="true"
+          className="pointer-events-none fixed left-0 top-0 z-30 hidden w-[220px] lg:block"
+        >
+          <div className="plate-frame relative aspect-[4/5] w-full overflow-hidden bg-surface-hover">
+            <Image
+              src={peekLine.product.image}
+              alt=""
+              fill
+              sizes="220px"
+              className="object-cover"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Compare overlay (§5.4) — opens from the command bar. */}
+      {compareOpen && compareLines.length > 0 && (
+        <CompareOverlay
+          lines={compareLines}
+          onClose={() => setCompareOpen(false)}
+          onRemove={(line) => {
+            tray.toggleCompare(line.product);
+            if (compareLines.length <= 1) setCompareOpen(false);
+          }}
+        />
+      )}
+
+      {/* Mobile filter sheet */}
+      {filtersOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button
+            type="button"
+            aria-label="Close filters"
+            onClick={() => setFiltersOpen(false)}
+            className="absolute inset-0 bg-surface-inverse/60"
+          />
+          <div
+            className={cn(
+              "absolute inset-y-0 right-0 flex w-[min(20rem,88vw)] flex-col",
+              "border-l border-line/25 bg-surface",
+            )}
+          >
+            <div className="flex h-14 shrink-0 items-center justify-between border-b-2 border-line px-4">
+              <span className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.24em]">
+                <SlidersHorizontal className="h-3.5 w-3.5" strokeWidth={2} />
+                Filters
+              </span>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                aria-label="Close filters"
+                className="flex h-8 w-8 items-center justify-center text-content/50 hover:text-content"
+              >
+                <X className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <FacetRail
+                query={query}
+                {...facets}
+                onToggleMulti={toggleMulti}
+                onToggleFlag={toggleFlag}
+              />
+            </div>
+            <div className="shrink-0 border-t border-line/20 p-4">
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="flex h-11 w-full items-center justify-center bg-surface-inverse text-[10px] font-bold uppercase tracking-[0.18em] text-content-inverse"
+              >
+                Show {results.length} styles
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <StickyMobileB2BCta />
       <Footer />
@@ -550,12 +812,14 @@ function ShopContent({
 
 export default function ShopClient({
   initialProducts,
+  season,
 }: {
-  initialProducts?: MockProduct[];
+  initialProducts: MockProduct[];
+  season: string;
 }) {
   return (
     <Suspense fallback={<ShopLoading />}>
-      <ShopContent initialProducts={initialProducts} />
+      <ShopContent initialProducts={initialProducts} season={season} />
     </Suspense>
   );
 }

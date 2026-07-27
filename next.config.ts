@@ -70,6 +70,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "instagram.com",
       },
+      // Sanity image CDN (lookbook editorial covers + galleries)
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+      },
     ],
   },
   // ── Baseline security headers ──────────────────────────────────────────────

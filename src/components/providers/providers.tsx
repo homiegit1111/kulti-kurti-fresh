@@ -6,8 +6,9 @@ import { TrayProvider } from "@/lib/line/tray-context";
 import { ScrollToTop } from "@/components/providers/scroll-to-top";
 import { ClerkShopifySync } from "@/components/providers/clerk-shopify-sync";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { ThemeProgressBar } from "@/components/layout/theme-progress-bar";
-import { ScrollProgress } from "@/components/ui/scroll-progress";
+import { TopRail } from "@/components/layout/top-rail";
+import { RunningFooter } from "@/components/layout/running-footer";
+import { CartAddedToast } from "@/components/layout/cart-added-toast";
 import { MotionConfig } from "framer-motion";
 import { type ReactNode } from "react";
 
@@ -21,8 +22,9 @@ export function Providers({ children }: { children: ReactNode }) {
               <ClerkShopifySync />
               <ScrollToTop />
               {children}
-              <ThemeProgressBar />
-              <ScrollProgress />
+              <TopRail />
+              <RunningFooter />
+              <CartAddedToast />
             </TrayProvider>
           </WishlistProvider>
         </CartProvider>
