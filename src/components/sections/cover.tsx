@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { TYPICAL_RESALE_MULTIPLIER } from "@/lib/b2b/config";
+import {
+  B2B_CONFIG,
+  TYPICAL_RESALE_MULTIPLIER,
+} from "@/lib/b2b/config";
 import { getPerPiecePrice } from "@/lib/b2b/pricing";
 import { getStyleCode } from "@/lib/b2b/style-code";
 import { formatPrice } from "@/lib/commerce/catalog";
@@ -14,31 +17,10 @@ const COVER_FALLBACK_CLOTH = "/images/catalog/set-10.jpg";
 /**
  * THE COVER — the model stands in front of the name.
  *
- * रंगत ("rangat" — colour) is set at display scale as a WINDOW ONTO THE CLOTH:
- * the fabric inside the letters is the current featured style's photograph, so
- * the masthead re-dresses itself whenever stock turns over. Nobody re-art-directs
- * it per drop — change the catalogue and the cover changes.
- *
- * The depth is the point. Three planes, back to front:
- *   1. the word, filled with cloth, with a blurred ink copy behind it for the
- *      cast shadow (that copy is also the contrast floor — stock churns, and a
- *      pale fabric must never leave the name unreadable);
- *   2. a raking soft-light pass across the folds;
- *   3. the model, cut out with real transparency, standing IN FRONT of the word
- *      and overlapping it — which is what makes the page read as a photographed
- *      set rather than a layout.
- *
- * The cutouts are supplied assets (professionally matted), not generated here.
- * Server-rendered throughout: no canvas, no scroll listener, no entrance
- * animation. The model is the LCP image.
- *
- * BELOW lg THE PLANES UNSTACK. A phone cannot hold three overlapping layers and
- * still be readable — the word, the model and the copy end up fighting for the
- * same 390px. So under lg the same three ingredients run down the page in normal
- * flow (word → model → reading column → price card) and only the model keeps a
- * small negative margin, so its head still tucks IN FRONT of the word's baseline
- * and the depth idea survives. Nothing is ever layered over type. The absolute
- * composition above returns intact at lg:, where there is room for it.
+ * The existing three-plane composition remains the source of truth:
+ * cloth-filled masthead, raking light, then the model. This pass only sharpens
+ * the trade hierarchy around it. The model remains the LCP image and the page
+ * stays server rendered with no hero animation or client state.
  */
 export function Cover({
   products,
@@ -59,12 +41,8 @@ export function Cover({
       ? Math.round(perPiece * TYPICAL_RESALE_MULTIPLIER) - perPiece
       : null;
 
-  /* The cloth inside the letters — live from the catalogue, falling back to the
-     editable still. */
   const clothUrl =
     featured?.image ?? (content.clothImage || COVER_FALLBACK_CLOTH);
-  /* next/image throws on an empty src, and the model is the LCP element, so the
-     one field that must never be blank gets a hard floor. */
   const modelUrl = content.modelImage || COVER_FALLBACK_MODEL;
 
   return (
@@ -73,12 +51,7 @@ export function Cover({
       aria-label="Rangat Pehnawa — wholesale kurtis"
       className="relative min-h-[94svh] overflow-hidden bg-home-ground text-home-ink"
     >
-      {/* ── Plane 1: the name, wearing this season's cloth ──
-          pt-[190px] is measured, not guessed. leading-[1.16] is tighter than this
-          face's own ascent+descent (1.56em), so the glyphs overflow their line box:
-          रंगत PAINTS 0.122em ABOVE its own rect, the anusvara highest of all. 190px
-          clears the fixed chrome (100px) AND the season tape sitting under it.
-          Anything less guillotines the dot. */}
+      {/* Plane 1: the name wearing the current featured cloth. */}
       <div
         aria-hidden="true"
         className="pointer-events-none relative z-[1] select-none px-4 pt-[190px] text-center lg:absolute lg:inset-x-0 lg:top-[21svh] lg:px-0 lg:pt-0"
@@ -89,32 +62,15 @@ export function Cover({
           </span>
           <span
             style={{ backgroundImage: `url(${clothUrl})` }}
-            /* `cover-cloth` (globals.css) carries the photographic grade. It was
-               a baked-in brightness(0.8), which is right against cream paper and
-               wrong under a lamp — at night that same grade sank the masthead
-               into its own ground. The class lifts instead of darkens in `.dark`.
-               Geometry, scale and position are untouched. */
             className="cover-cloth relative block bg-[length:190%_auto] bg-[position:46%_38%] bg-clip-text font-deva text-[clamp(5rem,40vw,15rem)] font-bold leading-[1.16] text-transparent lg:text-[clamp(5.5rem,20vw,21rem)]"
           >
             रंगत
           </span>
-          {/* Plane 2: raking light across the folds. */}
           <span className="pointer-events-none absolute inset-0 mix-blend-soft-light [background:repeating-linear-gradient(96deg,transparent_0_28px,rgba(255,255,255,0.18)_28px_32px,transparent_32px_66px)]" />
         </div>
       </div>
 
-      {/* ── Plane 3: the model, in front of the name ──
-          The cutout is only ~40% of its own frame wide (the rest is matting), so
-          under lg the box is deliberately wider than the viewport — the section
-          clips the empty sides and the figure lands at a human scale. Height comes
-          from the asset's own ratio, not svh, so the band can never letterbox.
-
-          The negative margin is what keeps the depth idea alive on a phone: it eats
-          the word's ~0.43em of empty line box below the baseline plus the asset's
-          own 3% top matting, so the model's head genuinely rises IN FRONT of रंगत
-          instead of merely sitting under it. It is clamped, not pure vw, because
-          the word stops growing at 15rem while a raw vw margin would not — by
-          1023px an unclamped one would have swallowed the whole word. */}
+      {/* Plane 3: the model remains in front of the name and remains the LCP. */}
       <div className="pointer-events-none relative z-[2] -mt-[clamp(6rem,28vw,10rem)] flex justify-center lg:absolute lg:inset-x-0 lg:bottom-0 lg:mt-0">
         <div className="relative aspect-[1024/1044] w-[118vw] max-w-[470px] shrink-0 lg:aspect-auto lg:h-[72svh] lg:w-full lg:shrink">
           <Image
@@ -133,12 +89,9 @@ export function Cover({
         </div>
       </div>
 
-      {/* ── The reading layer ──
-          pb clears the fixed mobile CTA bar (~76px) with room to breathe; the
-          full-height, bottom-justified overlay is an lg-only behaviour now. */}
+      {/* Reading layer: the sales argument and the live featured trade note. */}
       <div className="relative z-[3] mx-auto flex max-w-[1500px] flex-col px-5 pb-[112px] pt-10 sm:px-8 lg:min-h-[94svh] lg:justify-end lg:px-14 lg:pb-16 lg:pt-28">
         <div className="grid gap-y-10 lg:grid-cols-12 lg:items-end lg:gap-x-10">
-          {/* Left: the argument. */}
           <div className="lg:col-span-5">
             <p className="font-sans text-[11px] font-extrabold uppercase tracking-[0.42em] text-home-vermilion">
               {content.eyebrow}
@@ -155,59 +108,100 @@ export function Cover({
               {content.body}
             </p>
 
-            {/* Two equal columns on a phone: a wrapping flex row let these
-                collide once the labels grew. The grid cannot. Below 340px the
-                "BROWSE STYLES" label (116.7px set) no longer fits half the row,
-                so the pair stacks rather than printing outside the button. */}
             <div className="mt-8 grid grid-cols-1 gap-3 min-[340px]:grid-cols-2 sm:flex sm:flex-wrap sm:items-center">
               <Link
                 href={content.primaryCtaHref}
-                className="inline-flex h-[54px] items-center justify-center whitespace-nowrap bg-home-ink px-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-home-ground transition-opacity duration-200 hover:opacity-85 sm:px-7"
+                className="group/cta inline-flex h-[54px] items-center justify-center whitespace-nowrap bg-home-ink px-3 text-[11px] font-extrabold uppercase tracking-[0.16em] text-home-ground transition-opacity duration-200 hover:opacity-90 sm:px-7"
               >
-                {content.primaryCtaLabel}
+                <span className="relative">
+                  {content.primaryCtaLabel}
+                  <span
+                    aria-hidden="true"
+                    className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-home-vermilion transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/cta:scale-x-100 group-focus-visible/cta:scale-x-100 motion-reduce:transition-none"
+                  />
+                </span>
               </Link>
               <a
                 href={catalogRequestUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-[54px] items-center justify-center whitespace-nowrap border border-home-ink/35 px-3 text-[11px] font-extrabold uppercase tracking-[0.16em] transition-colors duration-200 hover:border-home-ink sm:px-7"
+                className="group/cta inline-flex h-[54px] items-center justify-center whitespace-nowrap border border-home-ink/35 px-3 text-[11px] font-extrabold uppercase tracking-[0.16em] transition-colors duration-200 hover:border-home-ink sm:px-7"
               >
-                {content.secondaryCtaLabel}
+                <span className="relative">
+                  {content.secondaryCtaLabel}
+                  <span
+                    aria-hidden="true"
+                    className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-home-vermilion transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/cta:scale-x-100 group-focus-visible/cta:scale-x-100 motion-reduce:transition-none"
+                  />
+                </span>
               </a>
             </div>
           </div>
 
-          {/* Right: the featured style, priced from the catalogue. */}
           {featured && setPrice !== null && perPiece !== null && keep !== null && (
-            <div className="lg:col-span-4 lg:col-start-9">
+            <aside className="lg:col-span-4 lg:col-start-9" aria-label="Featured trade style">
               <Link
                 href={`/shop/${featured.handle}`}
-                className="group block bg-home-panel/95 p-5 shadow-[0_24px_48px_-18px_rgba(25,20,16,0.34)] backdrop-blur-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink"
+                aria-label={`${featured.title}, ${formatPrice(perPiece)} per piece, ${formatPrice(setPrice)} per set`}
+                className="group relative block overflow-hidden border border-home-rule bg-home-panel/95 p-5 pl-7 shadow-[0_24px_48px_-18px_rgba(25,20,16,0.34)] backdrop-blur-[2px] before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-home-vermilion focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink"
               >
-                <p className="font-trade text-[10px] text-home-ink-mute">
-                  {getStyleCode(featured)}
-                </p>
-                <p className="mt-1.5 font-editorial text-[20px] italic leading-tight group-hover:underline">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-home-rule pb-3">
+                  <p className="font-trade text-[10px] tracking-[0.06em] text-home-ink-mute">
+                    {getStyleCode(featured)}
+                  </p>
+                  <p className="text-[9px] font-extrabold uppercase tracking-[0.2em] text-home-vermilion">
+                    Featured trade style
+                  </p>
+                </div>
+
+                <p className="mt-4 font-editorial text-[21px] italic leading-tight decoration-home-vermilion decoration-1 underline-offset-4 group-hover:underline">
                   {featured.title}
                 </p>
-                <div className="mt-3 flex items-baseline gap-3 border-t border-home-rule pt-3">
-                  <span className="text-[27px] font-extrabold tracking-[-0.03em] tabular-nums">
-                    {formatPrice(perPiece)}
-                    <span className="ml-0.5 text-[11px] font-semibold text-home-ink-mute">
-                      /pc
-                    </span>
+
+                <div className="mt-4 grid grid-cols-2 gap-x-5 border-t border-home-rule pt-4 tabular-nums">
+                  <div>
+                    <p className="text-[29px] font-extrabold tracking-[-0.04em]">
+                      {formatPrice(perPiece)}
+                      <span className="ml-1 text-[11px] font-semibold tracking-normal text-home-ink-mute">
+                        /pc
+                      </span>
+                    </p>
+                    <p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.18em] text-home-ink-mute">
+                      Trade rate
+                    </p>
+                  </div>
+                  <div className="border-l border-home-rule pl-5">
+                    <p className="text-[19px] font-bold tracking-[-0.025em]">
+                      {formatPrice(setPrice)}
+                    </p>
+                    <p className="mt-1 text-[9px] font-extrabold uppercase tracking-[0.18em] text-home-ink-mute">
+                      Set of {B2B_CONFIG.setSize}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-home-rule pt-3">
+                  <span className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-home-ink-mute">
+                    Typical resale margin
                   </span>
-                  <span className="text-[12px] font-bold text-home-vermilion">
-                    you keep {formatPrice(keep)}
+                  <span className="shrink-0 text-[13px] font-extrabold text-home-vermilion tabular-nums">
+                    +{formatPrice(keep)} /pc
                   </span>
                 </div>
               </Link>
-            </div>
+            </aside>
           )}
         </div>
       </div>
 
-      {/* The season tape — a real count, so it stays true as stock moves. */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-4 left-1/2 z-[4] hidden -translate-x-1/2 flex-col items-center gap-1.5 font-trade text-[9px] uppercase tracking-[0.18em] text-home-ink-mute lg:flex [@media(max-height:720px)]:hidden"
+      >
+        <span>Into the line book</span>
+        <span className="h-7 w-px bg-home-vermilion" />
+      </div>
+
       <span className="absolute right-5 top-[112px] z-[4] -rotate-[4deg] bg-home-vermilion px-3.5 py-2 font-trade text-[10px] tracking-[0.1em] text-home-panel sm:right-8 lg:right-14 lg:top-[120px]">
         {season.toUpperCase()} · {products.length} STYLES
       </span>
