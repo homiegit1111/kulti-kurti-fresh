@@ -230,7 +230,7 @@ export default function RootLayout({
       appearance={{
         variables: {
           colorPrimary: "#1a1a1a", // charcoal
-          colorText: "#1a1a1a",
+          colorForeground: "#1a1a1a",
           colorBackground: "#ffffff",
           fontFamily: "var(--font-inter), 'Segoe UI', sans-serif",
           borderRadius: "0px",

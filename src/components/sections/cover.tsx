@@ -6,40 +6,232 @@ import { getStyleCode } from "@/lib/b2b/style-code";
 import { formatPrice } from "@/lib/commerce/catalog";
 import type { CommerceProduct } from "@/lib/commerce/types";
 import type { HomeCoverContent } from "@/lib/content/home-types";
+import { RangatVectorPaths } from "./rangat-vector";
 
 /** Last-resort art, used only if the owner clears the field entirely. */
 const COVER_FALLBACK_MODEL = "/images/model-sage.png";
-const COVER_FALLBACK_CLOTH = "/images/catalog/set-10.jpg";
+const COVER_FALLBACK_CLOTH = "/images/rangat-editorial-cloth.svg";
 
 /**
- * THE COVER — the model stands in front of the name.
+ * THE COVER — couture typography first, model second.
  *
- * रंगत ("rangat" — colour) is set at display scale as a WINDOW ONTO THE CLOTH:
- * the fabric inside the letters is the current featured style's photograph, so
- * the masthead re-dresses itself whenever stock turns over. Nobody re-art-directs
- * it per drop — change the catalogue and the cover changes.
+ * रंगत ("rangat" — colour) is a vector window onto one owner-supplied fabric
+ * plate. The SVG keeps the Devanagari edges clean at every viewport, while the
+ * image remains a photograph clipped inside the letterforms — never a generated
+ * texture, overlay or replacement. A restrained internal rim and ambient shadow
+ * supply the depth of letterpress on thick paper without drawing an outline.
  *
- * The depth is the point. Three planes, back to front:
- *   1. the word, filled with cloth, with a blurred ink copy behind it for the
- *      cast shadow (that copy is also the contrast floor — stock churns, and a
- *      pale fabric must never leave the name unreadable);
- *   2. a raking soft-light pass across the folds;
- *   3. the model, cut out with real transparency, standing IN FRONT of the word
- *      and overlapping it — which is what makes the page read as a photographed
- *      set rather than a layout.
+ * The native Devanagari anatomy stays intact. A separate fabric-filled bar only
+ * extends the shirorekha beyond the word, giving the lockup its handcrafted,
+ * editorial width without horizontally distorting the glyphs.
  *
- * The cutouts are supplied assets (professionally matted), not generated here.
- * Server-rendered throughout: no canvas, no scroll listener, no entrance
- * animation. The model is the LCP image.
- *
- * BELOW lg THE PLANES UNSTACK. A phone cannot hold three overlapping layers and
- * still be readable — the word, the model and the copy end up fighting for the
- * same 390px. So under lg the same three ingredients run down the page in normal
- * flow (word → model → reading column → price card) and only the model keeps a
- * small negative margin, so its head still tucks IN FRONT of the word's baseline
- * and the depth idea survives. Nothing is ever layered over type. The absolute
- * composition above returns intact at lg:, where there is room for it.
+ * The cutout remains a secondary plane in front of the masthead on desktop. On
+ * phones the planes unstack so the word remains legible and the model never sits
+ * on top of a counter.
  */
+function CoutureWordmark({ clothUrl }: { clothUrl: string }) {
+  return (
+    <svg
+      viewBox="0 0 1600 600"
+      preserveAspectRatio="xMidYMid meet"
+      role="img"
+      aria-label="रंगत"
+      className="couture-wordmark block h-auto w-full overflow-visible"
+    >
+      <defs>
+        {/* One supplied editorial cloth composition, mapped across the whole
+            lockup. The letters reveal different zones of the same photograph
+            because each glyph occupies its own x-position — no tiled pattern. */}
+        <pattern id="editorial-cloth" patternUnits="userSpaceOnUse" width="1600" height="600">
+          <image
+            href={clothUrl}
+            x="-48"
+            y="120"
+            width="1696"
+            height="1131"
+            preserveAspectRatio="none"
+          />
+        </pattern>
+
+        {/* Black centered stroke erodes only the INSIDE of the white shape in
+            the luminance mask: ~18% thinner positive strokes, larger counters,
+            identical outside dimensions. The fixed paths are the approved
+            wordmark geometry, not live font text. */}
+        <mask id="rangat-letters" maskUnits="userSpaceOnUse" x="0" y="0" width="1600" height="600">
+          <rect width="1600" height="600" fill="black" />
+          <RangatVectorPaths fill="white" stroke="black" strokeWidth={22} />
+          {/* Recut the headline as one illustrator-style bar: thin, long and
+              optically continuous, while the underlying glyph junctions stay
+              anchored at its lower edge. */}
+          <rect x="0" y="118" width="1600" height="33" fill="black" />
+          <rect x="0" y="177" width="1600" height="10" fill="black" />
+          <rect x="70" y="151" width="1460" height="26" rx="2" fill="white" />
+          <rect x="338" y="174" width="116" height="16" rx="2" fill="white" />
+          <rect x="612" y="174" width="108" height="16" rx="2" fill="white" />
+          <rect x="770" y="174" width="104" height="16" rx="2" fill="white" />
+          <rect x="1240" y="174" width="116" height="16" rx="2" fill="white" />
+          <circle cx="423" cy="88" r="29" fill="white" />
+        </mask>
+
+        {/* A paper-soft cast shadow. It gives lift, not an illustrated outline. */}
+        <filter
+          id="rangat-ambient"
+          x="-12%"
+          y="-12%"
+          width="124%"
+          height="145%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feDropShadow
+            dx="0"
+            dy="4"
+            stdDeviation="5"
+            floodColor="#2a1c12"
+            floodOpacity="0.075"
+          />
+        </filter>
+
+        {/* A narrow inside rim: warm shade below/right, paper light above/left.
+            Both are clipped to the source alpha, so the vector edge stays clean. */}
+        <filter
+          id="rangat-surface"
+          x="-4%"
+          y="-4%"
+          width="108%"
+          height="108%"
+          colorInterpolationFilters="sRGB"
+        >
+          <feMorphology
+            in="SourceAlpha"
+            operator="erode"
+            radius="1.5"
+            result="eroded"
+          />
+          <feComposite
+            in="SourceAlpha"
+            in2="eroded"
+            operator="out"
+            result="inner-rim"
+          />
+
+          <feOffset in="inner-rim" dx="1" dy="2" result="shade-offset" />
+          <feGaussianBlur
+            in="shade-offset"
+            stdDeviation="0.9"
+            result="shade-blur"
+          />
+          <feFlood floodColor="#321d12" floodOpacity="0.055" result="shade-color" />
+          <feComposite
+            in="shade-color"
+            in2="shade-blur"
+            operator="in"
+            result="shade"
+          />
+          <feComposite
+            in="shade"
+            in2="SourceAlpha"
+            operator="in"
+            result="inner-shade"
+          />
+
+          <feOffset in="inner-rim" dx="-1" dy="-1" result="light-offset" />
+          <feGaussianBlur
+            in="light-offset"
+            stdDeviation="0.6"
+            result="light-blur"
+          />
+          <feFlood floodColor="#fffaf0" floodOpacity="0.045" result="light-color" />
+          <feComposite
+            in="light-color"
+            in2="light-blur"
+            operator="in"
+            result="light"
+          />
+          <feComposite
+            in="light"
+            in2="SourceAlpha"
+            operator="in"
+            result="inner-light"
+          />
+
+          <feMerge>
+            <feMergeNode in="SourceGraphic" />
+            <feMergeNode in="inner-shade" />
+            <feMergeNode in="inner-light" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <g filter="url(#rangat-ambient)">
+        <g mask="url(#rangat-letters)" filter="url(#rangat-surface)">
+          <rect width="1600" height="600" fill="url(#editorial-cloth)" />
+        </g>
+      </g>
+
+    </svg>
+  );
+}
+
+/** Quiet campaign notation: one drawn thread, three reference points, hairlines. */
+function EditorialMarks() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 1600 1240"
+      preserveAspectRatio="none"
+      className="pointer-events-none absolute inset-0 z-[4] hidden h-full w-full lg:block"
+    >
+      <g
+        fill="none"
+        stroke="var(--home-vermilion)"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path
+          d="M1042 262 C974 310 908 352 936 440 C962 524 936 600 894 660 C842 732 826 780 790 842 C748 912 696 950 622 1000"
+          strokeWidth="1.05"
+          opacity="0.82"
+        />
+        <path d="M450 1018 H1440" strokeWidth="0.7" opacity="0.36" />
+        <path d="M650 996 V1040 M930 996 V1040 M1210 996 V1040" strokeWidth="0.7" opacity="0.36" />
+      </g>
+
+      {[
+        { x: 936, y: 440, label: "01" },
+        { x: 790, y: 842, label: "02" },
+        { x: 622, y: 1000, label: "03" },
+      ].map((mark) => (
+        <g key={mark.label} transform={`translate(${mark.x} ${mark.y})`}>
+          <circle r="8" fill="var(--home-ground)" stroke="var(--home-vermilion)" strokeWidth="0.9" />
+          <path d="M-13 0H13M0-13V13" stroke="var(--home-vermilion)" strokeWidth="0.8" />
+          <text
+            x="15"
+            y="4"
+            fill="var(--home-vermilion)"
+            fontSize="11"
+            fontWeight="700"
+            letterSpacing="1"
+            style={{ fontFamily: "var(--font-mono-trade), monospace" }}
+          >
+            {mark.label}
+          </text>
+        </g>
+      ))}
+
+      <text
+        x="450"
+        y="1008"
+        fill="var(--home-ink-mute)"
+        fontSize="9"
+        letterSpacing="2.5"
+        style={{ fontFamily: "var(--font-mono-trade), monospace" }}
+      >
+        COLLECTION 01 / CLOTH STUDY
+      </text>
+    </svg>
+  );
+}
+
 export function Cover({
   products,
   catalogRequestUrl,
@@ -59,10 +251,11 @@ export function Cover({
       ? Math.round(perPiece * TYPICAL_RESALE_MULTIPLIER) - perPiece
       : null;
 
-  /* The cloth inside the letters — live from the catalogue, falling back to the
-     editable still. */
-  const clothUrl =
-    featured?.image ?? (content.clothImage || COVER_FALLBACK_CLOTH);
+  /* The cloth inside the letters — the owner's editable image, or the shipped
+     patchwork still. The featured style no longer wins here: the masthead's
+     mixed-textile fill is the brand mark's signature, and a single product
+     photograph flattens it. */
+  const clothUrl = content.clothImage || COVER_FALLBACK_CLOTH;
   /* next/image throws on an empty src, and the model is the LCP element, so the
      one field that must never be blank gets a hard floor. */
   const modelUrl = content.modelImage || COVER_FALLBACK_MODEL;
@@ -71,37 +264,20 @@ export function Cover({
     <section
       id="home-cover"
       aria-label="Rangat Pehnawa — wholesale kurtis"
-      className="relative min-h-[94svh] overflow-hidden bg-home-ground text-home-ink"
+      className="home-cover-paper relative min-h-[94svh] overflow-hidden bg-home-ground text-home-ink lg:min-h-[105svh]"
     >
-      {/* ── Plane 1: the name, wearing this season's cloth ──
-          pt-[190px] is measured, not guessed. leading-[1.16] is tighter than this
-          face's own ascent+descent (1.56em), so the glyphs overflow their line box:
-          रंगत PAINTS 0.122em ABOVE its own rect, the anusvara highest of all. 190px
-          clears the fixed chrome (100px) AND the season tape sitting under it.
-          Anything less guillotines the dot. */}
+      {/* ── Plane 1: giant fabric-clipped couture wordmark ──
+          Width is the art direction: 88vw keeps the typography at 80–90% of the
+          hero while preserving generous ivory margins. The SVG carries its own
+          correct Devanagari aspect ratio; no transform stretches the letters. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none relative z-[1] select-none px-4 pt-[190px] text-center lg:absolute lg:inset-x-0 lg:top-[21svh] lg:px-0 lg:pt-0"
+        className="pointer-events-none relative z-[1] mx-auto w-[92vw] max-w-[1580px] select-none px-1 pt-[148px] sm:w-[90vw] sm:px-0 lg:absolute lg:inset-x-0 lg:top-[8svh] lg:w-[84vw] lg:pt-0"
       >
-        <div className="relative inline-block">
-          <span className="absolute left-[4px] top-[6px] block font-deva text-[clamp(5rem,40vw,15rem)] font-bold leading-[1.16] text-home-ink/45 blur-[1.5px] lg:text-[clamp(5.5rem,20vw,21rem)]">
-            रंगत
-          </span>
-          <span
-            style={{ backgroundImage: `url(${clothUrl})` }}
-            /* `cover-cloth` (globals.css) carries the photographic grade. It was
-               a baked-in brightness(0.8), which is right against cream paper and
-               wrong under a lamp — at night that same grade sank the masthead
-               into its own ground. The class lifts instead of darkens in `.dark`.
-               Geometry, scale and position are untouched. */
-            className="cover-cloth relative block bg-[length:190%_auto] bg-[position:46%_38%] bg-clip-text font-deva text-[clamp(5rem,40vw,15rem)] font-bold leading-[1.16] text-transparent lg:text-[clamp(5.5rem,20vw,21rem)]"
-          >
-            रंगत
-          </span>
-          {/* Plane 2: raking light across the folds. */}
-          <span className="pointer-events-none absolute inset-0 mix-blend-soft-light [background:repeating-linear-gradient(96deg,transparent_0_28px,rgba(255,255,255,0.18)_28px_32px,transparent_32px_66px)]" />
-        </div>
+        <CoutureWordmark clothUrl={clothUrl} />
       </div>
+
+      <EditorialMarks />
 
       {/* ── Plane 3: the model, in front of the name ──
           The cutout is only ~40% of its own frame wide (the rest is matting), so
@@ -109,14 +285,12 @@ export function Cover({
           clips the empty sides and the figure lands at a human scale. Height comes
           from the asset's own ratio, not svh, so the band can never letterbox.
 
-          The negative margin is what keeps the depth idea alive on a phone: it eats
-          the word's ~0.43em of empty line box below the baseline plus the asset's
-          own 3% top matting, so the model's head genuinely rises IN FRONT of रंगत
-          instead of merely sitting under it. It is clamped, not pure vw, because
-          the word stops growing at 15rem while a raw vw margin would not — by
-          1023px an unclamped one would have swallowed the whole word. */}
-      <div className="pointer-events-none relative z-[2] -mt-[clamp(6rem,28vw,10rem)] flex justify-center lg:absolute lg:inset-x-0 lg:bottom-0 lg:mt-0">
-        <div className="relative aspect-[1024/1044] w-[118vw] max-w-[470px] shrink-0 lg:aspect-auto lg:h-[72svh] lg:w-full lg:shrink">
+          On phones the model begins after the SVG rather than eating into it: the
+          typography is now the hero element, and every counter must remain visible.
+          Desktop keeps a restrained overlap, with the cutout scaled down so the
+          wordmark remains the dominant plane. */}
+      <div className="pointer-events-none relative z-[2] mt-0 flex justify-center lg:absolute lg:inset-x-0 lg:top-[5svh] lg:translate-x-[3vw]">
+        <div className="relative aspect-[1024/1044] w-[106vw] max-w-[420px] shrink-0 lg:aspect-auto lg:h-[74svh] lg:w-full lg:shrink">
           <Image
             src={modelUrl}
             alt={
@@ -128,7 +302,7 @@ export function Cover({
             priority
             fetchPriority="high"
             sizes="(max-width: 1023px) 470px, 640px"
-            className="object-contain object-bottom drop-shadow-[0_28px_44px_rgba(25,20,16,0.28)]"
+            className="object-contain object-bottom drop-shadow-[0_10px_20px_rgba(25,20,16,0.12)] lg:origin-bottom lg:scale-[1.38]"
           />
         </div>
       </div>
@@ -136,7 +310,7 @@ export function Cover({
       {/* ── The reading layer ──
           pb clears the fixed mobile CTA bar (~76px) with room to breathe; the
           full-height, bottom-justified overlay is an lg-only behaviour now. */}
-      <div className="relative z-[3] mx-auto flex max-w-[1500px] flex-col px-5 pb-[112px] pt-10 sm:px-8 lg:min-h-[94svh] lg:justify-end lg:px-14 lg:pb-16 lg:pt-28">
+      <div className="relative z-[3] mx-auto flex max-w-[1500px] flex-col px-5 pb-[112px] pt-10 sm:px-8 lg:absolute lg:inset-x-0 lg:top-[50svh] lg:min-h-0 lg:justify-start lg:px-14 lg:pb-16 lg:pt-0">
         <div className="grid gap-y-10 lg:grid-cols-12 lg:items-end lg:gap-x-10">
           {/* Left: the argument. */}
           <div className="lg:col-span-5">
@@ -144,7 +318,7 @@ export function Cover({
               {content.eyebrow}
             </p>
 
-            <h1 className="mt-4 max-w-[15ch] font-editorial text-[clamp(1.9rem,3.3vw,2.7rem)] font-light leading-[1.12] tracking-[-0.01em]">
+            <h1 className="mt-4 max-w-[15ch] font-editorial text-[clamp(1.9rem,3.3vw,2.7rem)] font-light leading-[1.04] tracking-[-0.015em]">
               {content.headline}{" "}
               <span className="font-semibold italic text-home-vermilion">
                 {content.headlineAccent}
@@ -179,10 +353,10 @@ export function Cover({
 
           {/* Right: the featured style, priced from the catalogue. */}
           {featured && setPrice !== null && perPiece !== null && keep !== null && (
-            <div className="lg:col-span-4 lg:col-start-9">
+            <div className="lg:col-span-3 lg:col-start-10 lg:w-[280px] lg:justify-self-end lg:-translate-y-[165px]">
               <Link
                 href={`/shop/${featured.handle}`}
-                className="group block bg-home-panel/95 p-5 shadow-[0_24px_48px_-18px_rgba(25,20,16,0.34)] backdrop-blur-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink"
+                className="group block border border-home-rule/70 bg-home-panel/90 p-5 shadow-[0_16px_36px_-24px_rgba(25,20,16,0.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink"
               >
                 <p className="font-trade text-[10px] text-home-ink-mute">
                   {getStyleCode(featured)}
@@ -207,10 +381,21 @@ export function Cover({
         </div>
       </div>
 
-      {/* The season tape — a real count, so it stays true as stock moves. */}
-      <span className="absolute right-5 top-[112px] z-[4] -rotate-[4deg] bg-home-vermilion px-3.5 py-2 font-trade text-[10px] tracking-[0.1em] text-home-panel sm:right-8 lg:right-14 lg:top-[120px]">
-        {season.toUpperCase()} · {products.length} STYLES
-      </span>
+      {/* Stitched line-book label — live season and count, editorial not decorative. */}
+      <div className="stitched-label absolute right-5 top-[112px] z-[5] hidden w-[148px] -rotate-[1.5deg] bg-home-panel/95 px-3.5 py-2.5 text-home-vermilion sm:right-8 sm:block lg:right-24 lg:top-[110px]">
+        <span className="block font-trade text-[9px] uppercase tracking-[0.2em]">
+          {season.toUpperCase()}
+        </span>
+        <span className="mt-1.5 block border-t border-home-vermilion/45 pt-1.5 font-trade text-[12px] font-bold uppercase tracking-[0.16em]">
+          Line Book
+        </span>
+        <span className="mt-1 block font-trade text-[8px] uppercase tracking-[0.12em] opacity-75">
+          {products.length} styles · wholesale
+        </span>
+        <span aria-hidden="true" className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-center font-trade text-[14px] leading-4">
+          ⊕
+        </span>
+      </div>
     </section>
   );
 }

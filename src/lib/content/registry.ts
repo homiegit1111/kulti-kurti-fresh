@@ -86,9 +86,9 @@ const HOME_GROUP: ContentGroup = {
         {
           key: "home.cover.clothImage",
           label: "Cloth inside the brand mark",
-          help: "Fills the Devanagari letters. Used only when no featured style has an image.",
+          help: "Fills the Devanagari letters. Draped bolts of embroidered fabric read best — each glyph takes its own bolt.",
           type: "image",
-          default: "/images/catalog/set-10.jpg",
+          default: "/images/rangat-editorial-cloth.svg",
         },
         {
           key: "home.cover.primaryCtaLabel",
