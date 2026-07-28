@@ -1880,16 +1880,497 @@ body:has(#home-cover) header[class*="fixed"] {
 }
 
 /*
- * रंगत is filled with the season's photograph. The day grade darkens the cloth
- * so it holds against cream paper; at night that same grade sinks the masthead
- * into the ground, so the cloth is lifted instead of pushed down. The blurred
- * ink copy behind the word is the contrast floor either way — it is
- * --home-ink, so by day it is a cast shadow and at night a halo.
+ * The couture cover is printed on warm ivory paper in both themes. This is a
+ * campaign plate, not an app surface: it does not invert. The local token pair
+ * keeps every button and caption inside the cover legible against that paper.
  */
-.cover-cloth {
-  filter: brightness(0.8) contrast(1.3) saturate(1.25);
+.home-cover-paper {
+  --home-ground: #efe9da;
+  --home-panel: #f7f2e6;
+  --home-raised: #e5ddcb;
+  --home-ink: #191410;
+  --home-ink-soft: #55503f;
+  --home-ink-mute: #635d4c;
+  --home-rule: #d8cfb8;
+  --home-vermilion: #b03a26;
+  isolation: isolate;
+  background-color: var(--home-ground);
 }
 
-.dark .cover-cloth {
-  filter: brightness(1.06) contrast(1.18) saturate(1.2);
+/* Fine monochrome fibre — no repeating illustrated speckles or visible tiles. */
+.home-cover-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='4' seed='17' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.36'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* The paper is a touch warmer at the edges, like a photographed campaign sheet. */
+.home-cover-paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 8% 19%, rgba(105, 74, 40, 0.08) 0 0.7px, transparent 1.6px),
+    radial-gradient(circle at 24% 72%, rgba(105, 74, 40, 0.06) 0 0.8px, transparent 1.8px),
+    radial-gradient(circle at 78% 31%, rgba(105, 74, 40, 0.075) 0 0.65px, transparent 1.5px),
+    radial-gradient(circle at 91% 84%, rgba(105, 74, 40, 0.055) 0 0.8px, transparent 1.7px),
+    radial-gradient(ellipse at 50% 38%, transparent 34%, rgba(104, 72, 33, 0.065) 100%),
+    linear-gradient(180deg, rgba(255, 252, 244, 0.2), transparent 28%);
+}
+
+/* Preserve the supplied photograph; only a minute press-grade correction is used. */
+.couture-wordmark {
+  filter: brightness(0.99) contrast(1.035) saturate(0.93);
+}
+
+/* Cotton label with an inset running stitch; the seam stays quiet at mobile size. */
+.stitched-label {
+  border: 1px solid color-mix(in srgb, var(--home-vermilion) 68%, transparent);
+  box-shadow:
+    0 7px 18px rgba(62, 40, 20, 0.07),
+    inset 0 0 0 3px color-mix(in srgb, var(--home-panel) 88%, transparent);
+}
+
+.stitched-label::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  pointer-events: none;
+  border: 1px dashed color-mix(in srgb, var(--home-vermilion) 58%, transparent);
+}
+
+.stitched-label::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  top: 25px;
+  width: 38px;
+  height: 22px;
+  border-top: 1px solid color-mix(in srgb, var(--home-vermilion) 72%, transparent);
+  border-radius: 50%;
+  transform: rotate(12deg);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   DREAM HOMEPAGE (.dream-*) — faithful rebuild of the reference art.
+   Design space: 1536x1024. --u = one design pixel (100cqw / 1536), so
+   the entire composition scales fluidly with its container. Raster is
+   used only for paper, letter-fill fabric, models, and the tag swatch;
+   letterforms/thread/markers are SVG; all text is live HTML.
+   ══════════════════════════════════════════════════════════════════ */
+
+.dream-home {
+  container-type: inline-size;
+  container-name: dreamhome;
+  width: 100%;
+  background: #ebe0c6 url("/home-dream/paper.png");
+  background-size: calc(100vw / 4.13);
+  color: #1c1812;
+}
+.dream-stage {
+  --u: calc(100cqw / 1536);
+  --dream-red: #a03020;
+  --dream-thread: #a74a36;
+  position: relative;
+  aspect-ratio: 1536 / 1024;
+  font-family: var(--font-garamond), Georgia, serif;
+  overflow: hidden;
+}
+.dream-stage a { color: inherit; text-decoration: none; }
+
+/* ── header ── */
+.dream-header {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--u) * 62);
+  z-index: 40;
+}
+.dream-logo {
+  position: absolute;
+  left: calc(var(--u) * 52);
+  top: calc(var(--u) * 10);
+  display: block;
+  line-height: 1;
+}
+.dream-logo-name {
+  display: block;
+  font-family: var(--font-garamond), Georgia, serif;
+  font-weight: 600;
+  font-size: calc(var(--u) * 24.5);
+  color: #a42c17;
+  letter-spacing: 0.01em;
+}
+.dream-logo-sub {
+  display: block;
+  margin-top: calc(var(--u) * 5);
+  font-family: var(--font-inter), sans-serif;
+  font-size: calc(var(--u) * 8.6);
+  font-weight: 500;
+  letter-spacing: calc(var(--u) * 3.4);
+  color: #6b6154;
+}
+.dream-nav {
+  position: absolute;
+  left: calc(var(--u) * 466);
+  top: 0;
+  height: calc(var(--u) * 62);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 36);
+}
+.dream-nav a {
+  font-family: var(--font-inter), sans-serif;
+  font-size: calc(var(--u) * 13.3);
+  font-weight: 450;
+  color: #231d17;
+}
+.dream-nav a:hover { color: #a42c17; }
+.dream-hdr-right {
+  position: absolute;
+  right: calc(var(--u) * 44);
+  top: 0;
+  height: calc(var(--u) * 62);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 14);
+  font-family: var(--font-inter), sans-serif;
+  font-size: calc(var(--u) * 13.3);
+  color: #231d17;
+}
+.dream-login { display: flex; align-items: center; gap: calc(var(--u) * 7); }
+.dream-login:hover, .dream-cart:hover { color: #a42c17; }
+.dream-hdr-right svg {
+  width: calc(var(--u) * 15);
+  height: calc(var(--u) * 15);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+.dream-hdr-sep { width: 1px; height: calc(var(--u) * 18); background: #b4a88f; }
+.dream-cart { display: flex; align-items: center; gap: calc(var(--u) * 7); }
+
+/* ── hero art ── */
+.dream-art {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--u) * 712);
+}
+.dream-masthead {
+  position: absolute;
+  left: calc(var(--u) * 130);
+  top: calc(var(--u) * 52);
+  width: calc(var(--u) * 1210);
+  height: calc(var(--u) * 458);
+  z-index: 5;
+  filter: drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 2) rgba(96, 64, 32, 0.3));
+}
+.dream-model {
+  position: absolute !important;
+  left: calc(var(--u) * 620);
+  top: calc(var(--u) * 55);
+  width: calc(var(--u) * 365);
+  height: calc(var(--u) * 660);
+  z-index: 10;
+}
+.dream-model-shadow {
+  position: absolute;
+  left: calc(var(--u) * 660);
+  top: calc(var(--u) * 688);
+  width: calc(var(--u) * 290);
+  height: calc(var(--u) * 26);
+  z-index: 9;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(88, 66, 38, 0.34), rgba(88, 66, 38, 0) 68%);
+}
+.dream-thread {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+}
+.dream-thread-hero { inset: 0; width: 100%; height: 100%; }
+.dream-thread-line {
+  fill: none;
+  stroke: var(--dream-thread);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+}
+.dream-stitch { stroke-width: 2.2; stroke-dasharray: 17 6; }
+.dream-stitch-lite { stroke-width: 1.8; stroke-dasharray: 10 7; opacity: 0.85; }
+.dream-dropline { fill: none; stroke: var(--dream-red); stroke-width: 1; stroke-dasharray: 4 5; }
+.dream-pin { stroke: var(--dream-thread); stroke-width: 1.6; }
+.dream-pin-dot, .dream-xhair-dot { fill: var(--dream-thread); }
+.dream-xhair { stroke: #a73a20; }
+.dream-marker-label {
+  font-family: var(--font-courier), "Courier New", monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: #a73a20;
+}
+
+/* ── SS'24 tag ── */
+.dream-tag {
+  position: absolute;
+  left: calc(var(--u) * 1206);
+  top: calc(var(--u) * 62);
+  width: calc(var(--u) * 196);
+  height: calc(var(--u) * 124);
+  z-index: 25;
+  transform: rotate(-3deg);
+}
+.dream-tag > img {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+.dream-tag-inner {
+  position: absolute;
+  inset: calc(var(--u) * 15) calc(var(--u) * 26) calc(var(--u) * 15) calc(var(--u) * 23);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(var(--u) * 7);
+}
+.dream-tag-row { display: flex; align-items: center; justify-content: space-between; }
+.dream-tag-row svg, .dream-price-lbl svg {
+  width: calc(var(--u) * 22);
+  height: calc(var(--u) * 22);
+  stroke: #a73a20;
+}
+.dream-tag-row svg circle:last-child { fill: #a73a20; }
+.dream-tag-t {
+  font-family: var(--font-courier), "Courier New", monospace;
+  font-weight: 700;
+  font-size: calc(var(--u) * 14.5);
+  letter-spacing: calc(var(--u) * 2.4);
+  color: #a73a20;
+  line-height: 1;
+}
+.dream-tag-rule { height: 0; border-top: 1.5px solid #a73a20; opacity: 0.85; width: 64%; }
+
+/* ── headline + CTAs ── */
+.dream-copy {
+  position: absolute;
+  left: calc(var(--u) * 55);
+  top: calc(var(--u) * 468);
+  width: calc(var(--u) * 430);
+  z-index: 15;
+}
+.dream-copy h1 {
+  font-family: var(--font-garamond), Georgia, serif;
+  font-weight: 500;
+  font-size: calc(var(--u) * 45);
+  line-height: 1.14;
+  color: #15120e;
+  letter-spacing: 0.002em;
+}
+.dream-copy h1 em { font-style: italic; font-weight: 500; }
+.dream-cta {
+  position: absolute;
+  left: calc(var(--u) * 59);
+  top: calc(var(--u) * 638);
+  display: flex;
+  gap: calc(var(--u) * 24);
+  z-index: 15;
+}
+.dream-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--u) * 45);
+  padding: 0 calc(var(--u) * 27);
+  font-family: var(--font-inter), sans-serif;
+  font-size: calc(var(--u) * 14);
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  border-radius: 2px;
+  transition: filter 0.15s ease, background-color 0.15s ease;
+}
+.dream-btn-fill {
+  background: #9d2614;
+  color: #f6ead2 !important;
+  box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 5) rgba(90, 40, 20, 0.25);
+}
+.dream-btn-fill:hover { filter: brightness(1.08); }
+.dream-btn-line {
+  border: 1.4px solid #922f1b;
+  color: #922f1b !important;
+  background: rgba(246, 234, 210, 0.25);
+}
+.dream-btn-line:hover { background: rgba(246, 234, 210, 0.65); }
+
+/* ── wholesale rate tag ── */
+.dream-price {
+  position: absolute;
+  left: calc(var(--u) * 1183);
+  top: calc(var(--u) * 528);
+  width: calc(var(--u) * 222);
+  height: calc(var(--u) * 132);
+  z-index: 15;
+  filter: drop-shadow(0 calc(var(--u) * 3) calc(var(--u) * 4) rgba(90, 60, 30, 0.28));
+}
+.dream-price-card {
+  position: absolute;
+  inset: 0;
+  background: #f2e8d3;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 93.94%, 94.14% 100.00%, 88.29% 93.94%, 82.43% 100.00%, 76.58% 93.94%, 70.72% 100.00%, 64.86% 93.94%, 59.01% 100.00%, 53.15% 93.94%, 47.30% 100.00%, 41.44% 93.94%, 35.59% 100.00%, 29.73% 93.94%, 23.87% 100.00%, 18.02% 93.94%, 12.16% 100.00%, 6.31% 93.94%, 0.45% 100.00%, 0.00% 93.94%, 0% 93.94%);
+}
+.dream-price-bord {
+  position: absolute;
+  inset: calc(var(--u) * 6) calc(var(--u) * 7) calc(var(--u) * 12) calc(var(--u) * 7);
+  border: 1.6px dashed #a93820;
+  border-bottom: none;
+  padding: calc(var(--u) * 10) calc(var(--u) * 14) 0;
+}
+.dream-price-lbl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-courier), "Courier New", monospace;
+  font-weight: 700;
+  font-size: calc(var(--u) * 13);
+  letter-spacing: calc(var(--u) * 3.6);
+  color: #a93820;
+}
+.dream-price-div {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #a93820 0 calc(var(--u) * 9), transparent calc(var(--u) * 9) calc(var(--u) * 16));
+  margin: calc(var(--u) * 9) 0 calc(var(--u) * 5);
+  opacity: 0.9;
+}
+.dream-price-amt {
+  font-family: var(--font-courier), "Courier New", monospace;
+  font-weight: 700;
+  font-size: calc(var(--u) * 58);
+  line-height: 1;
+  color: #a93820;
+  letter-spacing: calc(var(--u) * 1);
+}
+.dream-price-rs { font-family: var(--font-garamond), Georgia, serif; font-weight: 600; font-size: 0.82em; margin-right: 0.04em; }
+.dream-price-pc {
+  font-family: var(--font-courier), "Courier New", monospace;
+  font-size: calc(var(--u) * 14);
+  font-weight: 700;
+  letter-spacing: calc(var(--u) * 1);
+  margin-left: calc(var(--u) * 6);
+}
+
+/* ── this season ── */
+.dream-season {
+  position: absolute;
+  left: 0;
+  top: calc(var(--u) * 712);
+  width: 100%;
+  height: calc(var(--u) * 312);
+  background: rgba(255, 249, 232, 0.42);
+  box-shadow: 0 -1px 0 rgba(120, 95, 60, 0.14);
+  z-index: 2;
+}
+.dream-season h2 {
+  position: absolute;
+  left: calc(var(--u) * 55);
+  top: calc(var(--u) * 86);
+  font-family: var(--font-garamond), Georgia, serif;
+  font-weight: 500;
+  font-size: calc(var(--u) * 54);
+  color: #14110d;
+  letter-spacing: 0.004em;
+}
+.dream-season-xhair {
+  position: absolute;
+  left: calc(var(--u) * 52);
+  top: calc(var(--u) * 155);
+  width: calc(var(--u) * 28);
+  height: calc(var(--u) * 28);
+  stroke: #a73a20;
+}
+.dream-season-tagline {
+  position: absolute;
+  left: calc(var(--u) * 58);
+  top: calc(var(--u) * 192);
+  font-family: var(--font-garamond), Georgia, serif;
+  font-style: italic;
+  font-size: calc(var(--u) * 23.5);
+  line-height: 1.38;
+  color: #0f0d0a;
+}
+.dream-smodels { display: contents; }
+.dream-smodel { position: absolute; z-index: 8; }
+.dream-smodel img { width: 100% !important; height: 100% !important; }
+.dream-scode {
+  position: absolute;
+  z-index: 12;
+  font-family: var(--font-courier), "Courier New", monospace;
+  font-weight: 700;
+}
+.dream-scode-c { font-size: calc(var(--u) * 13.5); letter-spacing: calc(var(--u) * 1.6); color: #252018; }
+.dream-scode-p { margin-top: calc(var(--u) * 4); font-size: calc(var(--u) * 13.5); letter-spacing: calc(var(--u) * 1); color: #a93820; }
+.dream-thread-season { inset: 0; width: 100%; height: 100%; }
+
+/* ── mobile adaptation (container < 800px): same language, reflowed ── */
+@container dreamhome (max-width: 800px) {
+  .dream-stage { aspect-ratio: auto; padding-bottom: calc(var(--u) * 30); }
+  .dream-header { position: relative; height: calc(var(--u) * 150); }
+  .dream-logo { left: calc(var(--u) * 40); top: calc(var(--u) * 38); }
+  .dream-logo-name { font-size: calc(var(--u) * 58); }
+  .dream-logo-sub { font-size: calc(var(--u) * 21); letter-spacing: calc(var(--u) * 8); margin-top: calc(var(--u) * 10); }
+  .dream-nav { display: none; }
+  .dream-hdr-right { right: calc(var(--u) * 40); height: 100%; gap: calc(var(--u) * 30); font-size: calc(var(--u) * 30); }
+  .dream-login-txt { display: none; }
+  .dream-hdr-right svg { width: calc(var(--u) * 42); height: calc(var(--u) * 42); }
+  .dream-hdr-sep { height: calc(var(--u) * 44); }
+
+  .dream-art { position: relative; height: calc(var(--u) * 780); }
+  .dream-masthead { left: 0; top: calc(var(--u) * 40); width: 100%; height: auto; aspect-ratio: 1210 / 458; }
+  .dream-model {
+    left: 50%;
+    top: calc(var(--u) * 60);
+    transform: translateX(-47%);
+    width: calc(var(--u) * 398);
+    height: calc(var(--u) * 720);
+  }
+  .dream-model-shadow { left: 40%; top: calc(var(--u) * 750); width: calc(var(--u) * 330); }
+  .dream-thread-hero { display: none; }
+  .dream-tag {
+    left: auto;
+    right: calc(var(--u) * 26);
+    top: 0;
+    width: calc(var(--u) * 300);
+    height: calc(var(--u) * 190);
+  }
+  .dream-tag-t { font-size: calc(var(--u) * 22); }
+
+  .dream-copy { position: static; width: auto; padding: calc(var(--u) * 40) 6% 0; }
+  .dream-copy h1 { font-size: clamp(26px, 8.5cqw, 42px); }
+  .dream-cta { position: static; padding: calc(var(--u) * 40) 6% 0; flex-wrap: wrap; gap: 12px; }
+  .dream-btn { height: 44px; padding: 0 22px; font-size: 13px; }
+
+  .dream-price { position: static; margin: 28px 6% 8px; --u: 1.42px; }
+
+  .dream-season { position: static; height: auto; margin-top: 26px; padding: 24px 6% 30px; }
+  .dream-season h2 { position: static; font-size: clamp(30px, 8cqw, 40px); }
+  .dream-season-xhair { display: none; }
+  .dream-season-tagline { position: static; font-size: clamp(16px, 4.6cqw, 20px); margin-top: 8px; }
+  .dream-smodels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 18px;
+    align-items: end;
+  }
+  .dream-smodel { position: static !important; width: auto !important; height: auto !important; }
+  .dream-smodel img { width: 100% !important; height: auto !important; }
+  .dream-scode { position: static !important; text-align: center; padding-top: 6px; }
+  .dream-scode-c { font-size: 11px; letter-spacing: 1px; }
+  .dream-scode-p { font-size: 11px; }
+  .dream-thread-season { display: none; }
 }
