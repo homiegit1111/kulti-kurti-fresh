@@ -119,17 +119,22 @@ export function DreamHome() {
             className="dream-model"
             src="/home-dream/hero.png"
             alt="Sage green embroidered kurta set with dupatta — this season's hero style"
-            width={365}
-            height={660}
+            width={462}
+            height={668}
             priority
           />
 
           <svg className="dream-thread dream-thread-hero" viewBox="0 0 1536 712" aria-hidden="true">
-            {/* tag tail */}
+            {/* cream underlay keeps the thread legible where it crosses fabric */}
+            <path d={THREAD_PATH} className="dream-thread-under" />
+            {/* tag tail: droops off the swatch's right edge, ends in loose fibers */}
             <path
-              d="M1400,120 C1444,128 1462,148 1458,172 C1455,186 1444,192 1436,188"
+              d="M1400,126 C1436,132 1452,148 1450,168"
               className="dream-thread-line"
             />
+            <path d="M1450,168 C1454,178 1460,184 1464,188" className="dream-thread-fiber" />
+            <path d="M1450,168 C1450,178 1452,188 1450,194" className="dream-thread-fiber" />
+            <path d="M1450,168 C1446,176 1440,182 1436,185" className="dream-thread-fiber" />
             <path d={THREAD_PATH} className="dream-thread-line" />
             <Crosshair x={923} y={289} />
             <text x="938" y="294" className="dream-marker-label">01</text>
