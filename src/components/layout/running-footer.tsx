@@ -27,10 +27,6 @@ export function RunningFooter() {
 
   if (hiddenPrefixes.some((prefix) => pathname?.startsWith(prefix))) return null;
 
-  // The dream homepage is a self-contained composition (reference artwork);
-  // the trade-facts rail is part of the old chrome and stays off it.
-  if (pathname === "/") return null;
-
   const onOrder = hydrated && totals.committedCount > 0;
 
   return (

@@ -2,8 +2,6 @@ import { jsonLdScript } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Script from "next/script";
 import {
-  Courier_Prime,
-  EB_Garamond,
   Fraunces,
   Inter,
   Noto_Serif_Devanagari,
@@ -49,22 +47,6 @@ const spaceMono = Space_Mono({
   subsets: ["latin"],
   weight: ["400", "700"],
   variable: "--font-mono-trade",
-  display: "swap",
-});
-
-/** Dream homepage serif — logo, headline, and season heads (see .dream-*). */
-const ebGaramond = EB_Garamond({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-garamond",
-  display: "swap",
-});
-
-/** Dream homepage typewriter mono — tag, wholesale rate, style codes. */
-const courierPrime = Courier_Prime({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-courier",
   display: "swap",
 });
 
@@ -179,7 +161,7 @@ export default function RootLayout({
   const app = (
     <html
       lang="en"
-      className={`h-full antialiased ${inter.variable} ${playfair.variable} ${devanagari.variable} ${fraunces.variable} ${spaceMono.variable} ${ebGaramond.variable} ${courierPrime.variable}`}
+      className={`h-full antialiased ${inter.variable} ${playfair.variable} ${devanagari.variable} ${fraunces.variable} ${spaceMono.variable}`}
       suppressHydrationWarning
     >
       <head>

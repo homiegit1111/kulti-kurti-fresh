@@ -116,9 +116,6 @@ export function TopRail() {
     return () => anim.cancel();
   }, [pathname]);
 
-  // The dream homepage is a clean editorial field — no chrome overlays on it.
-  if (pathname === "/") return null;
-
   return (
     <div
       aria-hidden="true"
